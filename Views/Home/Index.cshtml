@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    var apiKey = ViewData["GoogleApiKey"];
+}
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <div class="text-center">
+        <h1 class="display-4">Let's start with selecting your city break period:</h1>
+    </div>
+    <br>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <!-- Container for inputs -->
+    <div class="input-container">
+        <div class="form-group">
+            <input type="text" id="dateRange" class="form-control" placeholder="Select your vacation dates" />
+        </div>
+        <div class="form-group">
+            <button id="submitButton" class="btn btn-primary" type="button">Submit</button>
+        </div>
+
+    </div>
+}
+else
+{
+    <div class="text-center">
+        <h1 class="display-4">Welcome to Travel Agenda</h1>
+        <p>Please login</p>
+    </div>
+}
+
+<script>
+    // Initialize Flatpickr
+    flatpickr("#dateRange", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        minDate: "today",
+    });
+
+    // Submit button click event
+    document.getElementById("submitButton").addEventListener("click", () => {
+        const dateRange = document.getElementById("dateRange").value.split(" to ");
+        const startDate = dateRange[0];
+        const endDate = dateRange[1];
+
+        if (startDate && endDate) {
+            fetch('/Home/SaveDates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ startDate, endDate })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/Home/Activities';
+                    } else {
+                        alert("Failed to save dates.");
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        } else {
+            alert("Please select both start and end dates.");
+        }
+    });
+</script>
+
+<!-- Add styles for centering -->
+<style>
+    .input-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Center horizontally */
+        justify-content: center; /* Center vertically */
+        margin-top: 20px;
+    }
+
+    .form-group {
+        margin: 10px 0;
+        width: 100%;
+        max-width: 400px; /* Limit the width of the input fields */
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+    }
+</style>

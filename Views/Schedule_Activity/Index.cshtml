@@ -1,0 +1,107 @@
+﻿@model IEnumerable<TravelAgenda.Models.Schedule_Activity>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Start_Hour)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.End_Hour)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Start_Minute)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.End_Minute)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Start_Date)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.End_Date)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Add_Info)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Place_Id)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Type)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Available)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Schedule)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Activity)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Start_Hour)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.End_Hour)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Start_Minute)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.End_Minute)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Start_Date)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.End_Date)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Add_Info)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Place_Id)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Type)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Available)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Schedule.Schedule_Id)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Activity.Activity_Id)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Schedule_Activity_Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Schedule_Activity_Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Schedule_Activity_Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

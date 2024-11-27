@@ -1,0 +1,2 @@
+Intrebari:
+Informatii despre activitate: gen ora de inceput si ora de final, mai bine trecute in Day_activity sau in Activity?
