@@ -56,19 +56,23 @@
                             // Display results
                             filteredResults.forEach(result => {
                                 const photoUrl = result.photos?.[0]?.getUrl({ maxWidth: 200, maxHeight: 200 }) || "https://via.placeholder.com/200?text=No+Image";
+                                const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${result.place_id}`; // Generate the Google Maps URL
                                 const item = document.createElement("div");
                                 item.classList.add("mb-3");
                                 item.innerHTML = `
-                                        <div style="display: flex; align-items: center;">
+                                    <div style="display: flex; align-items: center;">
+                                        <a href="${googleMapsUrl}" target="_blank" style="text-decoration: none;"> <!-- Make the image clickable -->
                                             <img src="${photoUrl}" alt="${result.name}" style="width: 100px; height: 100px; margin-right: 15px; border-radius: 8px;">
-                                            <div>
-                                                <strong>${result.name}</strong><br>
-                                                Rating: ${result.rating} (${result.user_ratings_total} reviews)
-                                            </div>
+                                        </a>
+                                        <div>
+                                            <strong>${result.name}</strong><br>
+                                            Rating: ${result.rating} (${result.user_ratings_total} reviews)
                                         </div>
-                                    `;
+                                    </div>
+                                `;
                                 section.appendChild(item);
                             });
+
 
                             resultsContainer.appendChild(section);
                         } else {
