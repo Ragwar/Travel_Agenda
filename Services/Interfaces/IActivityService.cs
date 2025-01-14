@@ -12,6 +12,6 @@ namespace TravelAgenda.Services.Interfaces
 
         Activity GetActivityById(int id);
 
-        List<Activity> GetCategories();
+        List<Activity> GetActivities();
     }
 }

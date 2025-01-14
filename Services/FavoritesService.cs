@@ -41,7 +41,7 @@ namespace TravelAgenda.Services
             return _repositoryWrapper.FavoritesRepository.FindAll().ToList();//nu e functia buna, trebuie facuta
         }
 
-        public List<Favorites> GetCategories()
+        public List<Favorites> GetFavorites()
         {
             return _repositoryWrapper.FavoritesRepository.FindAll().ToList();
         }

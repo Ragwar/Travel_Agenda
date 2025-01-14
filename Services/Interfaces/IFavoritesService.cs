@@ -12,6 +12,6 @@ namespace TravelAgenda.Services.Interfaces
 
         Favorites GetFavoritesById(int id);
 
-        List<Favorites> GetCategories();
+        List<Favorites> GetFavorites();
     }
 }

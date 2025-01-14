@@ -1,0 +1,66 @@
+﻿@{
+    ViewData["Title"] = "Activities & Locations";
+    var cityName = ViewData["CityName"];
+    var placeId = ViewData["PlaceId"];
+    var latitude = ViewData["Latitude"];
+    var longitude = ViewData["Longitude"];
+}
+
+<h1>Top Locations in @cityName</h1>
+<div id="locations" class="mt-4"></div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=@ViewData["GoogleApiKey"]&libraries=places,geometry"></script>
+<script>
+    const locationCoords = { lat: parseFloat('@latitude'), lng: parseFloat('@longitude') };
+
+    // Reuse fetchTopLocations function
+    fetchTopLocations(locationCoords);
+
+    function fetchTopLocations(location) {
+        const service = new google.maps.places.PlacesService(document.createElement("div"));
+        const types = ["restaurant", "hotel", "park", "museum", "shopping_mall"];
+        const resultsContainer = document.getElementById("locations");
+        resultsContainer.innerHTML = ""; // Clear previous results
+
+        types.forEach(type => {
+            const request = {
+                location: location,
+                radius: 10000, // 10 km radius
+                type: type,
+            };
+
+            service.nearbySearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK && results.length) {
+                    const filteredResults = results
+                        .filter(result => result.rating && result.user_ratings_total)
+                        .sort((a, b) => b.user_ratings_total - a.user_ratings_total || b.rating - a.rating)
+                        .slice(0, 10); // Limit to top 10
+
+                    const section = document.createElement("div");
+                    section.classList.add("mt-3");
+                    section.innerHTML = `<h3>Top ${type.charAt(0).toUpperCase() + type.slice(1)}s</h3>`;
+
+                    filteredResults.forEach(result => {
+                        const photoUrl = result.photos?.[0]?.getUrl({ maxWidth: 200, maxHeight: 200 }) || "https://via.placeholder.com/200?text=No+Image";
+                        const item = document.createElement("div");
+                        item.classList.add("mb-3");
+                        item.innerHTML = `
+                                <div style="display: flex; align-items: center;">
+                                    <img src="${photoUrl}" alt="${result.name}" style="width: 100px; height: 100px; margin-right: 15px; border-radius: 8px;">
+                                    <div>
+                                        <strong>${result.name}</strong><br>
+                                        Rating: ${result.rating} (${result.user_ratings_total} reviews)
+                                    </div>
+                                </div>
+                            `;
+                        section.appendChild(item);
+                    });
+
+                    resultsContainer.appendChild(section);
+                } else {
+                    console.warn(`No results found for type: ${type}`);
+                }
+            });
+        });
+    }
+</script>

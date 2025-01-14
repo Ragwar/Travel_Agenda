@@ -1,0 +1,22 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+}
+@if (SignInManager.IsSignedIn(User))
+{
+    <div class="text-center">
+        <h1 class="display-4">Welcome to Travel Agenda</h1>
+        <p>Lets help you schedule your next adventure!</p>
+        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index" asp-route-id="@currentUser.Id">Start Schedule</a>
+    </div>
+    
+}
+else
+{
+    <div class="text-center">
+        <h1 class="display-4">Welcome to Travel Agenda</h1>
+        <p>Please login</p>
+    </div>
+}

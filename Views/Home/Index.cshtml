@@ -1,6 +1,8 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
     var apiKey = ViewData["GoogleApiKey"];
+    var currentUser = await UserManager.GetUserAsync(User);
+    var Schedule = ViewBag.Schedule;
 }
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
@@ -8,7 +10,26 @@
 
 @if (SignInManager.IsSignedIn(User))
 {
+    @if (ViewBag.Schedules != null)
+    {
+        <div><h1>Here are your schedules:</h1></div>
+        @foreach (Schedule schedule in ViewBag.Schedules)
+        {
+            @if (currentUser.Id == schedule.User_Id)
+            {
+
+                <h3>City Name: @schedule.City_Name</h3>
+                <h3>Start Date: @schedule.Start_Date and end date: @schedule.End_Date</h3>
+                <h3>Number of days: @schedule.Nr_Days</h3>
+                <a asp-area="" asp-controller="Home" asp-action="Produs" asp-route-id="@schedule.Schedule_Id">Click here to view this schedule</a>
+            }
+
+        }
+        
+    }
+    
     <div class="text-center">
+        <h1 class="display-4">Want to create a new schedule?</h1>
         <h1 class="display-4">Let's start with selecting your city break period:</h1>
     </div>
     <br>
@@ -42,8 +63,6 @@ else
         dateFormat: "Y-m-d",
         minDate: "today",
     });
-
-    // Submit button click event
     document.getElementById("submitButton").addEventListener("click", () => {
         const dateRange = document.getElementById("dateRange").value.split(" to ");
         const startDate = dateRange[0];
@@ -55,9 +74,13 @@ else
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ startDate, endDate })
             })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.href = '/Home/Activities';
+                .then(response => response.json())
+                .then(data => {
+                    if (data.scheduleId) {
+                        const scheduleId = data.scheduleId;
+
+                        // Redirect to the City page with scheduleId as a query parameter
+                        window.location.href = `/Home/City?scheduleId=${scheduleId}`;
                     } else {
                         alert("Failed to save dates.");
                     }
@@ -67,9 +90,10 @@ else
             alert("Please select both start and end dates.");
         }
     });
+
+
 </script>
 
-<!-- Add styles for centering -->
 <style>
     .input-container {
         display: flex;

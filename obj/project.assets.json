@@ -8722,11 +8722,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "W:\\TravelAgenda\\TravelAgenda.csproj",
+      "projectUniqueName": "W:\\TravelAgenda\\Travel_Agenda\\TravelAgenda.csproj",
       "projectName": "TravelAgenda",
-      "projectPath": "W:\\TravelAgenda\\TravelAgenda.csproj",
+      "projectPath": "W:\\TravelAgenda\\Travel_Agenda\\TravelAgenda.csproj",
       "packagesPath": "C:\\Users\\Lisaru\\.nuget\\packages\\",
-      "outputPath": "W:\\TravelAgenda\\obj\\",
+      "outputPath": "W:\\TravelAgenda\\Travel_Agenda\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Lisaru\\AppData\\Roaming\\NuGet\\NuGet.Config",

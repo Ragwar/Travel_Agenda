@@ -13,6 +13,8 @@ namespace TravelAgenda.Services.Interfaces
 
         IdentityUser GetUserById(string id);
 
-        List<IdentityUser> GetCategories();
+        IdentityUser GetUserByName(string Name);
+
+        List<IdentityUser> GetUsers();
     }
 }

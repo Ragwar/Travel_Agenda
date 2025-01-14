@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using GoogleApi.Entities.Search.Video.Common;
+using Microsoft.AspNetCore.Identity;
 using TravelAgenda.Models;
 using TravelAgenda.Repositories.Interfaces;
 using TravelAgenda.Services.Interfaces;
@@ -37,12 +38,12 @@ namespace TravelAgenda.Services
             return _repositoryWrapper.UserRepository.FindByCondition(c => c.Id == id).FirstOrDefault()!;
         }
 
-        public List<IdentityUser> GetUserByName(string Name)
+        public IdentityUser GetUserByName(string Name)
         {
-            return _repositoryWrapper.UserRepository.FindAll().ToList();//nu e functia buna, trebuie facuta
+            return _repositoryWrapper.UserRepository.FindByCondition(c => c.UserName == Name).FirstOrDefault()!;
         }
 
-        public List<IdentityUser> GetCategories()
+        public List<IdentityUser> GetUsers()
         {
             return _repositoryWrapper.UserRepository.FindAll().ToList();
         }

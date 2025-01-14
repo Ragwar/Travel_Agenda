@@ -8,7 +8,7 @@ namespace TravelAgenda.Models
     {
         [Key]
         public int Schedule_Id { get; set; }
-
+       // public string ? Schedule_Name { get; set; }
         public int? Nr_Days { get; set; }
         public int? Start_Day { get; set; }
         public int? End_Day { get; set; }
@@ -17,6 +17,8 @@ namespace TravelAgenda.Models
         public DateTime? Start_Date { get; set; }
         public DateTime? End_Date { get; set; }
         public string? User_Id { get; set; }
+        public string? City_Name { get; set; }
+        public string? Place_Id { get; set; }
 
         [ForeignKey("User_Id")]
         public IdentityUser? User { get; set; }

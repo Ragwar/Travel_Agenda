@@ -12,6 +12,7 @@ namespace TravelAgenda.Services.Interfaces
 
         Schedule GetScheduleById(int id);
 
-        List<Schedule> GetCategories();
+        Schedule GetScheduleByUserId(string id);
+        List<Schedule> GetSchedules();
     }
 }

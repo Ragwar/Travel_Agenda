@@ -12,8 +12,8 @@ using TravelAgenda.Data;
 namespace TravelAgenda.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241120185154_first")]
-    partial class first
+    [Migration("20250107184909_EMI")]
+    partial class EMI
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -170,10 +170,12 @@ namespace TravelAgenda.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -210,10 +212,12 @@ namespace TravelAgenda.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -279,6 +283,9 @@ namespace TravelAgenda.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Schedule_Id"));
 
+                    b.Property<string>("City_Name")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("End_Date")
                         .HasColumnType("datetime2");
 
@@ -290,6 +297,9 @@ namespace TravelAgenda.Migrations
 
                     b.Property<int?>("Nr_Days")
                         .HasColumnType("int");
+
+                    b.Property<string>("Place_Id")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("Start_Date")
                         .HasColumnType("datetime2");

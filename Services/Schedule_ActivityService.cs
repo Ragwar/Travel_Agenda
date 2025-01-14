@@ -41,7 +41,7 @@ namespace TravelAgenda.Services
             return _repositoryWrapper.Schedule_ActivityRepository.FindAll().ToList();//nu e functia buna, trebuie facuta
         }
 
-        public List<Schedule_Activity> GetCategories()
+        public List<Schedule_Activity> GetSchedule_Activities()
         {
             return _repositoryWrapper.Schedule_ActivityRepository.FindAll().ToList();
         }

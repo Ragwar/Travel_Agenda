@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Mb2+O5NCVzGqp7CAuY5N0LeEJ9N7DgP4cJrSJAW8YOoVjinVDZnUBnNokfTvbo177jGAKpvWLLRaRlJmhjvsDw==",
+  "dgSpecHash": "CEleaKeE/Y4F06p6aSFARxjn2GSiNTYbBojAwLBumseoZJ7Ewsh+/rgfb9fd34ZCndMz1ilcygWB2ia6QzeDEA==",
   "success": true,
-  "projectFilePath": "W:\\TravelAgenda\\TravelAgenda.csproj",
+  "projectFilePath": "W:\\TravelAgenda\\Travel_Agenda\\TravelAgenda.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Lisaru\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
