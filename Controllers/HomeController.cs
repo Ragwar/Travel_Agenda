@@ -42,20 +42,17 @@ namespace TravelAgenda.Controllers
             return View();
         }
 
-        public IActionResult ActivitiesAndLocations(string cityName, string placeId, double lat, double lng, int scheduleId)
+        public IActionResult LocationsAndActivities(int id)
         {
-            ViewData["CityName"] = cityName;
-            ViewData["PlaceId"] = placeId;
-            ViewData["Latitude"] = lat;
-            ViewData["Longitude"] = lng;
-            ViewData["ScheduleId"] = scheduleId;
-
-            // Optionally, you can fetch related data using scheduleId or placeId here.
+            Schedule schedule = _scheduleService.GetScheduleById(id);
+            ViewData["Schedule"] = _scheduleService.GetScheduleById(id);
+            ViewData["CityName"] = schedule.City_Name;
+            ViewData["PlaceId"] = schedule.Place_Id;
+            
+            ViewData["GoogleApiKey"] = _googleApiKey; // Add your API key here
 
             return View();
         }
-
-
 
         [HttpPost]
         public async Task<IActionResult> SaveDates([FromBody] DateRangeViewModel dateRange)

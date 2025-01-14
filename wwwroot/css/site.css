@@ -119,8 +119,8 @@ h1, h2 {
 
 /* Location Cards */
 #locations {
-    display: flex;
-    flex-wrap: wrap;
+    /*display: flex;
+    flex-wrap: wrap;*/
     gap: 20px;
     justify-content: center;
 }
@@ -160,7 +160,7 @@ h1, h2 {
         }
 
 /* Search Box */
-#searchBox {
+    #searchBox {
     border: 2px solid #007bff;
     border-radius: 5px;
     padding: 10px;

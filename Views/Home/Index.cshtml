@@ -4,29 +4,14 @@
     var currentUser = await UserManager.GetUserAsync(User);
     var Schedule = ViewBag.Schedule;
 }
+
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
 @if (SignInManager.IsSignedIn(User))
 {
-    @if (ViewBag.Schedules != null)
-    {
-        <div><h1>Here are your schedules:</h1></div>
-        @foreach (Schedule schedule in ViewBag.Schedules)
-        {
-            @if (currentUser.Id == schedule.User_Id)
-            {
 
-                <h3>City Name: @schedule.City_Name</h3>
-                <h3>Start Date: @schedule.Start_Date and end date: @schedule.End_Date</h3>
-                <h3>Number of days: @schedule.Nr_Days</h3>
-                <a asp-area="" asp-controller="Home" asp-action="Produs" asp-route-id="@schedule.Schedule_Id">Click here to view this schedule</a>
-            }
-
-        }
-        
-    }
     
     <div class="text-center">
         <h1 class="display-4">Want to create a new schedule?</h1>
@@ -47,6 +32,23 @@
         </div>
 
     </div>
+
+    @if (ViewBag.Schedules != null)
+    {
+        @foreach (Schedule schedule in ViewBag.Schedules)
+        {
+            @if (currentUser.Id == schedule.User_Id)
+            {
+                <br>
+                <p>City Name: @schedule.City_Name</p>
+                <p>Start Date: @schedule.Start_Date and end date: @schedule.End_Date</p>
+                <p>Number of days: @schedule.Nr_Days</p>
+                <a asp-area="" asp-controller="Home" asp-action="LocationsAndActivities" asp-route-id="@schedule.Schedule_Id">Click here to view this schedule</a>
+                <br>
+            }
+
+        }
+    }
 }
 else
 {

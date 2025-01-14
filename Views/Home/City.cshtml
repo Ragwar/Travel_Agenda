@@ -140,12 +140,16 @@
             .then(response => {
                 if (response.ok) {
                     alert("City saved successfully!");
-                    location.reload(); // Optionally reload or navigate to another page
+
+                    // Redirect to the And view with ScheduleId and PlaceId
+                    const redirectUrl = `/Home/LocationsAndActivities?id=${scheduleId}`;
+                    window.location.href = redirectUrl;
                 } else {
                     alert("Failed to save city.");
                 }
             })
             .catch(error => console.error('Error:', error));
+
     });
 
     // Initialize Autocomplete on Page Load

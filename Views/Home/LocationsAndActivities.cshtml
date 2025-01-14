@@ -2,65 +2,86 @@
     ViewData["Title"] = "Activities & Locations";
     var cityName = ViewData["CityName"];
     var placeId = ViewData["PlaceId"];
-    var latitude = ViewData["Latitude"];
-    var longitude = ViewData["Longitude"];
+    var schedule = ViewData["Schedule"];
+    var apiKey = ViewData["GoogleApiKey"];
 }
 
 <h1>Top Locations in @cityName</h1>
 <div id="locations" class="mt-4"></div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=@ViewData["GoogleApiKey"]&libraries=places,geometry"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places,geometry"></script>
 <script>
-    const locationCoords = { lat: parseFloat('@latitude'), lng: parseFloat('@longitude') };
+    const placeId = '@placeId'; // Get the placeId for the city
 
-    // Reuse fetchTopLocations function
-    fetchTopLocations(locationCoords);
-
-    function fetchTopLocations(location) {
+    // Initialize Google Places Service
+    function fetchTopLocations() {
         const service = new google.maps.places.PlacesService(document.createElement("div"));
         const types = ["restaurant", "hotel", "park", "museum", "shopping_mall"];
         const resultsContainer = document.getElementById("locations");
         resultsContainer.innerHTML = ""; // Clear previous results
 
-        types.forEach(type => {
-            const request = {
-                location: location,
-                radius: 10000, // 10 km radius
-                type: type,
-            };
+        // Fetch the place details using placeId
+        const request = {
+            placeId: placeId
+        };
 
-            service.nearbySearch(request, (results, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK && results.length) {
-                    const filteredResults = results
-                        .filter(result => result.rating && result.user_ratings_total)
-                        .sort((a, b) => b.user_ratings_total - a.user_ratings_total || b.rating - a.rating)
-                        .slice(0, 10); // Limit to top 10
+        // Use Google Places API to get the place details
+        service.getDetails(request, (place, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                const location = place.geometry.location; // Get the latitude and longitude from the place object
 
-                    const section = document.createElement("div");
-                    section.classList.add("mt-3");
-                    section.innerHTML = `<h3>Top ${type.charAt(0).toUpperCase() + type.slice(1)}s</h3>`;
+                // Calculate radius for search (10 km)
+                const radius = 10000;
 
-                    filteredResults.forEach(result => {
-                        const photoUrl = result.photos?.[0]?.getUrl({ maxWidth: 200, maxHeight: 200 }) || "https://via.placeholder.com/200?text=No+Image";
-                        const item = document.createElement("div");
-                        item.classList.add("mb-3");
-                        item.innerHTML = `
-                                <div style="display: flex; align-items: center;">
-                                    <img src="${photoUrl}" alt="${result.name}" style="width: 100px; height: 100px; margin-right: 15px; border-radius: 8px;">
-                                    <div>
-                                        <strong>${result.name}</strong><br>
-                                        Rating: ${result.rating} (${result.user_ratings_total} reviews)
-                                    </div>
-                                </div>
-                            `;
-                        section.appendChild(item);
+                // Fetch Top Locations for Each Type
+                types.forEach(type => {
+                    const nearbyRequest = {
+                        location: location,
+                        radius: radius,
+                        type: type,
+                    };
+
+                    service.nearbySearch(nearbyRequest, (results, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK && results.length) {
+                            // Filter out places with less than 300 reviews
+                            const filteredResults = results
+                                .filter(result => result.rating && result.user_ratings_total >= 300) // Ensure rating and reviews are 300 or more
+                                .sort((a, b) => b.user_ratings_total - a.user_ratings_total || b.rating - a.rating)
+                                .slice(0, 10); // Limit to top 10 results
+
+                            const section = document.createElement("div");
+                            section.classList.add("mt-3");
+                            section.innerHTML = `<h3>Top ${type.charAt(0).toUpperCase() + type.slice(1)}s</h3>`;
+
+                            // Display results
+                            filteredResults.forEach(result => {
+                                const photoUrl = result.photos?.[0]?.getUrl({ maxWidth: 200, maxHeight: 200 }) || "https://via.placeholder.com/200?text=No+Image";
+                                const item = document.createElement("div");
+                                item.classList.add("mb-3");
+                                item.innerHTML = `
+                                        <div style="display: flex; align-items: center;">
+                                            <img src="${photoUrl}" alt="${result.name}" style="width: 100px; height: 100px; margin-right: 15px; border-radius: 8px;">
+                                            <div>
+                                                <strong>${result.name}</strong><br>
+                                                Rating: ${result.rating} (${result.user_ratings_total} reviews)
+                                            </div>
+                                        </div>
+                                    `;
+                                section.appendChild(item);
+                            });
+
+                            resultsContainer.appendChild(section);
+                        } else {
+                            console.warn(`No results found for type: ${type}`);
+                        }
                     });
-
-                    resultsContainer.appendChild(section);
-                } else {
-                    console.warn(`No results found for type: ${type}`);
-                }
-            });
+                });
+            } else {
+                console.error('Error fetching place details:', status);
+            }
         });
     }
+
+    // Call the function to fetch locations when the page loads
+    fetchTopLocations();
 </script>
