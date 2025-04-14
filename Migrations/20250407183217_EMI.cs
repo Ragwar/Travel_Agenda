@@ -260,7 +260,7 @@ namespace TravelAgenda.Migrations
                     Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Available = table.Column<bool>(type: "bit", nullable: true),
                     Schedule_Id = table.Column<int>(type: "int", nullable: false),
-                    Activity_Id = table.Column<int>(type: "int", nullable: false)
+                    Activity_Id = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -269,8 +269,7 @@ namespace TravelAgenda.Migrations
                         name: "FK_Day_Activities_Activities_Activity_Id",
                         column: x => x.Activity_Id,
                         principalTable: "Activities",
-                        principalColumn: "Activity_Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Activity_Id");
                     table.ForeignKey(
                         name: "FK_Day_Activities_Schedules_Schedule_Id",
                         column: x => x.Schedule_Id,

@@ -13,5 +13,6 @@ namespace TravelAgenda.Services.Interfaces
         Schedule_Activity GetSchedule_ActivityById(int id);
 
         List<Schedule_Activity> GetSchedule_Activities();
+        List<Schedule_Activity> GetSchedule_ActivityByScheduleId(int id);
     }
 }

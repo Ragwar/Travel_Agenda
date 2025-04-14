@@ -48,9 +48,7 @@
             <th>
                 @Html.DisplayNameFor(model => model.Schedule)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Activity)
-            </th>
+
             <th></th>
         </tr>
     </thead>
@@ -92,9 +90,6 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Schedule.Schedule_Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Activity.Activity_Id)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Schedule_Activity_Id">Edit</a> |

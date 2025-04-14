@@ -23,10 +23,5 @@ namespace TravelAgenda.Models
         [ForeignKey("Schedule")]
         public int Schedule_Id { get; set; }
         public Schedule Schedule { get; set; } // Navigation property
-
-        // Foreign key to the Activity table
-        [ForeignKey("Activity")]
-        public int Activity_Id { get; set; }
-        public Activity Activity { get; set; } // Navigation property
     }
 }

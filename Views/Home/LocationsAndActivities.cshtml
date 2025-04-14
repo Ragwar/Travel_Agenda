@@ -1,91 +1,786 @@
-﻿@{
+﻿<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Activities & Locations</title>
+<style>
+    /* Calendar container & grid */
+    #calendar {
+        border: 1px solid #ccc;
+        width: 300px;
+    }
+
+    #calendarHeader {
+        text-align: center;
+        background: #f2f2f2;
+        padding: 10px;
+        font-weight: bold;
+    }
+    /* The scrollable container showing 8 slots at a time */
+    #hourSlotsScroll {
+        position: relative;
+        height: 480px; /* 8 * 60px */
+        overflow-y: auto;
+        border-top: 1px solid #ccc;
+    }
+    /* The full grid with all day slots */
+    #hourSlotsContainer {
+        position: relative;
+    }
+
+    .hour-slot {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 60px;
+        border-bottom: 1px solid #eee;
+        box-sizing: border-box;
+        padding-left: 40px;
+        cursor: pointer;
+    }
+
+        .hour-slot.selected {
+            background-color: #d0eaff;
+        }
+
+        .hour-slot.drag-over {
+            background-color: rgba(0,123,255,0.3);
+        }
+
+    .hour-label {
+        position: absolute;
+        left: 5px;
+        top: 0;
+        font-size: 12px;
+        font-weight: bold;
+        color: #555;
+    }
+    /* Event styling */
+    .event {
+        position: absolute;
+        left: 70px;
+        right: 5px;
+        background-color: #007bff;
+        color: #fff;
+        border-radius: 3px;
+        cursor: move;
+        overflow: hidden;
+    }
+
+        .event .content {
+            padding: 2px 20px 2px 5px;
+            font-size: 12px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .event .handle {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: darkblue;
+            cursor: ns-resize;
+        }
+
+            .event .handle.top {
+                top: 0;
+            }
+
+            .event .handle.bottom {
+                bottom: 0;
+            }
+
+        .event .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: red;
+            border: none;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    /* Locations & Tabs */
+    .nav-tabs {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        border-bottom: 1px solid #ccc;
+    }
+
+        .nav-tabs li {
+            margin-right: 5px;
+        }
+
+        .nav-tabs a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            border: 1px solid transparent;
+            border-radius: 4px 4px 0 0;
+            background: #eee;
+            color: #333;
+            cursor: pointer;
+        }
+
+            .nav-tabs a.active {
+                background: #fff;
+                border-color: #ccc;
+                border-bottom-color: transparent;
+                font-weight: bold;
+            }
+
+    .tab-content > div {
+        display: none;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-top: none;
+    }
+
+        .tab-content > div.active {
+            display: block;
+        }
+    /* Filters and Location List */
+    #filtersSection {
+        margin-bottom: 20px;
+    }
+
+    .location-item {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+        .location-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-right: 10px;
+            cursor: grab;
+        }
+
+    .add-btn {
+        margin-left: auto;
+        padding: 5px 10px;
+        font-size: 14px;
+    }
+</style>
+
+@{
+    // Razor Variables
     ViewData["Title"] = "Activities & Locations";
-    var cityName = ViewData["CityName"];
-    var placeId = ViewData["PlaceId"];
-    var schedule = ViewData["Schedule"];
-    var apiKey = ViewData["GoogleApiKey"];
+    var schedule = ViewBag.Schedule; // Contains Start_Date and End_Date
+    var cityName = ViewBag.CityName;
+    var placeId = ViewBag.PlaceId;
+    var apiKey = ViewBag.GoogleApiKey;
 }
 
 <h1>Top Locations in @cityName</h1>
-<div id="locations" class="mt-4"></div>
+<!-- Button to Show/Hide Filters -->
+<button id="toggleFiltersBtn" class="btn btn-primary mb-3">Show Filters</button>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places,geometry"></script>
+<!-- Main container: Left for locations/tabs, right for calendar -->
+<div style="display: flex; justify-content: space-between; margin-top: 20px;">
+    <!-- Locations & Tabs -->
+    <div style="width: 60%; padding-right: 20px;">
+        <!-- Filters Section -->
+        <div id="filtersSection" style="display: none;">
+            <div class="mb-3">
+                <label for="budgetFilter">Filter by Budget:</label>
+                <select id="budgetFilter" class="form-select">
+                    <option value="all">All</option>
+                    <option value="free">No cost</option>
+                    <option value="low">Low</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="ratingFilter">Minimum Rating:</label>
+                <input type="number" id="ratingFilter" class="form-control" min="1" max="5" step="0.1" value="1">
+            </div>
+            <div class="mb-3">
+                <label for="reviewsFilter">Minimum Reviews:</label>
+                <input type="number" id="reviewsFilter" class="form-control" min="0" value="0">
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <ul class="nav-tabs" id="locationTabs"></ul>
+        <!-- Tab Content -->
+        <div class="tab-content" id="locationTabContent"></div>
+    </div>
+
+    <!-- Calendar Container -->
+    <div style="width: 35%;">
+        <div id="calendar">
+            <div id="calendarHeaderContainer" style="display:flex; align-items:center; justify-content:center;">
+                <button id="prevDayBtn" style="margin-right:10px;">&#9664;</button>
+                <div id="calendarHeader"></div>
+                <button id="nextDayBtn" style="margin-left:10px;">&#9654;</button>
+            </div>
+            <div id="hourSlotsScroll">
+                <div id="hourSlotsContainer"></div>
+            </div>
+        </div>
+        <button id="saveDayConfigBtn" style="margin-top: 10px;">Save Day Configuration</button>
+    </div>
+</div>
+
 <script>
-    const placeId = '@placeId'; // Get the placeId for the city
+    // Serialize saved activities from the ViewBag.
+    // Note: property names here should match your model: Start_Date, Start_Hour, Start_Minute, End_Hour, End_Minute, Name, Place_Id, Type, etc.
+    const savedActivities = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Locations ?? new List<object>()));
+</script>
 
-    // Initialize Google Places Service
+<!-- Load Google Maps Places library -->
+<script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places,geometry" async defer></script>
+
+<script>
+    // ======================================================
+    // CALENDAR CONFIGURATION & EVENT RENDERING (Custom Code)
+    // ======================================================
+    const slotHeight = 60; // each hour slot is 60px tall
+    const fullStartHour = 1;
+    const fullEndHour = 25; // hours 1 to 24 (endHour is non-inclusive)
+    const visibleSlots = 8;
+    const defaultScrollStart = 8; // 8AM is default top visible hour
+
+    const calendarHeaderEl = document.getElementById("calendarHeader");
+    const scheduleDate = "@(ViewBag.Schedule?.Start_Date?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))";
+    calendarHeaderEl.textContent = "Schedule for " + scheduleDate;
+    const calendarEl = document.getElementById("hourSlotsContainer");
+    const hourSlotsContainer = document.getElementById("hourSlotsContainer");
+    hourSlotsContainer.style.height = ((fullEndHour - fullStartHour) * slotHeight) + "px";
+
+    const hourSlotsScroll = document.getElementById("hourSlotsScroll");
+    hourSlotsScroll.style.height = (visibleSlots * slotHeight) + "px";
+    setTimeout(() => {
+        hourSlotsScroll.scrollTop = ((defaultScrollStart - fullStartHour) * slotHeight);
+    }, 0);
+
+    let selectedSlot = null;
+    // Set current date from the schedule start date.
+    let currentDate = new Date(scheduleDate);
+    // End date from your schedule (should be set in ViewBag.Schedule)
+    const scheduleEndDate = new Date("@(ViewBag.Schedule?.End_Date?.ToString("yyyy-MM-dd"))");
+
+    // Render full day slots (from 1AM to 24PM)
+    for (let h = fullStartHour; h < fullEndHour; h++) {
+        const slot = document.createElement("div");
+        slot.className = "hour-slot";
+        slot.dataset.hour = h;
+        slot.style.top = ((h - fullStartHour) * slotHeight) + "px";
+        slot.style.height = slotHeight + "px";
+
+        const label = document.createElement("div");
+        label.className = "hour-label";
+        let displayHour = (h % 12 === 0 ? 12 : h % 12);
+        label.textContent = displayHour + (h < 12 ? "AM" : "PM");
+        slot.appendChild(label);
+
+        slot.addEventListener("click", function () {
+            document.querySelectorAll(".hour-slot").forEach(s => s.classList.remove("selected"));
+            slot.classList.add("selected");
+            selectedSlot = slot;
+        });
+        slot.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            slot.classList.add("drag-over");
+        });
+        slot.addEventListener("dragleave", function () {
+            slot.classList.remove("drag-over");
+        });
+        slot.addEventListener("drop", function (e) {
+            e.preventDefault();
+            slot.classList.remove("drag-over");
+            if (window.draggedEvent) {
+                let calendarEvent = window.draggedEventObj;
+                let newStart = parseInt(slot.dataset.hour);
+                if (isRangeFree(newStart, calendarEvent.duration, calendarEvent)) {
+                    calendarEvent.start = newStart;
+                    renderEvents();
+                } else {
+                    alert("Target time is not free.");
+                }
+                window.draggedEvent = null;
+                window.draggedEventObj = null;
+            } else {
+                // External drop: extract location data from dataTransfer
+                const data = JSON.parse(e.dataTransfer.getData("application/json") || "{}");
+                const locationName = data.name || e.dataTransfer.getData("text/plain");
+                const locationId = data.placeId || "";
+                const type = window.draggedType || "restaurant";
+                addEvent(locationName, type, parseInt(slot.dataset.hour), locationId);
+            }
+        });
+        hourSlotsContainer.appendChild(slot);
+    }
+
+    // Global events array.
+    const events = [];
+    const defaultDurations = {
+        restaurant: 2,
+        hotel: 1,
+        park: 3,
+        shopping_mall: 2,
+        museum: 3
+    };
+
+    // Utility: Check if a time range is free (no overlapping event)
+    function isRangeFree(start, duration, ignoreEvent) {
+        const desiredEnd = start + duration;
+        for (let calendarEvent of events) {
+            if (calendarEvent === ignoreEvent) continue;
+            const evEnd = calendarEvent.start + calendarEvent.duration;
+            if (calendarEvent.start < desiredEnd && evEnd > start) return false;
+        }
+        return true;
+    }
+
+    function renderEvents() {
+        document.querySelectorAll(".event").forEach(el => el.remove());
+        for (let calendarEvent of events) {
+            const evEl = document.createElement("div");
+            evEl.className = "event";
+            evEl.style.top = ((calendarEvent.start - fullStartHour) * slotHeight) + "px";
+            evEl.style.height = (calendarEvent.duration * slotHeight - 2) + "px";
+
+            const content = document.createElement("div");
+            content.className = "content";
+            content.textContent = calendarEvent.name;
+            evEl.appendChild(content);
+
+            const removeBtn = document.createElement("button");
+            removeBtn.className = "remove-btn";
+            removeBtn.textContent = "X";
+            removeBtn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                const idx = events.indexOf(calendarEvent);
+                if (idx > -1) events.splice(idx, 1);
+                renderEvents();
+            });
+            evEl.appendChild(removeBtn);
+
+            const topHandle = document.createElement("div");
+            topHandle.classList.add("handle", "top");
+            evEl.appendChild(topHandle);
+
+            const bottomHandle = document.createElement("div");
+            bottomHandle.classList.add("handle", "bottom");
+            evEl.appendChild(bottomHandle);
+
+            evEl.draggable = true;
+            evEl.addEventListener("dragstart", function (e) {
+                window.draggedEvent = evEl;
+                window.draggedEventObj = calendarEvent;
+                e.dataTransfer.setData("application/json", JSON.stringify({ name: calendarEvent.name, placeId: calendarEvent.placeId }));
+            });
+            evEl.addEventListener("dragend", function () {
+                window.draggedEvent = null;
+                window.draggedEventObj = null;
+            });
+            calendarEl.appendChild(evEl);
+            calendarEvent.element = evEl;
+            attachResizeHandles(calendarEvent);
+        }
+    }
+
+    // Add new event (either via drop or "Add to Schedule" button)
+    function addEvent(locationName, type, targetHour, locationId = "") {
+        let duration = defaultDurations[type] || 1;
+        while (!isRangeFree(targetHour, duration) && targetHour + duration <= fullEndHour) {
+            targetHour++;
+        }
+        if (targetHour + duration > fullEndHour) {
+            alert("No available slot for " + locationName);
+            return;
+        }
+        const calendarEvent = { name: locationName, type: type, start: targetHour, duration: duration, placeId: locationId };
+        events.push(calendarEvent);
+        renderEvents();
+    }
+
+    function attachResizeHandles(calendarEvent) {
+        const evEl = calendarEvent.element;
+        const topHandle = evEl.querySelector(".handle.top");
+        const bottomHandle = evEl.querySelector(".handle.bottom");
+
+        let startY, startDuration, startHourVal;
+
+        topHandle.addEventListener("mousedown", function (e) {
+            e.stopPropagation();
+            startY = e.clientY;
+            startDuration = calendarEvent.duration;
+            startHourVal = calendarEvent.start;
+            document.addEventListener("mousemove", onTopResize);
+            document.addEventListener("mouseup", stopResize);
+        });
+
+        bottomHandle.addEventListener("mousedown", function (e) {
+            e.stopPropagation();
+            startY = e.clientY;
+            startDuration = calendarEvent.duration;
+            document.addEventListener("mousemove", onBottomResize);
+            document.addEventListener("mouseup", stopResize);
+        });
+
+        function onTopResize(e) {
+            const diff = e.clientY - startY;
+            const diffHours = diff / slotHeight;
+            let newStart = startHourVal + diffHours;
+            newStart = Math.round(newStart * 2) / 2;
+            let newDuration = startDuration - (newStart - startHourVal);
+
+            if (newStart < fullStartHour || newDuration < 0.5 || !isRangeFree(newStart, newDuration, calendarEvent)) return;
+            calendarEvent.start = newStart;
+            calendarEvent.duration = newDuration;
+            renderEvents();
+        }
+
+        function onBottomResize(e) {
+            const diff = e.clientY - startY;
+            const diffHours = diff / slotHeight;
+            let newDuration = startDuration + diffHours;
+            newDuration = Math.round(newDuration * 2) / 2;
+
+            if (
+                calendarEvent.start + newDuration > fullEndHour ||
+                newDuration < 0.5 ||
+                !isRangeFree(calendarEvent.start, newDuration, calendarEvent)
+            ) return;
+
+            calendarEvent.duration = newDuration;
+            renderEvents();
+        }
+
+        function stopResize() {
+            document.removeEventListener("mousemove", onTopResize);
+            document.removeEventListener("mousemove", onBottomResize);
+            document.removeEventListener("mouseup", stopResize);
+        }
+    }
+
+    function parseDateAsLocal(dateStr) {
+        // Ensure only the date portion is used (first 10 characters).
+        let dStr = dateStr.substring(0, 10);
+        const [yyyy, mm, dd] = dStr.split('-');
+        return new Date(+yyyy, +mm - 1, +dd, 0, 0, 0);
+    }
+
+    // Helper: Format a Date object to "YYYY-MM-DD" using local date parts.
+    function getLocalDateStr(date) {
+        const yyyy = date.getFullYear();
+        const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+        const dd = date.getDate().toString().padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+
+    function updateCalendarForCurrentDate() {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        calendarHeaderEl.textContent = "Schedule for " + currentDate.toLocaleDateString(undefined, options);
+
+        events.length = 0;
+
+        // Get the current date as a local date string.
+        const currentDateStr = getLocalDateStr(currentDate);
+        console.log("Current date for rendering:", currentDateStr);
+
+        // Loop through each saved activity.
+        savedActivities.forEach(activity => {
+            // Parse the activity's Start_Date as a local date and format it.
+            let activityDateStr = getLocalDateStr(parseDateAsLocal(activity.Start_Date));
+            console.log("Checking activity:", activity.Name, "with date", activityDateStr);
+
+            if (activityDateStr === currentDateStr) {
+                const startHour = activity.Start_Hour + ((activity.Start_Minute || 0) / 60);
+                const endHour = activity.End_Hour + ((activity.End_Minute || 0) / 60);
+                const duration = endHour - startHour;
+                events.push({
+                    name: activity.Name,
+                    type: activity.Type,
+                    start: startHour,
+                    duration: duration,
+                    placeId: activity.Place_Id
+                });
+            }
+        });
+        renderEvents();
+    }
+
+    // ===================================================
+    // GOOGLE PLACES & LOCATIONS TABS
+    // ===================================================
+    const locationsTypes = ["restaurant", "hotel", "park", "museum", "shopping_mall"];
+    const locationsTypeNames = {
+        restaurant: "Restaurants",
+        hotel: "Hotels",
+        park: "Parks",
+        museum: "Museums",
+        shopping_mall: "Shopping Malls"
+    };
+    window.draggedType = "";
+
+    document.getElementById("toggleFiltersBtn").addEventListener("click", function () {
+        const filtersSection = document.getElementById("filtersSection");
+        if (filtersSection.style.display === "none") {
+            filtersSection.style.display = "block";
+            this.textContent = "Hide Filters";
+        } else {
+            filtersSection.style.display = "none";
+            this.textContent = "Show Filters";
+        }
+    });
+
     function fetchTopLocations() {
+        // Clear out tabs and content each time we re-fetch.
+        const tabsContainer = document.getElementById("locationTabs");
+        const contentContainer = document.getElementById("locationTabContent");
+        tabsContainer.innerHTML = "";
+        contentContainer.innerHTML = "";
+
+        const selectedBudget = document.getElementById("budgetFilter").value;
+        const minRating = parseFloat(document.getElementById("ratingFilter").value) || 1;
+        const minReviews = parseInt(document.getElementById("reviewsFilter").value) || 0;
+
         const service = new google.maps.places.PlacesService(document.createElement("div"));
-        const types = ["restaurant", "hotel", "park", "museum", "shopping_mall"];
-        const resultsContainer = document.getElementById("locations");
-        resultsContainer.innerHTML = ""; // Clear previous results
-
-        // Fetch the place details using placeId
-        const request = {
-            placeId: placeId
-        };
-
-        // Use Google Places API to get the place details
-        service.getDetails(request, (place, status) => {
+        service.getDetails({ placeId: "@placeId" }, (place, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
-                const location = place.geometry.location; // Get the latitude and longitude from the place object
-
-                // Calculate radius for search (10 km)
+                const location = place.geometry.location;
                 const radius = 10000;
 
-                // Fetch Top Locations for Each Type
-                types.forEach(type => {
-                    const nearbyRequest = {
-                        location: location,
-                        radius: radius,
-                        type: type,
-                    };
+                // Create tabs for each type exactly once
+                locationsTypes.forEach(type => {
+                    const tabLink = document.createElement("a");
+                    tabLink.textContent = locationsTypeNames[type];
+                    tabLink.dataset.type = type;
+                    tabLink.classList.add("nav-link");
+                    if (tabsContainer.children.length === 0) {
+                        // Make the first tab active by default
+                        tabLink.classList.add("active");
+                    }
+                    tabLink.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        document.querySelectorAll("#locationTabs .nav-link").forEach(link => link.classList.remove("active"));
+                        this.classList.add("active");
+                        document.querySelectorAll("#locationTabContent > div").forEach(div => div.classList.remove("active"));
+                        document.getElementById(type).classList.add("active");
+                    });
 
-                    service.nearbySearch(nearbyRequest, (results, status) => {
+                    const li = document.createElement("li");
+                    li.appendChild(tabLink);
+                    tabsContainer.appendChild(li);
+
+                    // Create a container <div> for the tab’s content
+                    const tabPane = document.createElement("div");
+                    tabPane.id = type;
+                    tabPane.classList.add("active");
+                    if (tabsContainer.children.length > 1) {
+                        // Only the first tab is active, turn off for subsequent tabs
+                        tabPane.classList.remove("active");
+                    }
+                    contentContainer.appendChild(tabPane);
+
+                    // Run nearbySearch for the given type
+                    service.nearbySearch({ location: location, radius: radius, type: type }, (results, status) => {
                         if (status === google.maps.places.PlacesServiceStatus.OK && results.length) {
-                            // Filter out places with less than 300 reviews
                             const filteredResults = results
-                                .filter(result => result.rating && result.user_ratings_total >= 300) // Ensure rating and reviews are 300 or more
-                                .sort((a, b) => b.user_ratings_total - a.user_ratings_total || b.rating - a.rating)
-                                .slice(0, 10); // Limit to top 10 results
+                                .filter(r => r.rating >= minRating && r.user_ratings_total >= minReviews)
+                                .filter(r => {
+                                    if (selectedBudget === "all") return true;
+                                    const priceLevel = r.price_level;
+                                    return (
+                                        (selectedBudget === "low" && priceLevel === 1) ||
+                                        (selectedBudget === "free" && priceLevel === 0) ||
+                                        (selectedBudget === "moderate" && priceLevel === 2) ||
+                                        (selectedBudget === "high" && priceLevel >= 3) ||
+                                        priceLevel === undefined
+                                    );
+                                })
+                                .filter(r => {
+                                    // Additional filtering: e.g. if type=restaurant, exclude lodging
+                                    if (type === "restaurant") {
+                                        return !r.types.includes("lodging");
+                                    }
+                                    return true;
+                                })
+                                .sort((a, b) => b.user_ratings_total - a.user_ratings_total)
+                                .slice(0, 10);
 
-                            const section = document.createElement("div");
-                            section.classList.add("mt-3");
-                            section.innerHTML = `<h3>Top ${type.charAt(0).toUpperCase() + type.slice(1)}s</h3>`;
-
-                            // Display results
                             filteredResults.forEach(result => {
-                                const photoUrl = result.photos?.[0]?.getUrl({ maxWidth: 200, maxHeight: 200 }) || "https://via.placeholder.com/200?text=No+Image";
-                                const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${result.place_id}`; // Generate the Google Maps URL
+                                const photoUrl = (result.photos && result.photos[0])
+                                    ? result.photos[0].getUrl({ maxWidth: 200, maxHeight: 200 })
+                                    : "https://via.placeholder.com/200?text=No+Image";
+
+                                const reviewsHtml = result.reviews
+                                    ? result.reviews.map(review => `
+                                            <div>
+                                                <strong>${review.author_name}</strong>: ${review.text}<br>
+                                                Rating: ${review.rating}
+                                                <small>(${new Date(review.time * 1000).toLocaleDateString()})</small>
+                                            </div>
+                                          `).join("")
+                                    : "No reviews available.";
+
                                 const item = document.createElement("div");
-                                item.classList.add("mb-3");
+                                item.classList.add("mb-3", "activity-item");
+                                item.setAttribute("draggable", "true");
+                                item.ondragstart = function (e) {
+                                    e.dataTransfer.setData("application/json", JSON.stringify({ name: result.name, placeId: result.place_id }));
+                                    window.draggedType = type;
+                                };
+
                                 item.innerHTML = `
-                                    <div style="display: flex; align-items: center;">
-                                        <a href="${googleMapsUrl}" target="_blank" style="text-decoration: none;"> <!-- Make the image clickable -->
-                                            <img src="${photoUrl}" alt="${result.name}" style="width: 100px; height: 100px; margin-right: 15px; border-radius: 8px;">
-                                        </a>
-                                        <div>
+                                        <div
+                                          style="display: flex; align-items: center; cursor: pointer;"
+                                          onclick="toggleDetails(this)"
+                                        >
+                                          <img
+                                            src="${photoUrl}"
+                                            alt="${result.name}"
+                                            style="width: 100px; height: 100px; margin-right: 15px; border-radius: 8px;"
+                                          >
+                                          <div>
                                             <strong>${result.name}</strong><br>
-                                            Rating: ${result.rating} (${result.user_ratings_total} reviews)
+                                            Rating: ${result.rating} (${result.user_ratings_total} reviews)<br>
+                                            Price Level: ${result.price_level !== undefined ? "$".repeat(result.price_level) : "N/A"}
+                                          </div>
                                         </div>
-                                    </div>
-                                `;
-                                section.appendChild(item);
+                                        <div
+                                          class="activity-details"
+                                          style="display: none; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;"
+                                        >
+                                          <p><strong>Address:</strong> ${result.vicinity || "N/A"}</p>
+                                          <p><strong>Phone:</strong> ${result.formatted_phone_number || "N/A"}</p>
+                                          <p><strong>Website:</strong> <a href="${result.website || "#"}" target="_blank">${result.website || "N/A"}</a></p>
+                                          <h5>Reviews</h5>
+                                          <div>${reviewsHtml}</div>
+                                          <h5>Additional Info</h5>
+                                          <p><strong>Wheelchair Accessible:</strong> ${result.types.includes('wheelchair_accessible') ? "Yes" : "No"}</p>
+                                          <p><strong>Kid-Friendly:</strong> ${result.types.includes('family_friendly') ? "Yes" : "No"}</p>
+                                          <p><strong>Planning Tip:</strong> ${result.editorial_summary || "No advice available"}</p>
+                                          <p>
+                                            <strong>View on Google Maps:</strong>
+                                            <a
+                                              href="https://www.google.com/maps?q=${result.geometry.location.lat()},${result.geometry.location.lng()}"
+                                              target="_blank"
+                                            >
+                                              Click here
+                                            </a>
+                                          </p>
+                                        </div>
+                                    `;
+
+                                const addBtn = document.createElement("button");
+                                addBtn.textContent = "Add to Schedule";
+                                addBtn.classList.add("add-btn");
+                                addBtn.addEventListener("click", function () {
+                                    let targetHour = selectedSlot ? parseInt(selectedSlot.dataset.hour) : 8;
+                                    addEvent(result.name, type, targetHour, result.place_id);
+                                });
+                                item.appendChild(addBtn);
+                                tabPane.appendChild(item);
                             });
-
-
-                            resultsContainer.appendChild(section);
-                        } else {
-                            console.warn(`No results found for type: ${type}`);
                         }
                     });
                 });
             } else {
-                console.error('Error fetching place details:', status);
+                console.error("Error fetching place details:", status);
             }
         });
     }
 
-    // Call the function to fetch locations when the page loads
-    fetchTopLocations();
+    // Listen for filter changes
+    document.getElementById("budgetFilter").addEventListener("change", fetchTopLocations);
+    document.getElementById("ratingFilter").addEventListener("input", fetchTopLocations);
+    document.getElementById("reviewsFilter").addEventListener("input", fetchTopLocations);
+
+    // Toggle details in the results
+    window.toggleDetails = function (element) {
+        document.querySelectorAll(".activity-details").forEach(detail => {
+            if (detail !== element.nextElementSibling) {
+                detail.style.display = "none";
+            }
+        });
+        const details = element.nextElementSibling;
+        details.style.display = details.style.display === "none" ? "block" : "none";
+    };
+</script>
+
+<script>
+    // ======================================================
+    // DAY NAVIGATION & SAVE
+    // ======================================================
+    document.getElementById("prevDayBtn").addEventListener("click", function () {
+        let newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() - 1);
+        const scheduleStartDate = new Date(scheduleDate);
+        if (newDate >= scheduleStartDate) {
+            currentDate = newDate;
+            updateCalendarForCurrentDate();
+        } else {
+            alert("You have reached the beginning of the schedule.");
+        }
+    });
+
+    document.getElementById("nextDayBtn").addEventListener("click", function () {
+        let newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + 1);
+        if (newDate <= scheduleEndDate) {
+            currentDate = newDate;
+            updateCalendarForCurrentDate();
+        } else {
+            alert("You have reached the end of the schedule.");
+        }
+    });
+
+    // Handler for Save Day Configuration button:
+    document.getElementById("saveDayConfigBtn").addEventListener("click", function () {
+        const scheduleDateIso = currentDate.toISOString();
+        const scheduleId = @ViewBag.Schedule.Schedule_Id;
+
+        const activitiesToSave = events.map(ev => {
+            const startHourInt = Math.floor(ev.start);
+            const startMinute = Math.round((ev.start - startHourInt) * 60);
+            const end = ev.start + ev.duration;
+            const endHourInt = Math.floor(end);
+            const endMinute = Math.round((end - endHourInt) * 60);
+
+            return {
+                Schedule_Id: scheduleId,
+                Name: ev.name,
+                Place_Id: ev.placeId,
+                Type: ev.type,
+                Start_Hour: startHourInt,
+                End_Hour: endHourInt,
+                Start_Minute: startMinute,
+                End_Minute: endMinute,
+                Start_Date: scheduleDateIso,
+                End_Date: scheduleDateIso, // Adjust if needed
+                Add_Info: ""
+            };
+        });
+
+        console.log("Saving the following activities for", scheduleDateIso, ":", activitiesToSave);
+        fetch('/Home/SaveScheduleActivities', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activitiesToSave)
+        })
+            .then(response => response.json())
+            .then(data => console.log("Save response:", data))
+            .catch(err => console.error("Error saving activities:", err));
+    });
+
+    window.addEventListener("load", function () {
+        updateCalendarForCurrentDate();
+        fetchTopLocations();
+    });
 </script>

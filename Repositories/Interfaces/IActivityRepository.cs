@@ -4,5 +4,6 @@ namespace TravelAgenda.Repositories.Interfaces
 {
     public interface IActivityRepository : IRepositoryBase<Activity>
     {
+
     }
 }

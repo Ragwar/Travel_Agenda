@@ -45,10 +45,11 @@ namespace TravelAgenda.Controllers
         public IActionResult LocationsAndActivities(int id)
         {
             Schedule schedule = _scheduleService.GetScheduleById(id);
-            ViewData["Schedule"] = _scheduleService.GetScheduleById(id);
+            ViewBag.Schedule = _scheduleService.GetScheduleById(id);
             ViewData["CityName"] = schedule.City_Name;
             ViewData["PlaceId"] = schedule.Place_Id;
-            
+            List <Schedule_Activity> Emi = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(id);
+            ViewBag.Locations = Emi;
             ViewData["GoogleApiKey"] = _googleApiKey; // Add your API key here
 
             return View();
@@ -199,5 +200,38 @@ namespace TravelAgenda.Controllers
         //  {
         //      return View(new ErrorViewModel { RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         //  }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveScheduleActivities([FromBody] List<Schedule_Activity> activities)
+        {
+            if (activities == null || activities.Count == 0)
+            {
+                return BadRequest("No activities provided.");
+            }
+
+            foreach (var activity in activities)
+            {
+                var scheduleActivity = new Schedule_Activity
+                {
+                    Schedule_Id = activity.Schedule_Id,
+                    Name = activity.Name,
+                    Place_Id = activity.Place_Id,
+                    Type = activity.Type,
+                    Start_Hour = activity.Start_Hour,
+                    End_Hour = activity.End_Hour,
+                    Start_Minute = activity.Start_Minute,
+                    End_Minute = activity.End_Minute,
+                    Start_Date = activity.Start_Date,
+                    End_Date = activity.End_Date,
+                    Add_Info = activity.Add_Info,
+                    Available = true
+                };
+
+                // Save using your schedule activity service
+                _schedule_activityProductService.CreateSchedule_Activity(scheduleActivity);
+            }
+            return Ok(new { message = "Activities saved successfully." });
+        }
+
     }
 }

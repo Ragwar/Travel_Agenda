@@ -22,7 +22,7 @@ namespace TravelAgenda.Controllers
         // GET: Schedule_Activity
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Day_Activities.Include(s => s.Activity).Include(s => s.Schedule);
+            var applicationDbContext = _context.Day_Activities.Include(s => s.Schedule);
             return View(await applicationDbContext.ToListAsync());
         }
 
@@ -35,7 +35,6 @@ namespace TravelAgenda.Controllers
             }
 
             var schedule_Activity = await _context.Day_Activities
-                .Include(s => s.Activity)
                 .Include(s => s.Schedule)
                 .FirstOrDefaultAsync(m => m.Schedule_Activity_Id == id);
             if (schedule_Activity == null)
@@ -67,7 +66,6 @@ namespace TravelAgenda.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Activity_Id"] = new SelectList(_context.Activities, "Activity_Id", "Activity_Id", schedule_Activity.Activity_Id);
             ViewData["Schedule_Id"] = new SelectList(_context.Schedules, "Schedule_Id", "Schedule_Id", schedule_Activity.Schedule_Id);
             return View(schedule_Activity);
         }
@@ -85,7 +83,7 @@ namespace TravelAgenda.Controllers
             {
                 return NotFound();
             }
-            ViewData["Activity_Id"] = new SelectList(_context.Activities, "Activity_Id", "Activity_Id", schedule_Activity.Activity_Id);
+
             ViewData["Schedule_Id"] = new SelectList(_context.Schedules, "Schedule_Id", "Schedule_Id", schedule_Activity.Schedule_Id);
             return View(schedule_Activity);
         }
@@ -122,7 +120,6 @@ namespace TravelAgenda.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Activity_Id"] = new SelectList(_context.Activities, "Activity_Id", "Activity_Id", schedule_Activity.Activity_Id);
             ViewData["Schedule_Id"] = new SelectList(_context.Schedules, "Schedule_Id", "Schedule_Id", schedule_Activity.Schedule_Id);
             return View(schedule_Activity);
         }
@@ -136,7 +133,6 @@ namespace TravelAgenda.Controllers
             }
 
             var schedule_Activity = await _context.Day_Activities
-                .Include(s => s.Activity)
                 .Include(s => s.Schedule)
                 .FirstOrDefaultAsync(m => m.Schedule_Activity_Id == id);
             if (schedule_Activity == null)

@@ -12,7 +12,7 @@ using TravelAgenda.Data;
 namespace TravelAgenda.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250107184909_EMI")]
+    [Migration("20250407183217_EMI")]
     partial class EMI
     {
         /// <inheritdoc />
@@ -328,7 +328,7 @@ namespace TravelAgenda.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Schedule_Activity_Id"));
 
-                    b.Property<int>("Activity_Id")
+                    b.Property<int?>("Activity_Id")
                         .HasColumnType("int");
 
                     b.Property<string>("Add_Info")
@@ -474,19 +474,15 @@ namespace TravelAgenda.Migrations
 
             modelBuilder.Entity("TravelAgenda.Models.Schedule_Activity", b =>
                 {
-                    b.HasOne("TravelAgenda.Models.Activity", "Activity")
+                    b.HasOne("TravelAgenda.Models.Activity", null)
                         .WithMany("Schedule_Activity")
-                        .HasForeignKey("Activity_Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("Activity_Id");
 
                     b.HasOne("TravelAgenda.Models.Schedule", "Schedule")
                         .WithMany()
                         .HasForeignKey("Schedule_Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Activity");
 
                     b.Navigation("Schedule");
                 });

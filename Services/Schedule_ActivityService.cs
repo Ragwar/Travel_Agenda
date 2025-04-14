@@ -45,7 +45,11 @@ namespace TravelAgenda.Services
         {
             return _repositoryWrapper.Schedule_ActivityRepository.FindAll().ToList();
         }
-
+        
+        public List<Schedule_Activity> GetSchedule_ActivityByScheduleId(int id)
+        {
+            return _repositoryWrapper.Schedule_ActivityRepository.FindByCondition(c => c.Schedule_Id == id).ToList();
+        }
 
     }
 }
