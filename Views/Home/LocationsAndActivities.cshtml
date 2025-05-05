@@ -236,7 +236,8 @@
 <script>
     // Serialize saved activities from the ViewBag.
     // Note: property names here should match your model: Start_Date, Start_Hour, Start_Minute, End_Hour, End_Minute, Name, Place_Id, Type, etc.
-    const savedActivities = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Locations ?? new List<object>()));
+    const schedule_Id = @ViewBag.Schedule.Schedule_Id;
+    savedActivities = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Locations ?? new List<object>()));
 </script>
 
 <!-- Load Google Maps Places library -->
@@ -306,6 +307,8 @@
                 if (isRangeFree(newStart, calendarEvent.duration, calendarEvent)) {
                     calendarEvent.start = newStart;
                     renderEvents();
+                    // Now update the event in the database.
+                    updateScheduleActivity(calendarEvent);
                 } else {
                     alert("Target time is not free.");
                 }
@@ -362,10 +365,31 @@
             removeBtn.textContent = "X";
             removeBtn.addEventListener("click", function (e) {
                 e.stopPropagation();
-                const idx = events.indexOf(calendarEvent);
-                if (idx > -1) events.splice(idx, 1);
-                renderEvents();
+
+                const activityId = calendarEvent.schedule_Activity_Id;
+                if (!activityId) {
+                    console.warn("Cannot delete an unsaved event.");
+                    return;
+                }
+
+                fetch(`/Home/DeleteScheduleActivity?id=${activityId}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error("Delete failed");
+                        // On success, remove from local array and re‑render
+                        const idx = events.indexOf(calendarEvent);
+                        if (idx > -1) {
+                            events.splice(idx, 1);
+                            renderEvents();
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error deleting schedule activity:", err);
+                        alert("Could not delete the event. Please try again.");
+                    });
             });
+
             evEl.appendChild(removeBtn);
 
             const topHandle = document.createElement("div");
@@ -402,9 +426,113 @@
             alert("No available slot for " + locationName);
             return;
         }
-        const calendarEvent = { name: locationName, type: type, start: targetHour, duration: duration, placeId: locationId };
-        events.push(calendarEvent);
-        renderEvents();
+        // Create the new event object.
+        const calendarEvent = {
+            name: locationName,
+            type: type,
+            start: targetHour,
+            duration: duration,
+            placeId: locationId,
+            schedule_Activity_Id: 0
+        };
+        //events.push(calendarEvent);
+        //renderEvents();
+
+        // Immediately persist this new event in the database.
+        createScheduleActivity(calendarEvent);
+    }
+
+    // Helper: Create a new schedule activity in the database.
+    function createScheduleActivity(calendarEvent) {
+        // Use local date string for schedule. (Assumes currentDate holds the view date.)
+        let scheduleDateIso = getLocalDateStr(currentDate);
+        // Get schedule ID from Razor.
+        let scheduleId = @ViewBag.Schedule.Schedule_Id;
+
+        // Prepare the data using the event’s current properties.
+        let startHourInt = Math.floor(calendarEvent.start);
+        let startMinute = Math.round((calendarEvent.start - startHourInt) * 60);
+        let end = calendarEvent.start + calendarEvent.duration;
+        let endHourInt = Math.floor(end);
+        let endMinute = Math.round((end - endHourInt) * 60);
+
+        const activityData = {
+            Schedule_Id: scheduleId,
+            Name: calendarEvent.name,
+            Place_Id: calendarEvent.placeId,
+            Type: calendarEvent.type,
+            Start_Hour: startHourInt,
+            End_Hour: endHourInt,
+            Start_Minute: startMinute,
+            End_Minute: endMinute,
+            Start_Date: scheduleDateIso,
+            End_Date: scheduleDateIso,
+            Add_Info: ""
+        };
+
+        fetch('/Home/CreateScheduleActivity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activityData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Assume the response contains the created activity record, including its Schedule_Activity_Id.
+                if (data && data.scheduleActivity && data.scheduleActivity.schedule_Activity_Id) {
+                    calendarEvent.schedule_Activity_Id = data.scheduleActivity.schedule_Activity_Id;
+                }
+                
+                console.log("Created schedule activity:", data);
+                events.push(calendarEvent);
+                renderEvents();
+            })
+            .catch(err => console.error("Error creating schedule activity:", err));
+
+
+
+    }
+
+    // Helper: Update an existing schedule activity in the database.
+    function updateScheduleActivity(calendarEvent) {
+        if (!calendarEvent.schedule_Activity_Id) {
+            console.warn("No Schedule_Activity_Id defined for event, cannot update.");
+            return;
+        }
+        let scheduleDateIso = getLocalDateStr(currentDate);
+        let scheduleId = @ViewBag.Schedule.Schedule_Id;
+
+        let startHourInt = Math.floor(calendarEvent.start);
+        let startMinute = Math.round((calendarEvent.start - startHourInt) * 60);
+        let end = calendarEvent.start + calendarEvent.duration;
+        let endHourInt = Math.floor(end);
+        let endMinute = Math.round((end - endHourInt) * 60);
+
+        const activityData = {
+            Schedule_Activity_Id: calendarEvent.schedule_Activity_Id,
+            Schedule_Id: scheduleId,
+            Name: calendarEvent.name,
+            Place_Id: calendarEvent.placeId,
+            Type: calendarEvent.type,
+            Start_Hour: startHourInt,
+            End_Hour: endHourInt,
+            Start_Minute: startMinute,
+            End_Minute: endMinute,
+            Start_Date: scheduleDateIso,
+            End_Date: scheduleDateIso,
+            Add_Info: ""
+        };
+
+        fetch('/Home/UpdateScheduleActivity', {
+            method: 'PUT', // using PUT for updating
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activityData)
+        })
+            .then(response => response.json())
+            .then(data => console.log("Updated schedule activity:", data))
+            .catch(err => console.error("Error updating schedule activity:", err));
+
+
+
     }
 
     function attachResizeHandles(calendarEvent) {
@@ -421,6 +549,7 @@
             startHourVal = calendarEvent.start;
             document.addEventListener("mousemove", onTopResize);
             document.addEventListener("mouseup", stopResize);
+           
         });
 
         bottomHandle.addEventListener("mousedown", function (e) {
@@ -429,6 +558,7 @@
             startDuration = calendarEvent.duration;
             document.addEventListener("mousemove", onBottomResize);
             document.addEventListener("mouseup", stopResize);
+            
         });
 
         function onTopResize(e) {
@@ -440,8 +570,9 @@
 
             if (newStart < fullStartHour || newDuration < 0.5 || !isRangeFree(newStart, newDuration, calendarEvent)) return;
             calendarEvent.start = newStart;
-            calendarEvent.duration = newDuration;
+            calendarEvent.duration = newDuration; 
             renderEvents();
+            updateScheduleActivity(calendarEvent);
         }
 
         function onBottomResize(e) {
@@ -455,16 +586,18 @@
                 newDuration < 0.5 ||
                 !isRangeFree(calendarEvent.start, newDuration, calendarEvent)
             ) return;
-
             calendarEvent.duration = newDuration;
             renderEvents();
+            updateScheduleActivity(calendarEvent);
         }
 
         function stopResize() {
             document.removeEventListener("mousemove", onTopResize);
             document.removeEventListener("mousemove", onBottomResize);
             document.removeEventListener("mouseup", stopResize);
+
         }
+
     }
 
     function parseDateAsLocal(dateStr) {
@@ -481,7 +614,26 @@
         const dd = date.getDate().toString().padStart(2, '0');
         return `${yyyy}-${mm}-${dd}`;
     }
+    // Update navigation arrow buttons based on the current date.
+    function updateNavButtons() {
+        const scheduleStartDate = new Date(scheduleDate); // scheduleDate is the schedule’s start date string.
+        const prevDayBtn = document.getElementById("prevDayBtn");
+        const nextDayBtn = document.getElementById("nextDayBtn");
 
+        // Hide previous button if currentDate equals the schedule start date.
+        if (getLocalDateStr(currentDate) === getLocalDateStr(scheduleStartDate)) {
+            prevDayBtn.style.visibility = "hidden";
+        } else {
+            prevDayBtn.style.visibility = "visible";
+        }
+
+        // Hide next button if currentDate equals the schedule end date.
+        if (getLocalDateStr(currentDate) === getLocalDateStr(scheduleEndDate)) {
+            nextDayBtn.style.visibility = "hidden";
+        } else {
+            nextDayBtn.style.visibility = "visible";
+        }
+    }
 
     function updateCalendarForCurrentDate() {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -492,27 +644,47 @@
         // Get the current date as a local date string.
         const currentDateStr = getLocalDateStr(currentDate);
         console.log("Current date for rendering:", currentDateStr);
+        fetch(`/Home/GetScheduleActivities?id=${schedule_Id}`, {
+            method: 'GET'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch schedule activities");
+                }
+                return response.json();           // ← parse JSON
+            })
+            .then(data => {
+                // ‘data’ is now the array of Schedule_Activity from your controller
+                savedActivities = data;
+                console.log("Loaded activities:", savedActivities);
+                // Loop through each saved activity.
+                savedActivities.forEach(activity => {
+                    // Parse the activity's Start_Date as a local date and format it.
+                    let activityDateStr = getLocalDateStr(parseDateAsLocal(activity.start_Date));
+                    console.log("Checking activity:", activity.name, "with date", activityDateStr);
 
-        // Loop through each saved activity.
-        savedActivities.forEach(activity => {
-            // Parse the activity's Start_Date as a local date and format it.
-            let activityDateStr = getLocalDateStr(parseDateAsLocal(activity.Start_Date));
-            console.log("Checking activity:", activity.Name, "with date", activityDateStr);
-
-            if (activityDateStr === currentDateStr) {
-                const startHour = activity.Start_Hour + ((activity.Start_Minute || 0) / 60);
-                const endHour = activity.End_Hour + ((activity.End_Minute || 0) / 60);
-                const duration = endHour - startHour;
-                events.push({
-                    name: activity.Name,
-                    type: activity.Type,
-                    start: startHour,
-                    duration: duration,
-                    placeId: activity.Place_Id
+                    if (activityDateStr === currentDateStr) {
+                        const startHour = activity.start_Hour + ((activity.start_Minute || 0) / 60);
+                        const endHour = activity.end_Hour + ((activity.end_Minute || 0) / 60);
+                        const duration = endHour - startHour;
+                        events.push({
+                            name: activity.name,
+                            type: activity.type,
+                            start: startHour,
+                            duration: duration,
+                            placeId: activity.place_Id,
+                            schedule_Activity_Id: activity.schedule_Activity_Id
+                        });
+                    }
                 });
-            }
-        });
-        renderEvents();
+                renderEvents();
+                updateNavButtons();
+            })
+            .catch(err => {
+                console.error("Error updating json:", err);
+                alert("Could not load activities. Please try again.");
+            });
+        
     }
 
     // ===================================================

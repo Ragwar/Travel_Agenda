@@ -12,7 +12,7 @@ namespace TravelAgenda.Services.Interfaces
 
         Schedule GetScheduleById(int id);
 
-        Schedule GetScheduleByUserId(string id);
+        public List<Schedule> GetSchedulesByUserId(string id);
         List<Schedule> GetSchedules();
     }
 }

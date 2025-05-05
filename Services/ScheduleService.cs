@@ -36,9 +36,9 @@ namespace TravelAgenda.Services
             return _repositoryWrapper.ScheduleRepository.FindByCondition(c => c.Schedule_Id == id).FirstOrDefault()!;
         }
 
-        public Schedule GetScheduleByUserId(string id)
+        public List<Schedule> GetSchedulesByUserId(string id)
         {
-            return _repositoryWrapper.ScheduleRepository.FindByCondition(c => c.User_Id == id).FirstOrDefault()!;
+            return _repositoryWrapper.ScheduleRepository.FindByCondition(c => c.User_Id == id).ToList();
         }
 
         public List<Schedule> GetScheduleByName(string Name)

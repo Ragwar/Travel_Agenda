@@ -1,3 +1,4 @@
+﻿using GoogleApi.Entities.Search.Video.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -35,10 +36,17 @@ namespace TravelAgenda.Controllers
             return View();
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string id)
         {
             ViewData["GoogleApiKey"] = _googleApiKey;
-            ViewBag.Schedules= _scheduleService.GetSchedules();
+            ViewBag.Schedules= _scheduleService.GetSchedulesByUserId(id);
+            return View();
+        }
+
+        public IActionResult SchedulesList(string id)
+        {
+            ViewData["GoogleApiKey"] = _googleApiKey;
+            ViewBag.Schedules = _scheduleService.GetSchedulesByUserId(id);
             return View();
         }
 
@@ -162,8 +170,6 @@ namespace TravelAgenda.Controllers
         }
 
 
-
-
         public IActionResult Privacy()
         {
             return View();
@@ -194,12 +200,21 @@ namespace TravelAgenda.Controllers
             public string EndDate { get; set; }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetScheduleActivities(int id)
+        {
+            // e.g. date in "yyyy-MM-dd" format
+            //var all = _schedule_activityProductService
+            //              .GetSchedule_ActivityByScheduleId(scheduleId);
+            List<Schedule_Activity> Emi = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(id);
+            // filter to only those with Start_Date == date
+           //   var filtered = Emi
+           //       .Where(a => a.Start_Date.ToString("yyyy-MM-dd") == date)
+            //      .ToList();
 
-        // [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        //  public IActionResult Error()
-        //  {
-        //      return View(new ErrorViewModel { RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        //  }
+            return Ok(Emi);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> SaveScheduleActivities([FromBody] List<Schedule_Activity> activities)
@@ -232,6 +247,50 @@ namespace TravelAgenda.Controllers
             }
             return Ok(new { message = "Activities saved successfully." });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateScheduleActivity([FromBody] Schedule_Activity activity)
+        {
+            if (activity == null)
+                return BadRequest("Invalid activity.");
+
+            // Save the new activity.
+            _schedule_activityProductService.CreateSchedule_Activity(activity);
+            return Ok(new { scheduleActivity = activity });
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateScheduleActivity([FromBody] Schedule_Activity activity)
+        {
+            if (activity == null || activity.Schedule_Activity_Id <= 0)
+                return BadRequest("Invalid activity.");
+
+            _schedule_activityProductService.UpdateSchedule_Activity(activity);
+            return Ok(new { scheduleActivity = activity });
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteScheduleActivity(int id)
+        {
+            if (id <= 0)
+                return BadRequest("Invalid activity ID.");
+            Schedule_Activity activity = _schedule_activityProductService.GetSchedule_ActivityById(id);
+            // Assuming your service has a DeleteSchedule_Activity(int id) method:
+            _schedule_activityProductService.DeleteSchedule_Activity(activity);
+
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteSchedule(int id)
+        {
+
+            Schedule schedule = _scheduleService.GetScheduleById(id);
+            _scheduleService.DeleteSchedule(schedule);
+
+            return Ok(new { success = true });
+        }
+
 
     }
 }

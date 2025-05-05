@@ -34,6 +34,9 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index" asp-route-id="@currentUser.Id">Schedule</a>
                             </li>
+                            <li>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="SchedulesList" asp-route-id="@currentUser.Id">Your Schedules</a>
+                            </li>
                         }
                     </ul>
                     <partial name="_LoginPartial"/>
