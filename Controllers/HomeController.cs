@@ -19,8 +19,9 @@ namespace TravelAgenda.Controllers
         private readonly IUserInfoService _userInfoService;
         private readonly IUserService _userService;
         private readonly string _googleApiKey;
+        private readonly IWeatherService _weatherService;
 
-        public HomeController(ApplicationDbContext context, IActivityService activityService, IScheduleService scheduleService, ISchedule_ActivityService schedule_activityProductService, IUserInfoService userInfoService, IUserService userService, IFavoritesService favoritesService, IConfiguration configuration)
+        public HomeController(ApplicationDbContext context, IActivityService activityService, IScheduleService scheduleService, ISchedule_ActivityService schedule_activityProductService, IUserInfoService userInfoService, IUserService userService, IFavoritesService favoritesService, IConfiguration configuration, IWeatherService weatherService)
         {
             _activityService = activityService;
             _scheduleService = scheduleService;
@@ -29,7 +30,8 @@ namespace TravelAgenda.Controllers
             _userInfoService = userInfoService;
             _userService = userService;
             _googleApiKey = configuration["GoogleAPI:ApiKey"];
-            _context = context; 
+            _context = context;
+            _weatherService = weatherService;
         }
         public IActionResult Home()
         {
@@ -52,15 +54,21 @@ namespace TravelAgenda.Controllers
 
         public IActionResult LocationsAndActivities(int id)
         {
-            Schedule schedule = _scheduleService.GetScheduleById(id);
-            ViewBag.Schedule = _scheduleService.GetScheduleById(id);
+            var schedule = _scheduleService.GetScheduleById(id);
+            if (schedule == null) return NotFound();
+
+            ViewBag.Schedule = schedule;
             ViewData["CityName"] = schedule.City_Name;
             ViewData["PlaceId"] = schedule.Place_Id;
-            List <Schedule_Activity> Emi = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(id);
-            ViewBag.Locations = Emi;
-            ViewData["GoogleApiKey"] = _googleApiKey; // Add your API key here
+            ViewData["GoogleApiKey"] = _googleApiKey;
 
-            return View();
+            
+            var weather =  _weatherService.GetForecastAsync(schedule.City_Name, (int)schedule.Nr_Days);
+            ViewData["WeatherForecast"] = weather;
+
+            var activities = _schedule_activityProductService
+                                 .GetSchedule_ActivityByScheduleId(id);
+            return View(activities);
         }
 
         [HttpPost]
@@ -289,6 +297,18 @@ namespace TravelAgenda.Controllers
             _scheduleService.DeleteSchedule(schedule);
 
             return Ok(new { success = true });
+        }
+
+
+        public IActionResult ViewSchedule(int id)
+        {
+            var schedule = _scheduleService.GetScheduleById(id);
+            var activities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(schedule.Schedule_Id);
+            ViewBag.Schedule = schedule;
+            ViewBag.Activities = activities;
+            
+            ViewData["GoogleApiKey"] = _googleApiKey;
+            return View();
         }
 
 

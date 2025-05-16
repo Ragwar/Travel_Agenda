@@ -292,6 +292,12 @@ namespace TravelAgenda.Migrations
                     b.Property<int?>("End_Month")
                         .HasColumnType("int");
 
+                    b.Property<string>("Hotel_Id")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Hotel_Name")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("Nr_Days")
                         .HasColumnType("int");
 

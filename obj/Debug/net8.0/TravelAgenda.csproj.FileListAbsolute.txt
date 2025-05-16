@@ -597,3 +597,4 @@ W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\refint\TravelAgenda.dll
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\TravelAgenda.pdb
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\TravelAgenda.genruntimeconfig.cache
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\ref\TravelAgenda.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\DayPilot.dll

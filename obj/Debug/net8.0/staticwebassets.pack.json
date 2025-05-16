@@ -5,6 +5,10 @@
       "PackagePath": "staticwebassets\\TravelAgenda.bundle.scp.css"
     },
     {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\Travel Agenda .docx",
+      "PackagePath": "staticwebassets\\Travel Agenda .docx"
+    },
+    {
       "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\css\\site.css",
       "PackagePath": "staticwebassets\\css\\site.css"
     },
@@ -13,8 +17,76 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\daypilot-all.min.d.ts",
+      "PackagePath": "staticwebassets\\js\\daypilot-all.min.d.ts"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\daypilot-all.min.js",
+      "PackagePath": "staticwebassets\\js\\daypilot-all.min.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\daypilot-all.src.js",
+      "PackagePath": "staticwebassets\\js\\daypilot-all.src.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\min\\daypilot-calendar.min.js",
+      "PackagePath": "staticwebassets\\js\\min\\daypilot-calendar.min.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\min\\daypilot-common.min.js",
+      "PackagePath": "staticwebassets\\js\\min\\daypilot-common.min.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\min\\daypilot-datepicker.min.js",
+      "PackagePath": "staticwebassets\\js\\min\\daypilot-datepicker.min.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\min\\daypilot-menu.min.js",
+      "PackagePath": "staticwebassets\\js\\min\\daypilot-menu.min.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\min\\daypilot-modal.min.js",
+      "PackagePath": "staticwebassets\\js\\min\\daypilot-modal.min.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\min\\daypilot-month.min.js",
+      "PackagePath": "staticwebassets\\js\\min\\daypilot-month.min.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\min\\daypilot-navigator.min.js",
+      "PackagePath": "staticwebassets\\js\\min\\daypilot-navigator.min.js"
+    },
+    {
       "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\site.js",
       "PackagePath": "staticwebassets\\js\\site.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\src\\daypilot-calendar.src.js",
+      "PackagePath": "staticwebassets\\js\\src\\daypilot-calendar.src.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\src\\daypilot-common.src.js",
+      "PackagePath": "staticwebassets\\js\\src\\daypilot-common.src.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\src\\daypilot-datepicker.src.js",
+      "PackagePath": "staticwebassets\\js\\src\\daypilot-datepicker.src.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\src\\daypilot-menu.src.js",
+      "PackagePath": "staticwebassets\\js\\src\\daypilot-menu.src.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\src\\daypilot-modal.src.js",
+      "PackagePath": "staticwebassets\\js\\src\\daypilot-modal.src.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\src\\daypilot-month.src.js",
+      "PackagePath": "staticwebassets\\js\\src\\daypilot-month.src.js"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\src\\daypilot-navigator.src.js",
+      "PackagePath": "staticwebassets\\js\\src\\daypilot-navigator.src.js"
     },
     {
       "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\lib\\bootstrap\\LICENSE",

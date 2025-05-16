@@ -25,6 +25,8 @@ builder.Services.AddAuthentication()
        options.ClientId = builder.Configuration.GetSection("GoogleKeys:ClientId").Value;
        options.ClientSecret = builder.Configuration.GetSection("GoogleKeys:ClientSecret").Value;
    });
+builder.Services
+       .AddHttpClient<IWeatherService, WeatherService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

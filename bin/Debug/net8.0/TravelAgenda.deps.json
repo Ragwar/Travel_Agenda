@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v8.0": {
       "TravelAgenda/1.0.0": {
         "dependencies": {
+          "DayPilot": "5.0.303",
           "GoogleApi": "5.6.0",
           "Microsoft.AspNetCore.Authentication.Google": "8.0.11",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.11",
@@ -54,6 +55,14 @@
           "lib/netstandard2.0/Azure.Identity.dll": {
             "assemblyVersion": "1.11.4.0",
             "fileVersion": "1.1100.424.31005"
+          }
+        }
+      },
+      "DayPilot/5.0.303": {
+        "runtime": {
+          "lib/DayPilot.dll": {
+            "assemblyVersion": "5.0.303.0",
+            "fileVersion": "5.0.303.0"
           }
         }
       },
@@ -2278,6 +2287,13 @@
       "sha512": "sha512-Sf4BoE6Q3jTgFkgBkx7qztYOFELBCo+wQgpYDwal/qJ1unBH73ywPztIJKXBXORRzAeNijsuxhk94h0TIMvfYg==",
       "path": "azure.identity/1.11.4",
       "hashPath": "azure.identity.1.11.4.nupkg.sha512"
+    },
+    "DayPilot/5.0.303": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-TpgkBj9kliqpqHR1w3uLY7XgmTccB2zZFCr/koTh3lghDUCNRB7h0xWYKz52MHJkA80pFh0CRBrG27vZN+ylvA==",
+      "path": "daypilot/5.0.303",
+      "hashPath": "daypilot.5.0.303.nupkg.sha512"
     },
     "GoogleApi/5.6.0": {
       "type": "package",

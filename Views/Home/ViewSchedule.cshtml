@@ -1,0 +1,158 @@
+﻿@{
+    ViewData["Title"] = "View Schedule";
+    var schedule = ViewBag.Schedule as TravelAgenda.Models.Schedule;
+    var activities = (ViewBag.Activities as IEnumerable<TravelAgenda.Models.Schedule_Activity>)?.ToList()
+                               ?? new List<TravelAgenda.Models.Schedule_Activity>();
+
+    // build date list
+    var startDate = schedule.Start_Date.Value.Date;
+    var daysCount = schedule.Nr_Days ?? 0;
+    var dates = Enumerable.Range(0, daysCount)
+                              .Select(i => startDate.AddDays(i))
+                              .ToList();
+}
+
+<style>
+    .calendar-container {
+        border: 1px solid #ccc;
+        width: 300px;
+        margin-bottom: 20px;
+    }
+
+    .calendar-header {
+        text-align: center;
+        background: #f2f2f2;
+        padding: 10px;
+        font-weight: bold;
+    }
+
+    .hourSlotsScroll {
+        height: 480px;
+        overflow-y: auto;
+        border-top: 1px solid #ccc;
+        position: relative;
+    }
+
+    .hourSlotsContainer {
+        position: relative;
+        height: 1440px;
+    }
+
+    .hour-slot {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 60px;
+        border-bottom: 1px solid #eee;
+        box-sizing: border-box;
+        padding-left: 40px;
+    }
+
+    .hour-label {
+        position: absolute;
+        left: 5px;
+        top: 0;
+        font-size: 12px;
+        font-weight: bold;
+        color: #555;
+    }
+
+    .event {
+        position: absolute;
+        left: 70px;
+        right: 5px;
+        background: #007bff;
+        color: #fff;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+        .event .content {
+            padding: 2px 5px;
+            font-size: 12px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+</style>
+
+<h1>Your Trip: @schedule.City_Name</h1>
+<p>
+    @startDate.ToString("MMMM dd, yyyy")
+    &ndash;
+    @dates.Last().ToString("MMMM dd, yyyy")
+</p>
+
+<div style="display:flex; gap:20px; overflow-x:auto;">
+    @foreach (var date in dates)
+    {
+        // filter to just this date’s activities
+        var dayActs = activities
+        .Where(a => a.Start_Date.HasValue && a.Start_Date.Value.Date == date)
+        .Select(a => new
+        {
+            a.Name,
+            Start = a.Start_Hour + ((a.Start_Minute ?? 0) / 60.0),
+            Duration = (a.End_Hour + ((a.End_Minute ?? 0) / 60.0))
+        - (a.Start_Hour + ((a.Start_Minute ?? 0) / 60.0))
+        })
+        .OrderBy(e => e.Start)
+        .ToList();
+
+        <div class="day-column">
+            <h4 style="text-align:center;">
+                @date.ToString("dddd, MMM dd")
+            </h4>
+
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    @date.ToString("yyyy-MM-dd")
+                </div>
+                <div class="hourSlotsScroll">
+                    <div class="hourSlotsContainer">
+                        @for (int h = 1; h <= 24; h++)
+                        {
+                            <div class="hour-slot" style="top:@((h-1)*60)px;">
+                                <div class="hour-label">
+                                    @(h % 12 == 0 ? 12 : h % 12)@(h < 12 ? "AM" : "PM")
+                                </div>
+                            </div>
+                        }
+
+                        @* render only this day’s events *@
+                        @foreach (var ev in dayActs)
+                        {
+                            var top = ev.Start * 60;
+                            var height = ev.Duration * 60 - 2;  // subtract 2px for borders
+                            <div class="event"
+                                 style="top:@(top)px; height:@(height)px;">
+                                <div class="content">@ev.Name</div>
+
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div>
+    <a class="btn btn-primary"
+       asp-controller="Home"
+       asp-action="LocationsAndActivities"
+       asp-route-id="@schedule.Schedule_Id">
+        Edit Schedule
+    </a>
+</div>
+<script>
+    // Once everything’s rendered, scroll each day's calendar so that 8 AM is at the top
+    window.addEventListener('load', function () {
+        // Calculate how many pixels down to put 8 AM (hour 8 means skip 1–7)
+        const scrollTo = (8 - 1) * 60; // 7 hours × 60px
+
+        document.querySelectorAll('.hourSlotsScroll').forEach(el => {
+            el.scrollTop = scrollTo;
+        });
+    });
+</script>

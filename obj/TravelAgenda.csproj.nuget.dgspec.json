@@ -45,6 +45,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "DayPilot": {
+              "target": "Package",
+              "version": "[5.0.303, )"
+            },
             "GoogleApi": {
               "target": "Package",
               "version": "[5.6.0, )"

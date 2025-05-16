@@ -18,11 +18,11 @@
                 <div class="schedule-item" data-id="@schedule.Schedule_Id">
                     <button class="delete-schedule-btn" title="Delete schedule">✕</button>
                     <div class="schedule-image">
-                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=@(schedule.City_Name)&zoom=13&size=300x200&maptype=roadmap&key=@apiKey"
-                             alt="@schedule.City_Name" />
+                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=@(schedule.City_Name ?? "0,0")&zoom=13&size=300x200&maptype=roadmap&key=@apiKey"
+                             alt="@(string.IsNullOrWhiteSpace(schedule.City_Name) ? "No city selected" : schedule.City_Name)" />
                     </div>
                     <div class="schedule-details">
-                        <h3>@schedule.City_Name</h3>
+                        <h3>@(string.IsNullOrWhiteSpace(schedule.City_Name) ? "(No city selected)" : schedule.City_Name)</h3>
                         <p>
                             <strong>Dates:</strong>
                             @schedule.Start_Date?.ToString(dateFormat)
@@ -30,16 +30,29 @@
                             @schedule.End_Date?.ToString(dateFormat)
                         </p>
                         <p><strong>Number of days:</strong> @schedule.Nr_Days</p>
-                        <a class="btn btn-primary"
-                           asp-area=""
-                           asp-controller="Home"
-                           asp-action="LocationsAndActivities"
-                           asp-route-id="@schedule.Schedule_Id">
-                            View schedule
-                        </a>
+
+                        @if (string.IsNullOrWhiteSpace(schedule.City_Name))
+                        {
+                            <a class="btn btn-warning"
+                               asp-controller="Home"
+                               asp-action="City"
+                               asp-route-scheduleId="@schedule.Schedule_Id">
+                                Select City
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-primary"
+                               asp-controller="Home"
+                               asp-action="ViewSchedule"
+                               asp-route-id="@schedule.Schedule_Id">
+                                View Schedule
+                            </a>
+                        }
                     </div>
                 </div>
             }
+
         </div>
     }
 }

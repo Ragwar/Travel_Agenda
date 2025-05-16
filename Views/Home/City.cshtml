@@ -139,8 +139,6 @@
         })
             .then(response => {
                 if (response.ok) {
-                    alert("City saved successfully!");
-
                     // Redirect to the And view with ScheduleId and PlaceId
                     const redirectUrl = `/Home/LocationsAndActivities?id=${scheduleId}`;
                     window.location.href = redirectUrl;
