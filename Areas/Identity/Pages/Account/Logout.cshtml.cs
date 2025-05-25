@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace TravelAgenda.Areas.Identity.Pages.Account
 {
+    [AllowAnonymous]
     public class LogoutModel : PageModel
     {
         private readonly SignInManager<IdentityUser> _signInManager;
@@ -21,6 +22,10 @@ namespace TravelAgenda.Areas.Identity.Pages.Account
         {
             _signInManager = signInManager;
             _logger = logger;
+        }
+
+        public void OnGet()
+        {
         }
 
         public async Task<IActionResult> OnPost(string returnUrl = null)
@@ -35,7 +40,7 @@ namespace TravelAgenda.Areas.Identity.Pages.Account
             {
                 // This needs to be a redirect so that the browser performs a new
                 // request and the identity for the user gets updated.
-                return RedirectToPage();
+                return RedirectToAction("Index", "Home");
             }
         }
     }

@@ -9,12 +9,20 @@
       "PackagePath": "staticwebassets\\Travel Agenda .docx"
     },
     {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\css\\LocationsAndActivities.css",
+      "PackagePath": "staticwebassets\\css\\LocationsAndActivities.css"
+    },
+    {
       "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\css\\site.css",
       "PackagePath": "staticwebassets\\css\\site.css"
     },
     {
       "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\favicon.ico",
       "PackagePath": "staticwebassets\\favicon.ico"
+    },
+    {
+      "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\LocationAndActivities.js",
+      "PackagePath": "staticwebassets\\js\\LocationAndActivities.js"
     },
     {
       "Id": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\daypilot-all.min.d.ts",

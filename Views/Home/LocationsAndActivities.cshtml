@@ -1,176 +1,7 @@
 ﻿<!DOCTYPE html>
 <meta charset="utf-8">
 <title>Activities & Locations</title>
-<style>
-    /* Calendar container & grid */
-    #calendar {
-        border: 1px solid #ccc;
-        width: 300px;
-    }
-
-    #calendarHeader {
-        text-align: center;
-        background: #f2f2f2;
-        padding: 10px;
-        font-weight: bold;
-    }
-    /* The scrollable container showing 8 slots at a time */
-    #hourSlotsScroll {
-        position: relative;
-        height: 480px; /* 8 * 60px */
-        overflow-y: auto;
-        border-top: 1px solid #ccc;
-    }
-    /* The full grid with all day slots */
-    #hourSlotsContainer {
-        position: relative;
-    }
-
-    .hour-slot {
-        position: absolute;
-        left: 0;
-        right: 0;
-        height: 60px;
-        border-bottom: 1px solid #eee;
-        box-sizing: border-box;
-        padding-left: 40px;
-        cursor: pointer;
-    }
-
-        .hour-slot.selected {
-            background-color: #d0eaff;
-        }
-
-        .hour-slot.drag-over {
-            background-color: rgba(0,123,255,0.3);
-        }
-
-    .hour-label {
-        position: absolute;
-        left: 5px;
-        top: 0;
-        font-size: 12px;
-        font-weight: bold;
-        color: #555;
-    }
-    /* Event styling */
-    .event {
-        position: absolute;
-        left: 70px;
-        right: 5px;
-        background-color: #007bff;
-        color: #fff;
-        border-radius: 3px;
-        cursor: move;
-        overflow: hidden;
-    }
-
-        .event .content {
-            padding: 2px 20px 2px 5px;
-            font-size: 12px;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-        }
-
-        .event .handle {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: darkblue;
-            cursor: ns-resize;
-        }
-
-            .event .handle.top {
-                top: 0;
-            }
-
-            .event .handle.bottom {
-                bottom: 0;
-            }
-
-        .event .remove-btn {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            background: red;
-            border: none;
-            color: #fff;
-            font-weight: bold;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-    /* Locations & Tabs */
-    .nav-tabs {
-        list-style: none;
-        padding: 0;
-        display: flex;
-        border-bottom: 1px solid #ccc;
-    }
-
-        .nav-tabs li {
-            margin-right: 5px;
-        }
-
-        .nav-tabs a {
-            display: block;
-            padding: 8px 12px;
-            text-decoration: none;
-            border: 1px solid transparent;
-            border-radius: 4px 4px 0 0;
-            background: #eee;
-            color: #333;
-            cursor: pointer;
-        }
-
-            .nav-tabs a.active {
-                background: #fff;
-                border-color: #ccc;
-                border-bottom-color: transparent;
-                font-weight: bold;
-            }
-
-    .tab-content > div {
-        display: none;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-top: none;
-    }
-
-        .tab-content > div.active {
-            display: block;
-        }
-    /* Filters and Location List */
-    #filtersSection {
-        margin-bottom: 20px;
-    }
-
-    .location-item {
-        border: 1px solid #ccc;
-        padding: 10px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-    }
-
-        .location-item img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            margin-right: 10px;
-            cursor: grab;
-        }
-
-    .add-btn {
-        margin-left: auto;
-        padding: 5px 10px;
-        font-size: 14px;
-    }
-</style>
+<link rel="stylesheet" href="~/css/LocationsAndActivities.css" asp-append-version="true" />
 
 @{
     // Razor Variables
@@ -180,9 +11,6 @@
     var placeId = ViewBag.PlaceId;
     var apiKey = ViewBag.GoogleApiKey;
 }
-<script>
-    const googleApiKey = "@apiKey";    // from your Razor ViewData
-</script>
 
 <h1>Top Locations in @cityName</h1>
 <!-- Button to Show/Hide Filters -->
@@ -232,7 +60,7 @@
                 <div id="hourSlotsContainer"></div>
             </div>
         </div>
-        <button id="saveDayConfigBtn" style="margin-top: 10px;">Save Day Configuration</button>
+       
         <button id="routeBtn" style="margin-top: 10px; margin-left: 10px;">
             Go to Google Maps
         </button>
@@ -240,17 +68,18 @@
     </div>
 </div>
 
-<script>
-    // Serialize saved activities from the ViewBag.
-    // Note: property names here should match your model: Start_Date, Start_Hour, Start_Minute, End_Hour, End_Minute, Name, Place_Id, Type, etc.
-    const schedule_Id = @ViewBag.Schedule.Schedule_Id;
-    savedActivities = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Locations ?? new List<object>()));
-</script>
-
 <!-- Load Google Maps Places library -->
 <script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places,geometry" async defer></script>
 
 <script>
+ 
+    const googleApiKey = "@apiKey";    // from your Razor ViewData
+
+    // Serialize saved activities from the ViewBag.
+    // Note: property names here should match your model: Start_Date, Start_Hour, Start_Minute, End_Hour, End_Minute, Name, Place_Id, Type, etc.
+    const schedule_Id = @ViewBag.Schedule.Schedule_Id;
+    savedActivities = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Locations ?? new List<object>()));
+
     // ======================================================
     // CALENDAR CONFIGURATION & EVENT RENDERING (Custom Code)
     // ======================================================
@@ -280,18 +109,28 @@
     const scheduleEndDate = new Date("@(ViewBag.Schedule?.End_Date?.ToString("yyyy-MM-dd"))");
 
     // Render full day slots (from 1AM to 24PM)
-    for (let h = fullStartHour; h < fullEndHour; h++) {
+    const step = 0.5;  // half-hour
+    for (let t = fullStartHour; t < fullEndHour; t += step) {
         const slot = document.createElement("div");
+        // use a shared class so your existing CSS applies
         slot.className = "hour-slot";
-        slot.dataset.hour = h;
-        slot.style.top = ((h - fullStartHour) * slotHeight) + "px";
-        slot.style.height = slotHeight + "px";
+        slot.dataset.hour = t;
+        // Each half-hour is half the height
+        slot.style.top = ((t - fullStartHour) * slotHeight) + "px";
+        slot.style.height = (slotHeight * step) + "px";
 
-        const label = document.createElement("div");
-        label.className = "hour-label";
-        let displayHour = (h % 12 === 0 ? 12 : h % 12);
-        label.textContent = displayHour + (h < 12 ? "AM" : "PM");
-        slot.appendChild(label);
+        // Only integer hours get a visible label
+        if (Number.isInteger(t)) {
+            const label = document.createElement("div");
+            label.className = "hour-label";
+            let h = t;
+            let displayHour = (h % 12 === 0 ? 12 : h % 12);
+            label.textContent = displayHour + (h < 12 ? "AM" : "PM");
+            slot.appendChild(label);
+        } else {
+            // half-hour: make borders invisible (you can refine in your CSS)
+            slot.style.borderTop = "none";
+        }
 
         slot.addEventListener("click", function () {
             document.querySelectorAll(".hour-slot").forEach(s => s.classList.remove("selected"));
@@ -309,25 +148,30 @@
             e.preventDefault();
             slot.classList.remove("drag-over");
             if (window.draggedEvent) {
-                let calendarEvent = window.draggedEventObj;
-                let newStart = parseInt(slot.dataset.hour);
-                if (isRangeFree(newStart, calendarEvent.duration, calendarEvent)) {
-                    calendarEvent.start = newStart;
-                    renderEvents();
-                    // Now update the event in the database.
-                    updateScheduleActivity(calendarEvent);
+                let ev = window.draggedEventObj;
+                let raw = parseFloat(slot.dataset.hour);
+                let newStart = Math.round(raw * 2) / 2;
+
+                if (isRangeFree(newStart, ev.duration, ev)) {
+                    ev.start = newStart;
+                    updateScheduleActivity(ev);
                 } else {
                     alert("Target time is not free.");
+                    ev.start = ev._oldStart;
                 }
-                window.draggedEvent = null;
-                window.draggedEventObj = null;
-            } else {
+
+                renderEvents();
+            }
+            else {
                 // External drop: extract location data from dataTransfer
                 const data = JSON.parse(e.dataTransfer.getData("application/json") || "{}");
                 const locationName = data.name || e.dataTransfer.getData("text/plain");
                 const locationId = data.placeId || "";
                 const type = window.draggedType || "restaurant";
-                addEvent(locationName, type, parseInt(slot.dataset.hour), locationId);
+                let rawHour = parseFloat(slot.dataset.hour);
+                let startHour = Math.round(rawHour * 2) / 2;
+                addEvent(locationName, type, startHour, locationId);
+
             }
         });
         hourSlotsContainer.appendChild(slot);
@@ -345,11 +189,13 @@
 
     // Utility: Check if a time range is free (no overlapping event)
     function isRangeFree(start, duration, ignoreEvent) {
-        const desiredEnd = start + duration;
-        for (let calendarEvent of events) {
-            if (calendarEvent === ignoreEvent) continue;
-            const evEnd = calendarEvent.start + calendarEvent.duration;
-            if (calendarEvent.start < desiredEnd && evEnd > start) return false;
+        const eps = 0.0001;
+        const desiredEnd = start + duration - eps;
+        for (let ev of events) {
+            if (ev === ignoreEvent) continue;
+            const evEnd = ev.start + ev.duration - eps;
+            // overlap if ev.start < desiredEnd && evEnd > start
+            if (ev.start < desiredEnd && evEnd > start) return false;
         }
         return true;
     }
@@ -409,14 +255,42 @@
 
             evEl.draggable = true;
             evEl.addEventListener("dragstart", function (e) {
+                calendarEvent._oldStart = calendarEvent.start;
+                
+                const dragIcon = evEl.cloneNode(true);
+                const rect = evEl.getBoundingClientRect();
+                dragIcon.style.position = "absolute";
+                dragIcon.style.top = "-1000px";           // off-screen
+                dragIcon.style.left = "0";                 // remove inherited offsets
+                dragIcon.style.right = "auto";
+                dragIcon.style.width = rect.width + "px";
+                dragIcon.style.height = rect.height + "px";
+                dragIcon.style.background = "#007bff";           // solid color
+                dragIcon.style.backgroundImage = "none";              // no gradients
+                dragIcon.style.filter = "none";              // no browser dimming
+                dragIcon.style.opacity = "1";                 // fully opaque
+                dragIcon.style.boxSizing = "border-box";        // ensure height includes borders
+                dragIcon.style.visibility = "visible";
+                evEl.style.visibility = "hidden";
+  
+                document.body.appendChild(dragIcon);
+                e.dataTransfer.setDragImage(dragIcon, 20, 10);
+                setTimeout(() => document.body.removeChild(dragIcon), 0);
                 window.draggedEvent = evEl;
                 window.draggedEventObj = calendarEvent;
-                e.dataTransfer.setData("application/json", JSON.stringify({ name: calendarEvent.name, placeId: calendarEvent.placeId }));
+                e.dataTransfer.setData(
+                    "application/json",
+                    JSON.stringify({ name: calendarEvent.name, placeId: calendarEvent.placeId })
+                );
             });
+
             evEl.addEventListener("dragend", function () {
+               
+                evEl.style.visibility = "";
                 window.draggedEvent = null;
                 window.draggedEventObj = null;
             });
+
             calendarEl.appendChild(evEl);
             calendarEvent.element = evEl;
             attachResizeHandles(calendarEvent);
@@ -488,7 +362,7 @@
                 if (data && data.scheduleActivity && data.scheduleActivity.schedule_Activity_Id) {
                     calendarEvent.schedule_Activity_Id = data.scheduleActivity.schedule_Activity_Id;
                 }
-                
+
                 console.log("Created schedule activity:", data);
                 events.push(calendarEvent);
                 renderEvents();
@@ -556,7 +430,7 @@
             startHourVal = calendarEvent.start;
             document.addEventListener("mousemove", onTopResize);
             document.addEventListener("mouseup", stopResize);
-           
+
         });
 
         bottomHandle.addEventListener("mousedown", function (e) {
@@ -565,7 +439,7 @@
             startDuration = calendarEvent.duration;
             document.addEventListener("mousemove", onBottomResize);
             document.addEventListener("mouseup", stopResize);
-            
+
         });
 
         function onTopResize(e) {
@@ -577,7 +451,7 @@
 
             if (newStart < fullStartHour || newDuration < 0.5 || !isRangeFree(newStart, newDuration, calendarEvent)) return;
             calendarEvent.start = newStart;
-            calendarEvent.duration = newDuration; 
+            calendarEvent.duration = newDuration;
             renderEvents();
             updateScheduleActivity(calendarEvent);
         }
@@ -691,7 +565,7 @@
                 console.error("Error updating json:", err);
                 alert("Could not load activities. Please try again.");
             });
-        
+
     }
 
     // ===================================================
@@ -705,7 +579,18 @@
         museum: "Museums",
         shopping_mall: "Shopping Malls"
     };
+    const allPlaces = {};
+    const nextPageTokens = {};
+    const loadingPlaces = {};
     window.draggedType = "";
+    let cityViewport = null;
+
+    // Initialize per‐type state
+    locationsTypes.forEach(type => {
+        allPlaces[type] = [];
+        nextPageTokens[type] = null;
+        loadingPlaces[type] = false;
+    });
 
     // toggle filters panel
     document.getElementById("toggleFiltersBtn").addEventListener("click", function () {
@@ -820,14 +705,14 @@
                             || "https://via.placeholder.com/100?text=No+Image";
 
                         header.innerHTML = `
-                <img src="${imgUrl}" width="100" height="100"
-                     style="margin-right:10px;border-radius:6px;object-fit:cover">
-                <div>
-                  <strong>${place.name}</strong><br>
-                  ${place.rating.toFixed(1)} ★ (${place.user_ratings_total})<br>
-                  <small>${priceSymbols}</small>
-                </div>
-              `;
+                    <img src="${imgUrl}" width="100" height="100"
+                         style="margin-right:10px;border-radius:6px;object-fit:cover">
+                    <div>
+                      <strong>${place.name}</strong><br>
+                      ${place.rating.toFixed(1)} ★ (${place.user_ratings_total})<br>
+                      <small>${priceSymbols}</small>
+                    </div>
+                  `;
 
                         // details placeholder
                         details.classList.add("activity-details");
@@ -881,19 +766,19 @@
                                 .join("") || "<em>No reviews.</em>";
 
                             details.innerHTML = `
-                  <p><strong>Address:</strong> ${full.formatted_address}</p>
-                  <p><strong>Phone:</strong> ${full.formatted_phone_number || "N/A"}</p>
-                  <p><strong>Website:</strong>
-                     ${full.website
+                      <p><strong>Address:</strong> ${full.formatted_address}</p>
+                      <p><strong>Phone:</strong> ${full.formatted_phone_number || "N/A"}</p>
+                      <p><strong>Website:</strong>
+                         ${full.website
                                     ? `<a href="${full.website}" target="_blank">${full.website}</a>`
                                     : "N/A"}</p>
-                  ${hours}
-                  <h5>Tags</h5><div>${tags}</div>
-                  <h5>Top Reviews</h5><div>${revs}</div>
-                  <h5>About</h5><p>${full.editorial_summary || "No description."}</p>
-                  <p><a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
-                        target="_blank">View on Google Maps</a></p>
-                `;
+                      ${hours}
+                      <h5>Tags</h5><div>${tags}</div>
+                      <h5>Top Reviews</h5><div>${revs}</div>
+                      <h5>About</h5><p>${full.editorial_summary || "No description."}</p>
+                      <p><a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
+                            target="_blank">View on Google Maps</a></p>
+                    `;
                         });
                     });
                 });
@@ -913,9 +798,6 @@
         det.style.display = det.style.display === "none" ? "block" : "none";
     };
 
-</script>
-
-<script>
     // ======================================================
     // DAY NAVIGATION & SAVE
     // ======================================================
@@ -942,44 +824,6 @@
         }
     });
 
-    // Handler for Save Day Configuration button:
-    document.getElementById("saveDayConfigBtn").addEventListener("click", function () {
-        const scheduleDateIso = currentDate.toISOString();
-        const scheduleId = @ViewBag.Schedule.Schedule_Id;
-
-        const activitiesToSave = events.map(ev => {
-            const startHourInt = Math.floor(ev.start);
-            const startMinute = Math.round((ev.start - startHourInt) * 60);
-            const end = ev.start + ev.duration;
-            const endHourInt = Math.floor(end);
-            const endMinute = Math.round((end - endHourInt) * 60);
-
-            return {
-                Schedule_Id: scheduleId,
-                Name: ev.name,
-                Place_Id: ev.placeId,
-                Type: ev.type,
-                Start_Hour: startHourInt,
-                End_Hour: endHourInt,
-                Start_Minute: startMinute,
-                End_Minute: endMinute,
-                Start_Date: scheduleDateIso,
-                End_Date: scheduleDateIso, // Adjust if needed
-                Add_Info: ""
-            };
-        });
-
-        console.log("Saving the following activities for", scheduleDateIso, ":", activitiesToSave);
-        fetch('/Home/SaveScheduleActivities', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(activitiesToSave)
-        })
-            .then(response => response.json())
-            .then(data => console.log("Save response:", data))
-            .catch(err => console.error("Error saving activities:", err));
-    });
-
     window.addEventListener("load", function () {
         updateCalendarForCurrentDate();
         fetchTopLocations();
@@ -987,17 +831,17 @@
 
     document.getElementById("routeBtn").addEventListener("click", () => {
         if (!events.length) {
-        alert("No locations scheduled for today!");
-        return;
+            alert("No locations scheduled for today!");
+            return;
         }
 
         // First, sort a copy of events by their start hour/minute
         const sorted = events
-        .slice()  // clone so we don’t mutate original
-        .sort((a, b) => {
-            // a.start and b.start are floats, e.g. 8.5 for 8:30am
-            return a.start - b.start;
-        });
+            .slice()  // clone so we don’t mutate original
+            .sort((a, b) => {
+                // a.start and b.start are floats, e.g. 8.5 for 8:30am
+                return a.start - b.start;
+            });
 
         // Extract the names in chronological order:
         const names = sorted.map(ev => ev.name);
@@ -1012,19 +856,19 @@
             return;
         }
 
-        // Build origin, destination, and waypoints using the names
-        const origin = encodeURIComponent(names[0]);
-        const destination = encodeURIComponent(names[names.length - 1]);
+        // Your hotel name from the Razor model
+        const hotelName = "@ViewBag.Schedule.Hotel_Name";
+        const encodedHotel = encodeURIComponent(hotelName);
+
         const waypoints = names
-            .slice(1, -1)
+            .filter(name => name !== hotelName)
             .map(name => encodeURIComponent(name))
             .join("|");
 
-        // Assemble the Directions URL
         let url = [
             "https://www.google.com/maps/dir/?api=1",
-            `origin=${origin}`,
-            `destination=${destination}`,
+            `origin=${encodedHotel}`,
+            `destination=${encodedHotel}`,
             "travelmode=driving"
         ].join("&");
 

@@ -1,4 +1,5 @@
 ﻿using GoogleApi.Entities.Search.Video.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -69,6 +70,19 @@ namespace TravelAgenda.Controllers
             var activities = _schedule_activityProductService
                                  .GetSchedule_ActivityByScheduleId(id);
             return View(activities);
+        }
+
+        public IActionResult Residence(int id)
+        {
+            var schedule = _scheduleService.GetScheduleById(id);
+            if (schedule == null) return NotFound();
+
+            ViewBag.Schedule = schedule;
+            ViewData["CityName"] = schedule.City_Name;
+            ViewData["PlaceId"] = schedule.Place_Id;
+            ViewData["GoogleApiKey"] = _googleApiKey;
+
+            return View();
         }
 
         [HttpPost]
@@ -169,6 +183,34 @@ namespace TravelAgenda.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        public class ResidenceViewModel
+        {
+            public int Schedule_Id { get; set; }
+
+            public string? Hotel_Id { get; set; }
+            public string? Hotel_Name { get; set; }
+        }
+
+
+        [HttpPost]
+        public IActionResult SaveResidence([FromBody] ResidenceViewModel vm)
+        {
+            if (vm == null || vm.Schedule_Id <= 0)
+                return BadRequest("Invalid payload.");
+
+            var schedule = _scheduleService.GetScheduleById(vm.Schedule_Id);
+            if (schedule == null)
+                return NotFound("Schedule not found.");
+
+            // always write vm.Hotel_Id / vm.Hotel_Name
+            schedule.Hotel_Id = vm.Hotel_Id;
+            schedule.Hotel_Name = vm.Hotel_Name;
+
+            _scheduleService.UpdateSchedule(schedule);
+            return Ok();
+        }
+
 
         public class CityViewModel
         {

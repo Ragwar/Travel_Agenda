@@ -21,6 +21,10 @@ namespace TravelAgenda.Models
         public string? Place_Id { get; set; }
         public string? Hotel_Name { get; set; }
         public string? Hotel_Id { get; set; }
+        public double? Residence_Lat { get; set; }
+        public double? Residence_Lng { get; set; }
+        public string? Residence_Address { get; set; }
+
 
         [ForeignKey("User_Id")]
         public IdentityUser? User { get; set; }

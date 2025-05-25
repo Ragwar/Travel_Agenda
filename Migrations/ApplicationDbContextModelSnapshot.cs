@@ -304,6 +304,15 @@ namespace TravelAgenda.Migrations
                     b.Property<string>("Place_Id")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Residence_Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Residence_Lat")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Residence_Lng")
+                        .HasColumnType("float");
+
                     b.Property<DateTime?>("Start_Date")
                         .HasColumnType("datetime2");
 

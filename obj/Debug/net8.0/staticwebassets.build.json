@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "XDkbQEfdhnd7xEvWiDmyRl6owA1mCInPszXm8u5S/qg=",
+  "Hash": "Q3pUVmlFbTgE6pTQiiliyBLMqkhlm69AuH8np9FN9Rw=",
   "Source": "TravelAgenda",
   "BasePath": "_content/TravelAgenda",
   "Mode": "Default",
@@ -1195,6 +1195,25 @@
       "OriginalItemSpec": "W:\\TravelAgenda\\Travel_Agenda\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\TravelAgenda.bundle.scp.css"
     },
     {
+      "Identity": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\css\\LocationsAndActivities.css",
+      "SourceId": "TravelAgenda",
+      "SourceType": "Discovered",
+      "ContentRoot": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\",
+      "BasePath": "_content/TravelAgenda",
+      "RelativePath": "css/LocationsAndActivities.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\LocationsAndActivities.css"
+    },
+    {
       "Identity": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\css\\site.css",
       "SourceId": "TravelAgenda",
       "SourceType": "Discovered",
@@ -1288,6 +1307,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\daypilot-all.src.js"
+    },
+    {
+      "Identity": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\LocationAndActivities.js",
+      "SourceId": "TravelAgenda",
+      "SourceType": "Discovered",
+      "ContentRoot": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\",
+      "BasePath": "_content/TravelAgenda",
+      "RelativePath": "js/LocationAndActivities.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\LocationAndActivities.js"
     },
     {
       "Identity": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\js\\min\\daypilot-calendar.min.js",

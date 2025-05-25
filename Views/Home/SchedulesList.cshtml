@@ -18,11 +18,47 @@
                 <div class="schedule-item" data-id="@schedule.Schedule_Id">
                     <button class="delete-schedule-btn" title="Delete schedule">✕</button>
                     <div class="schedule-image">
-                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=@(schedule.City_Name ?? "0,0")&zoom=13&size=300x200&maptype=roadmap&key=@apiKey"
-                             alt="@(string.IsNullOrWhiteSpace(schedule.City_Name) ? "No city selected" : schedule.City_Name)" />
+                        @{
+                            string mapUrl;
+                            if (!string.IsNullOrWhiteSpace(schedule.Hotel_Id) && !string.IsNullOrWhiteSpace(schedule.Hotel_Name))
+                            {
+                                // Center on the hotel name and drop a marker there
+                                var encodedName = Uri.EscapeDataString(schedule.Hotel_Name);
+                                mapUrl =
+                                $"https://maps.googleapis.com/maps/api/staticmap?" +
+                                $"center={encodedName}" +
+                                $"&zoom=15" +
+                                $"&size=300x200" +
+                                $"&maptype=roadmap" +
+                                $"&markers=label:H%7C{encodedName}" +
+                                $"&key={apiKey}";
+                            }
+                            else
+                            {
+                                // Fallback to city‐center
+                                var center = string.IsNullOrWhiteSpace(schedule.City_Name)
+                                ? "0,0"
+                                : Uri.EscapeDataString(schedule.City_Name);
+                                mapUrl =
+                                $"https://maps.googleapis.com/maps/api/staticmap?" +
+                                $"center={center}" +
+                                $"&zoom=13" +
+                                $"&size=300x200" +
+                                $"&maptype=roadmap" +
+                                $"&key={apiKey}";
+                            }
+                        }
+                        <img src="@mapUrl"
+                             alt="@(string.IsNullOrWhiteSpace(schedule.Hotel_Name ?? schedule.City_Name)
+                                    ? "No location selected"
+                                    : schedule.Hotel_Name ?? schedule.City_Name)" />
                     </div>
                     <div class="schedule-details">
-                        <h3>@(string.IsNullOrWhiteSpace(schedule.City_Name) ? "(No city selected)" : schedule.City_Name)</h3>
+                        <h3>
+                            @(string.IsNullOrWhiteSpace(schedule.City_Name)
+                                ? "(No city selected)"
+                                : schedule.City_Name)
+                        </h3>
                         <p>
                             <strong>Dates:</strong>
                             @schedule.Start_Date?.ToString(dateFormat)
@@ -30,6 +66,11 @@
                             @schedule.End_Date?.ToString(dateFormat)
                         </p>
                         <p><strong>Number of days:</strong> @schedule.Nr_Days</p>
+
+                        @if (!string.IsNullOrWhiteSpace(schedule.Hotel_Name))
+                        {
+                            <p><strong>Residence:</strong> @schedule.Hotel_Name</p>
+                        }
 
                         @if (string.IsNullOrWhiteSpace(schedule.City_Name))
                         {
@@ -52,7 +93,6 @@
                     </div>
                 </div>
             }
-
         </div>
     }
 }
@@ -124,9 +164,8 @@ else
             font-size: 0.9em;
         }
 
-    .btn-primary {
+    .btn-primary, .btn-warning {
         padding: 10px 15px;
-        background-color: #007bff;
         border: none;
         color: #fff;
         border-radius: 4px;
@@ -134,8 +173,20 @@ else
         cursor: pointer;
     }
 
+    .btn-primary {
+        background-color: #007bff;
+    }
+
         .btn-primary:hover {
             background-color: #0056b3;
+        }
+
+    .btn-warning {
+        background-color: #f0ad4e;
+    }
+
+        .btn-warning:hover {
+            background-color: #ec971f;
         }
 </style>
 
@@ -150,7 +201,6 @@ else
                 try {
                     const res = await fetch(`/Home/DeleteSchedule?id=${id}`, { method: 'DELETE' });
                     if (!res.ok) throw new Error('Delete failed');
-                    // Remove from DOM
                     item.remove();
                 } catch (err) {
                     console.error(err);

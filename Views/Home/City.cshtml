@@ -140,7 +140,7 @@
             .then(response => {
                 if (response.ok) {
                     // Redirect to the And view with ScheduleId and PlaceId
-                    const redirectUrl = `/Home/LocationsAndActivities?id=${scheduleId}`;
+                    const redirectUrl = `/Home/Residence?id=${scheduleId}`;
                     window.location.href = redirectUrl;
                 } else {
                     alert("Failed to save city.");

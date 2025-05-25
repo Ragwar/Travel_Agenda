@@ -246,6 +246,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[W:/TravelAgenda/Travel_Agenda/Views/Home/Residence.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxSZXNpZGVuY2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [W:/TravelAgenda/Travel_Agenda/Views/Home/SchedulesList.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxTY2hlZHVsZXNMaXN0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
