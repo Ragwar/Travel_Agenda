@@ -1,4 +1,4 @@
-/* Theme Variables */
+﻿/* Theme Variables */
 :root {
     --primary-color: #007bff;
     --primary-hover: #0056b3;
@@ -91,7 +91,6 @@ body {
     right: 0;
     border-bottom: 1px solid var(--border-color);
     padding-left: 3rem;
-    cursor: pointer;
 }
 
     .hour-slot.selected {
@@ -211,6 +210,24 @@ body {
         margin-bottom: 0.75rem;
     }
 
+.activity-header {
+    position: relative; /* make this the positioning context */
+    padding-right: 3rem; /* room on the right for the button */
+}
+
+    .activity-header .add-btn {
+        position: absolute;
+        right: 0.75rem; /* tweak to taste */
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.25rem;
+        width: 2rem;
+        height: 2rem;
+        line-height: 1;
+        padding: 0;
+        border-radius: 50%;
+        z-index: 1;
+    }
 /* Location List Items */
 .location-item {
     display: flex;
@@ -221,6 +238,18 @@ body {
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
+    .location-item .add-btn {
+        position: absolute;
+        right: 0.75rem; /* adjust horizontal offset */
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.25rem; /* larger plus */
+        width: 2rem;
+        height: 2rem;
+        line-height: 1;
+        padding: 0; /* we set explicit width/height */
+        border-radius: 50%; /* circular button, optional */
+    }
 
     .location-item img {
         width: 100px;
@@ -233,11 +262,9 @@ body {
         padding: 0.5rem;
         flex: 1;
     }
-
-    .location-item .add-btn {
-        align-self: center;
-    }
-
+.activity-details {
+    margin-bottom: 0.75rem;
+}
 /* Responsive tweaks */
 @media (max-width: 768px) {
     #calendar {

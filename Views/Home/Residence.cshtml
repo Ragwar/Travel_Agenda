@@ -218,6 +218,7 @@
 
             service.getDetails({ placeId: CITY_PLACE_ID, fields: ['geometry'] }, (city, st) => {
                 if (st !== google.maps.places.PlacesServiceStatus.OK) return;
+                cityViewport = city.geometry.viewport;  // save viewport
                 const center = city.geometry.location;
 
                 map = new google.maps.Map(document.getElementById('map'), { center, zoom: 13 });
@@ -241,9 +242,9 @@
         function loadHotelsPage(pageToken) {
             loading = true;
             const params = {
-                location: map.getCenter(),
-                radius: 5000,
-                type: 'lodging'
+                bounds: cityViewport,
+                type: 'lodging',
+                strictBounds: true
             };
             if (pageToken) params.pageToken = pageToken;
 
@@ -251,11 +252,15 @@
                 loading = false;
                 if (status !== google.maps.places.PlacesServiceStatus.OK) return;
 
-                allHotels = allHotels.concat(results);
+                // filter out any result we’ve already added
+                const newUnique = results.filter(r =>
+                    !allHotels.some(existing => existing.place_id === r.place_id)
+                );
+
+                allHotels = allHotels.concat(newUnique);
                 allHotels.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0));
                 renderAllHotels();
 
-                // only store nextPageToken, do not auto-fetch
                 if (pagination && pagination.hasNextPage) {
                     nextPageToken = pagination.nextPage();
                 } else {
@@ -332,7 +337,7 @@
                 .forEach(d => { if (d !== el) d.style.display = 'none'; });
             el.style.display = el.style.display === 'block' ? 'none' : 'block';
         }
-
+        
         document.getElementById('selectHotelBtn').addEventListener('click', () => {
             fetch('/Home/SaveResidence', {
                 method: 'POST',

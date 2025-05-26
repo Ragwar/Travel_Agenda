@@ -72,7 +72,7 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places,geometry" async defer></script>
 
 <script>
- 
+    
     const googleApiKey = "@apiKey";    // from your Razor ViewData
 
     // Serialize saved activities from the ViewBag.
@@ -137,6 +137,8 @@
             slot.classList.add("selected");
             selectedSlot = slot;
         });
+        // ─── dragover ───────────────────────────────────────────────────────────
+
         slot.addEventListener("dragover", function (e) {
             e.preventDefault();
             slot.classList.add("drag-over");
@@ -161,19 +163,22 @@
                 }
 
                 renderEvents();
-            }
-            else {
-                // External drop: extract location data from dataTransfer
-                const data = JSON.parse(e.dataTransfer.getData("application/json") || "{}");
-                const locationName = data.name || e.dataTransfer.getData("text/plain");
-                const locationId = data.placeId || "";
-                const type = window.draggedType || "restaurant";
-                let rawHour = parseFloat(slot.dataset.hour);
-                let startHour = Math.round(rawHour * 2) / 2;
-                addEvent(locationName, type, startHour, locationId);
 
             }
+            // 2) Dropping in a location from the side-pane?
+            else {
+                const dataJson = e.dataTransfer.getData("application/json") || "{}";
+                const data = JSON.parse(dataJson);
+                const name = data.name || e.dataTransfer.getData("text/plain");
+                const placeId = data.placeId || "";
+                const type = window.draggedType || "restaurant";
+                const rawHour = parseFloat(slot.dataset.hour);
+                const start = Math.round(rawHour * 2) / 2;
+
+                addEvent(name, type, start, placeId);
+            }
         });
+
         hourSlotsContainer.appendChild(slot);
     }
 
@@ -253,39 +258,56 @@
             bottomHandle.classList.add("handle", "bottom");
             evEl.appendChild(bottomHandle);
 
-            evEl.draggable = true;
+            // Make the event draggable
+            evEl.setAttribute("draggable", "true");
+
+            // Tell WebKit (Chrome/Safari) that this element should be draggable
+            evEl.style.webkitUserDrag = "element";
+
             evEl.addEventListener("dragstart", function (e) {
                 calendarEvent._oldStart = calendarEvent.start;
-                
+
+                // Build a drag image off-screen
                 const dragIcon = evEl.cloneNode(true);
                 const rect = evEl.getBoundingClientRect();
-                dragIcon.style.position = "absolute";
-                dragIcon.style.top = "-1000px";           // off-screen
-                dragIcon.style.left = "0";                 // remove inherited offsets
-                dragIcon.style.right = "auto";
-                dragIcon.style.width = rect.width + "px";
-                dragIcon.style.height = rect.height + "px";
-                dragIcon.style.background = "#007bff";           // solid color
-                dragIcon.style.backgroundImage = "none";              // no gradients
-                dragIcon.style.filter = "none";              // no browser dimming
-                dragIcon.style.opacity = "1";                 // fully opaque
-                dragIcon.style.boxSizing = "border-box";        // ensure height includes borders
-                dragIcon.style.visibility = "visible";
-                evEl.style.visibility = "hidden";
-  
+                Object.assign(dragIcon.style, {
+                    position: "absolute",
+                    top: "-1000px",    // off-screen
+                    left: "0",
+                    width: rect.width + "px",
+                    height: rect.height + "px",
+                    background: "#007bff",
+                    backgroundImage: "none",
+                    filter: "none",
+                    opacity: "1",
+                    boxSizing: "border-box",
+                    visibility: "visible",
+                    webkitUserDrag: "none"  // don’t let the clone itself be draggable
+                });
                 document.body.appendChild(dragIcon);
                 e.dataTransfer.setDragImage(dragIcon, 20, 10);
-                setTimeout(() => document.body.removeChild(dragIcon), 0);
+
+                e.dataTransfer.effectAllowed = "move";
+               
+
+                // payloads
+                e.dataTransfer.setData("application/json",
+                    JSON.stringify({ name: calendarEvent.name, placeId: calendarEvent.placeId }));
+                e.dataTransfer.setData("text/plain", calendarEvent.name);
+                 
+                setTimeout(() => {
+                    if (dragIcon.parentNode === document.body) {
+                        document.body.removeChild(dragIcon);
+                    }
+                }, 0);
+
+                // Hide the real element while dragging
+                evEl.style.visibility = "hidden";
                 window.draggedEvent = evEl;
                 window.draggedEventObj = calendarEvent;
-                e.dataTransfer.setData(
-                    "application/json",
-                    JSON.stringify({ name: calendarEvent.name, placeId: calendarEvent.placeId })
-                );
             });
 
             evEl.addEventListener("dragend", function () {
-               
                 evEl.style.visibility = "";
                 window.draggedEvent = null;
                 window.draggedEventObj = null;
@@ -683,6 +705,7 @@
                         // build the item: header + details + button
                         const item = document.createElement("div");
                         const header = document.createElement("div");
+                        
                         const details = document.createElement("div");
 
                         // header: image + name + rating + price symbols
@@ -691,6 +714,10 @@
                         header.setAttribute("draggable", "true");
                         header.onclick = () => toggleDetails(header);
                         header.addEventListener("dragstart", e => {
+                            // allow copy
+                            e.dataTransfer.effectAllowed = "copy";
+                            e.dataTransfer.setData("text/plain", "");
+
                             e.dataTransfer.setData("application/json",
                                 JSON.stringify({ name: place.name, placeId: place.place_id }));
                             window.draggedType = type;
@@ -721,14 +748,20 @@
 
                         // add‐to‐schedule button
                         const addBtn = document.createElement("button");
-                        addBtn.textContent = "Add to Schedule";
+                        addBtn.textContent = "+";
+                        addBtn.title = "Add to schedule";
                         addBtn.classList.add("add-btn");
-                        addBtn.onclick = () => {
+                        addBtn.onclick = (e) => {
+                            e.stopPropagation();   // ← prevent the header’s toggleDetails from firing
                             const targetHour = selectedSlot ? +selectedSlot.dataset.hour : 8;
                             addEvent(place.name, type, targetHour, place.place_id);
                         };
+                        header.appendChild(addBtn);
 
-                        item.append(header, details, addBtn);
+                        // 4) Now assemble the item: header (with button) then details
+                        item.append(header, details);
+
+                        // 5) Finally, stick it into the tab pane
                         pane.appendChild(item);
 
                         // fetch full details
@@ -846,15 +879,6 @@
         // Extract the names in chronological order:
         const names = sorted.map(ev => ev.name);
 
-        if (names.length === 1) {
-            // Single location: open a simple search
-            const query = encodeURIComponent(names[0]);
-            window.open(
-                `https://www.google.com/maps/search/?api=1&query=${query}`,
-                "_blank"
-            );
-            return;
-        }
 
         // Your hotel name from the Razor model
         const hotelName = "@ViewBag.Schedule.Hotel_Name";

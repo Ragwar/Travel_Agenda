@@ -133,6 +133,24 @@
                     </div>
                 </div>
             </div>
+
+            @* Show route button for this day *@
+            @{
+                var hotelName = schedule.Hotel_Name ?? string.Empty;
+                var encodedHotel = Uri.EscapeDataString(hotelName);
+                var stops = dayActs
+                .Where(e => e.Name != hotelName)
+                .Select(e => Uri.EscapeDataString(e.Name));
+                var waypointsParam = string.Join("|", stops);
+                var routeUrl = $"https://www.google.com/maps/dir/?api=1&origin={encodedHotel}&destination={encodedHotel}&travelmode=driving";
+                if (!string.IsNullOrEmpty(waypointsParam))
+                {
+                    routeUrl += $"&waypoints={waypointsParam}";
+                }
+            }
+            <a href="@routeUrl" target="_blank" class="btn btn-secondary">
+                Show Route in Google Maps
+            </a>
         </div>
     }
 </div>
