@@ -24,6 +24,20 @@ body {
     background: var(--bg-light);
 }
 
+.filter-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+    .filter-btn:hover {
+        background: #5a6268;
+    }
+
 /* Buttons */
 .btn, button, .add-btn, .remove-btn {
     display: inline-block;
@@ -59,6 +73,17 @@ body {
 
     .remove-btn:hover {
         background: darken(var(--danger-color), 10%);
+    }
+
+#locationTabContent {
+    height: 70vh; /* adjust as needed */
+    overflow-y: auto;
+}
+
+    /* if you want each individual tab pane to also scroll */
+    #locationTabContent > div {
+        max-height: 70vh;
+        overflow-y: auto;
     }
 
 /* Calendar container & grid */
@@ -262,6 +287,40 @@ body {
         padding: 0.5rem;
         flex: 1;
     }
+
+.search-container {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.search-input {
+    width: 70%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+.search-btn {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+    .search-btn:hover {
+        background: #0056b3;
+    }
+
+    .search-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+
 .activity-details {
     margin-bottom: 0.75rem;
 }

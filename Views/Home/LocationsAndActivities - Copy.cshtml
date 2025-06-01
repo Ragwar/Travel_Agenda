@@ -1,0 +1,907 @@
+﻿<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Activities & Locations</title>
+<link rel="stylesheet" href="~/css/LocationsAndActivities.css" asp-append-version="true" />
+
+@{
+    // Razor Variables
+    ViewData["Title"] = "Activities & Locations";
+    var schedule = ViewBag.Schedule; // Contains Start_Date and End_Date
+    var cityName = ViewBag.CityName;
+    var placeId = ViewBag.PlaceId;
+    var apiKey = ViewBag.GoogleApiKey;
+}
+
+<h1>Top Locations in @cityName</h1>
+<!-- Button to Show/Hide Filters -->
+<button id="toggleFiltersBtn" class="btn btn-primary mb-3">Show Filters</button>
+
+<!-- Main container: Left for locations/tabs, right for calendar -->
+<div style="display: flex; justify-content: space-between; margin-top: 20px;">
+    <!-- Locations & Tabs -->
+    <div style="width: 60%; padding-right: 20px;">
+        <!-- Filters Section -->
+        <div id="filtersSection" style="display: none;">
+            <div class="mb-3">
+                <label for="budgetFilter">Filter by Budget:</label>
+                <select id="budgetFilter" class="form-select">
+                    <option value="all">All</option>
+                    <option value="free">No cost</option>
+                    <option value="low">Low</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="ratingFilter">Minimum Rating:</label>
+                <input type="number" id="ratingFilter" class="form-control" min="1" max="5" step="0.1" value="1">
+            </div>
+            <div class="mb-3">
+                <label for="reviewsFilter">Minimum Reviews:</label>
+                <input type="number" id="reviewsFilter" class="form-control" min="0" value="0">
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <ul class="nav-tabs" id="locationTabs"></ul>
+        <!-- Tab Content -->
+        <div class="tab-content" id="locationTabContent"></div>
+    </div>
+
+    <!-- Calendar Container -->
+    <div style="width: 35%;">
+        <div id="calendar">
+            <div id="calendarHeaderContainer" style="display:flex; align-items:center; justify-content:center;">
+                <button id="prevDayBtn" style="margin-right:10px;">&#9664;</button>
+                <div id="calendarHeader"></div>
+                <button id="nextDayBtn" style="margin-left:10px;">&#9654;</button>
+            </div>
+            <div id="hourSlotsScroll">
+                <div id="hourSlotsContainer"></div>
+            </div>
+        </div>
+       
+        <button id="routeBtn" style="margin-top: 10px; margin-left: 10px;">
+            Go to Google Maps
+        </button>
+
+    </div>
+</div>
+
+<!-- Load Google Maps Places library -->
+<script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places,geometry" async defer></script>
+
+<script>
+    window.currentProgressStep = 'activities';
+    const googleApiKey = "@apiKey";    // from your Razor ViewData
+
+    // Serialize saved activities from the ViewBag.
+    // Note: property names here should match your model: Start_Date, Start_Hour, Start_Minute, End_Hour, End_Minute, Name, Place_Id, Type, etc.
+    const schedule_Id = @ViewBag.Schedule.Schedule_Id;
+    savedActivities = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Locations ?? new List<object>()));
+
+    // ======================================================
+    // CALENDAR CONFIGURATION & EVENT RENDERING (Custom Code)
+    // ======================================================
+    const slotHeight = 60; // each hour slot is 60px tall
+    const fullStartHour = 1;
+    const fullEndHour = 25; // hours 1 to 24 (endHour is non-inclusive)
+    const visibleSlots = 8;
+    const defaultScrollStart = 8; // 8AM is default top visible hour
+
+    const calendarHeaderEl = document.getElementById("calendarHeader");
+    const scheduleDate = "@(ViewBag.Schedule?.Start_Date?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))";
+    calendarHeaderEl.textContent = "Schedule for " + scheduleDate;
+    const calendarEl = document.getElementById("hourSlotsContainer");
+    const hourSlotsContainer = document.getElementById("hourSlotsContainer");
+    hourSlotsContainer.style.height = ((fullEndHour - fullStartHour) * slotHeight) + "px";
+
+    const hourSlotsScroll = document.getElementById("hourSlotsScroll");
+    hourSlotsScroll.style.height = (visibleSlots * slotHeight) + "px";
+    setTimeout(() => {
+        hourSlotsScroll.scrollTop = ((defaultScrollStart - fullStartHour) * slotHeight);
+    }, 0);
+
+    let selectedSlot = null;
+    // Set current date from the schedule start date.
+    let currentDate = new Date(scheduleDate);
+    // End date from your schedule (should be set in ViewBag.Schedule)
+    const scheduleEndDate = new Date("@(ViewBag.Schedule?.End_Date?.ToString("yyyy-MM-dd"))");
+
+    // Render full day slots (from 1AM to 24PM)
+    const step = 0.5;  // half-hour
+    for (let t = fullStartHour; t < fullEndHour; t += step) {
+        const slot = document.createElement("div");
+        // use a shared class so your existing CSS applies
+        slot.className = "hour-slot";
+        slot.dataset.hour = t;
+        // Each half-hour is half the height
+        slot.style.top = ((t - fullStartHour) * slotHeight) + "px";
+        slot.style.height = (slotHeight * step) + "px";
+
+        // Only integer hours get a visible label
+        if (Number.isInteger(t)) {
+            const label = document.createElement("div");
+            label.className = "hour-label";
+            let h = t;
+            let displayHour = (h % 12 === 0 ? 12 : h % 12);
+            label.textContent = displayHour + (h < 12 ? "AM" : "PM");
+            slot.appendChild(label);
+        } else {
+            // half-hour: make borders invisible (you can refine in your CSS)
+            slot.style.borderTop = "none";
+        }
+
+        slot.addEventListener("click", function () {
+            document.querySelectorAll(".hour-slot").forEach(s => s.classList.remove("selected"));
+            slot.classList.add("selected");
+            selectedSlot = slot;
+        });
+        // ─── dragover ───────────────────────────────────────────────────────────
+
+        slot.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            slot.classList.add("drag-over");
+        });
+        slot.addEventListener("dragleave", function () {
+            slot.classList.remove("drag-over");
+        });
+        slot.addEventListener("drop", function (e) {
+            e.preventDefault();
+            slot.classList.remove("drag-over");
+            if (window.draggedEvent) {
+                let ev = window.draggedEventObj;
+                let raw = parseFloat(slot.dataset.hour);
+                let newStart = Math.round(raw * 2) / 2;
+
+                if (isRangeFree(newStart, ev.duration, ev)) {
+                    ev.start = newStart;
+                    updateScheduleActivity(ev);
+                } else {
+                    alert("Target time is not free.");
+                    ev.start = ev._oldStart;
+                }
+
+                renderEvents();
+
+            }
+            // 2) Dropping in a location from the side-pane?
+            else {
+                const dataJson = e.dataTransfer.getData("application/json") || "{}";
+                const data = JSON.parse(dataJson);
+                const name = data.name || e.dataTransfer.getData("text/plain");
+                const placeId = data.placeId || "";
+                const type = window.draggedType || "restaurant";
+                const rawHour = parseFloat(slot.dataset.hour);
+                const start = Math.round(rawHour * 2) / 2;
+
+                addEvent(name, type, start, placeId);
+            }
+        });
+
+        hourSlotsContainer.appendChild(slot);
+    }
+
+    // Global events array.
+    const events = [];
+    const defaultDurations = {
+        restaurant: 2,
+        hotel: 1,
+        park: 3,
+        shopping_mall: 2,
+        museum: 3
+    };
+
+    // Utility: Check if a time range is free (no overlapping event)
+    function isRangeFree(start, duration, ignoreEvent) {
+        const eps = 0.0001;
+        const desiredEnd = start + duration - eps;
+        for (let ev of events) {
+            if (ev === ignoreEvent) continue;
+            const evEnd = ev.start + ev.duration - eps;
+            // overlap if ev.start < desiredEnd && evEnd > start
+            if (ev.start < desiredEnd && evEnd > start) return false;
+        }
+        return true;
+    }
+
+    function renderEvents() {
+        document.querySelectorAll(".event").forEach(el => el.remove());
+        for (let calendarEvent of events) {
+            const evEl = document.createElement("div");
+            evEl.className = "event";
+            evEl.style.top = ((calendarEvent.start - fullStartHour) * slotHeight) + "px";
+            evEl.style.height = (calendarEvent.duration * slotHeight - 2) + "px";
+
+            const content = document.createElement("div");
+            content.className = "content";
+            content.textContent = calendarEvent.name;
+            evEl.appendChild(content);
+
+            const removeBtn = document.createElement("button");
+            removeBtn.className = "remove-btn";
+            removeBtn.textContent = "X";
+            removeBtn.addEventListener("click", function (e) {
+                e.stopPropagation();
+
+                const activityId = calendarEvent.schedule_Activity_Id;
+                if (!activityId) {
+                    console.warn("Cannot delete an unsaved event.");
+                    return;
+                }
+                
+                fetch(`/Home/DeleteScheduleActivity?id=${activityId}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error("Delete failed");
+                        // On success, remove from local array and re‑render
+                        const idx = events.indexOf(calendarEvent);
+                        if (idx > -1) {
+                            events.splice(idx, 1);
+                            renderEvents();
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error deleting schedule activity:", err);
+                        alert("Could not delete the event. Please try again.");
+                    });
+            });
+
+            evEl.appendChild(removeBtn);
+
+            const topHandle = document.createElement("div");
+            topHandle.classList.add("handle", "top");
+            evEl.appendChild(topHandle);
+
+            const bottomHandle = document.createElement("div");
+            bottomHandle.classList.add("handle", "bottom");
+            evEl.appendChild(bottomHandle);
+
+            // Make the event draggable
+            evEl.setAttribute("draggable", "true");
+
+            // Tell WebKit (Chrome/Safari) that this element should be draggable
+            evEl.style.webkitUserDrag = "element";
+
+            evEl.addEventListener("dragstart", function (e) {
+                calendarEvent._oldStart = calendarEvent.start;
+
+                // Build a drag image off-screen
+                const dragIcon = evEl.cloneNode(true);
+                const rect = evEl.getBoundingClientRect();
+                Object.assign(dragIcon.style, {
+                    position: "absolute",
+                    top: "-1000px",    // off-screen
+                    left: "0",
+                    width: rect.width + "px",
+                    height: rect.height + "px",
+                    background: "#007bff",
+                    backgroundImage: "none",
+                    filter: "none",
+                    opacity: "1",
+                    boxSizing: "border-box",
+                    visibility: "visible",
+                    webkitUserDrag: "none"  // don’t let the clone itself be draggable
+                });
+                document.body.appendChild(dragIcon);
+                e.dataTransfer.setDragImage(dragIcon, 20, 10);
+
+                e.dataTransfer.effectAllowed = "move";
+               
+
+                // payloads
+                e.dataTransfer.setData("application/json",
+                    JSON.stringify({ name: calendarEvent.name, placeId: calendarEvent.placeId }));
+                e.dataTransfer.setData("text/plain", calendarEvent.name);
+                 
+                setTimeout(() => {
+                    if (dragIcon.parentNode === document.body) {
+                        document.body.removeChild(dragIcon);
+                    }
+                }, 0);
+
+                // Hide the real element while dragging
+                evEl.style.visibility = "hidden";
+                window.draggedEvent = evEl;
+                window.draggedEventObj = calendarEvent;
+            });
+
+            evEl.addEventListener("dragend", function () {
+                evEl.style.visibility = "";
+                window.draggedEvent = null;
+                window.draggedEventObj = null;
+            });
+
+            calendarEl.appendChild(evEl);
+            calendarEvent.element = evEl;
+            attachResizeHandles(calendarEvent);
+        }
+    }
+
+    // Add new event (either via drop or "Add to Schedule" button)
+    function addEvent(locationName, type, targetHour, locationId = "") {
+        let duration = defaultDurations[type] || 1;
+        while (!isRangeFree(targetHour, duration) && targetHour + duration <= fullEndHour) {
+            targetHour++;
+        }
+        if (targetHour + duration > fullEndHour) {
+            alert("No available slot for " + locationName);
+            return;
+        }
+        // Create the new event object.
+        const calendarEvent = {
+            name: locationName,
+            type: type,
+            start: targetHour,
+            duration: duration,
+            placeId: locationId,
+            schedule_Activity_Id: 0
+        };
+        //events.push(calendarEvent);
+        //renderEvents();
+
+        // Immediately persist this new event in the database.
+        createScheduleActivity(calendarEvent);
+    }
+
+    // Helper: Create a new schedule activity in the database.
+    function createScheduleActivity(calendarEvent) {
+        // Use local date string for schedule. (Assumes currentDate holds the view date.)
+        let scheduleDateIso = getLocalDateStr(currentDate);
+        // Get schedule ID from Razor.
+        let scheduleId = @ViewBag.Schedule.Schedule_Id;
+
+        // Prepare the data using the event’s current properties.
+        let startHourInt = Math.floor(calendarEvent.start);
+        let startMinute = Math.round((calendarEvent.start - startHourInt) * 60);
+        let end = calendarEvent.start + calendarEvent.duration;
+        let endHourInt = Math.floor(end);
+        let endMinute = Math.round((end - endHourInt) * 60);
+
+        const activityData = {
+            Schedule_Id: scheduleId,
+            Name: calendarEvent.name,
+            Place_Id: calendarEvent.placeId,
+            Type: calendarEvent.type,
+            Start_Hour: startHourInt,
+            End_Hour: endHourInt,
+            Start_Minute: startMinute,
+            End_Minute: endMinute,
+            Start_Date: scheduleDateIso,
+            End_Date: scheduleDateIso,
+            Add_Info: ""
+        };
+
+        fetch('/Home/CreateScheduleActivity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activityData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Assume the response contains the created activity record, including its Schedule_Activity_Id.
+                if (data && data.scheduleActivity && data.scheduleActivity.schedule_Activity_Id) {
+                    calendarEvent.schedule_Activity_Id = data.scheduleActivity.schedule_Activity_Id;
+                }
+
+                console.log("Created schedule activity:", data);
+                events.push(calendarEvent);
+                renderEvents();
+            })
+            .catch(err => console.error("Error creating schedule activity:", err));
+
+
+
+    }
+
+    // Helper: Update an existing schedule activity in the database.
+    function updateScheduleActivity(calendarEvent) {
+        if (!calendarEvent.schedule_Activity_Id) {
+            console.warn("No Schedule_Activity_Id defined for event, cannot update.");
+            return;
+        }
+        let scheduleDateIso = getLocalDateStr(currentDate);
+        let scheduleId = @ViewBag.Schedule.Schedule_Id;
+
+        let startHourInt = Math.floor(calendarEvent.start);
+        let startMinute = Math.round((calendarEvent.start - startHourInt) * 60);
+        let end = calendarEvent.start + calendarEvent.duration;
+        let endHourInt = Math.floor(end);
+        let endMinute = Math.round((end - endHourInt) * 60);
+
+        const activityData = {
+            Schedule_Activity_Id: calendarEvent.schedule_Activity_Id,
+            Schedule_Id: scheduleId,
+            Name: calendarEvent.name,
+            Place_Id: calendarEvent.placeId,
+            Type: calendarEvent.type,
+            Start_Hour: startHourInt,
+            End_Hour: endHourInt,
+            Start_Minute: startMinute,
+            End_Minute: endMinute,
+            Start_Date: scheduleDateIso,
+            End_Date: scheduleDateIso,
+            Add_Info: ""
+        };
+
+        fetch('/Home/UpdateScheduleActivity', {
+            method: 'PUT', // using PUT for updating
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activityData)
+        })
+            .then(response => response.json())
+            .then(data => console.log("Updated schedule activity:", data))
+            .catch(err => console.error("Error updating schedule activity:", err));
+
+
+
+    }
+
+    function attachResizeHandles(calendarEvent) {
+        const evEl = calendarEvent.element;
+        const topHandle = evEl.querySelector(".handle.top");
+        const bottomHandle = evEl.querySelector(".handle.bottom");
+
+        let startY, startDuration, startHourVal;
+
+        topHandle.addEventListener("mousedown", function (e) {
+            e.stopPropagation();
+            startY = e.clientY;
+            startDuration = calendarEvent.duration;
+            startHourVal = calendarEvent.start;
+            document.addEventListener("mousemove", onTopResize);
+            document.addEventListener("mouseup", stopResize);
+
+        });
+
+        bottomHandle.addEventListener("mousedown", function (e) {
+            e.stopPropagation();
+            startY = e.clientY;
+            startDuration = calendarEvent.duration;
+            document.addEventListener("mousemove", onBottomResize);
+            document.addEventListener("mouseup", stopResize);
+
+        });
+
+        function onTopResize(e) {
+            const diff = e.clientY - startY;
+            const diffHours = diff / slotHeight;
+            let newStart = startHourVal + diffHours;
+            newStart = Math.round(newStart * 2) / 2;
+            let newDuration = startDuration - (newStart - startHourVal);
+
+            if (newStart < fullStartHour || newDuration < 0.5 || !isRangeFree(newStart, newDuration, calendarEvent)) return;
+            calendarEvent.start = newStart;
+            calendarEvent.duration = newDuration;
+            renderEvents();
+            updateScheduleActivity(calendarEvent);
+        }
+
+        function onBottomResize(e) {
+            const diff = e.clientY - startY;
+            const diffHours = diff / slotHeight;
+            let newDuration = startDuration + diffHours;
+            newDuration = Math.round(newDuration * 2) / 2;
+
+            if (
+                calendarEvent.start + newDuration > fullEndHour ||
+                newDuration < 0.5 ||
+                !isRangeFree(calendarEvent.start, newDuration, calendarEvent)
+            ) return;
+            calendarEvent.duration = newDuration;
+            renderEvents();
+            updateScheduleActivity(calendarEvent);
+        }
+
+        function stopResize() {
+            document.removeEventListener("mousemove", onTopResize);
+            document.removeEventListener("mousemove", onBottomResize);
+            document.removeEventListener("mouseup", stopResize);
+
+        }
+
+    }
+
+    function parseDateAsLocal(dateStr) {
+        // Ensure only the date portion is used (first 10 characters).
+        let dStr = dateStr.substring(0, 10);
+        const [yyyy, mm, dd] = dStr.split('-');
+        return new Date(+yyyy, +mm - 1, +dd, 0, 0, 0);
+    }
+
+    // Helper: Format a Date object to "YYYY-MM-DD" using local date parts.
+    function getLocalDateStr(date) {
+        const yyyy = date.getFullYear();
+        const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+        const dd = date.getDate().toString().padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+    // Update navigation arrow buttons based on the current date.
+    function updateNavButtons() {
+        const scheduleStartDate = new Date(scheduleDate); // scheduleDate is the schedule’s start date string.
+        const prevDayBtn = document.getElementById("prevDayBtn");
+        const nextDayBtn = document.getElementById("nextDayBtn");
+
+        // Hide previous button if currentDate equals the schedule start date.
+        if (getLocalDateStr(currentDate) === getLocalDateStr(scheduleStartDate)) {
+            prevDayBtn.style.visibility = "hidden";
+        } else {
+            prevDayBtn.style.visibility = "visible";
+        }
+
+        // Hide next button if currentDate equals the schedule end date.
+        if (getLocalDateStr(currentDate) === getLocalDateStr(scheduleEndDate)) {
+            nextDayBtn.style.visibility = "hidden";
+        } else {
+            nextDayBtn.style.visibility = "visible";
+        }
+    }
+
+    function updateCalendarForCurrentDate() {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        calendarHeaderEl.textContent = "Schedule for " + currentDate.toLocaleDateString(undefined, options);
+
+        events.length = 0;
+
+        // Get the current date as a local date string.
+        const currentDateStr = getLocalDateStr(currentDate);
+        console.log("Current date for rendering:", currentDateStr);
+        fetch(`/Home/GetScheduleActivities?id=${schedule_Id}`, {
+            method: 'GET'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch schedule activities");
+                }
+                return response.json();           // ← parse JSON
+            })
+            .then(data => {
+                // ‘data’ is now the array of Schedule_Activity from your controller
+                savedActivities = data;
+                console.log("Loaded activities:", savedActivities);
+                // Loop through each saved activity.
+                savedActivities.forEach(activity => {
+                    // Parse the activity's Start_Date as a local date and format it.
+                    let activityDateStr = getLocalDateStr(parseDateAsLocal(activity.start_Date));
+                    console.log("Checking activity:", activity.name, "with date", activityDateStr);
+
+                    if (activityDateStr === currentDateStr) {
+                        const startHour = activity.start_Hour + ((activity.start_Minute || 0) / 60);
+                        const endHour = activity.end_Hour + ((activity.end_Minute || 0) / 60);
+                        const duration = endHour - startHour;
+                        events.push({
+                            name: activity.name,
+                            type: activity.type,
+                            start: startHour,
+                            duration: duration,
+                            placeId: activity.place_Id,
+                            schedule_Activity_Id: activity.schedule_Activity_Id
+                        });
+                    }
+                });
+                renderEvents();
+                updateNavButtons();
+            })
+            .catch(err => {
+                console.error("Error updating json:", err);
+                alert("Could not load activities. Please try again.");
+            });
+
+    }
+
+    // ===================================================
+    // GOOGLE PLACES & LOCATIONS TABS
+    // ===================================================
+    const locationsTypes = ["restaurant", "hotel", "park", "museum", "shopping_mall"];
+    const locationsTypeNames = {
+        restaurant: "Restaurants",
+        hotel: "Hotels",
+        park: "Parks",
+        museum: "Museums",
+        shopping_mall: "Shopping Malls"
+    };
+    const allPlaces = {};
+    const nextPageTokens = {};
+    const loadingPlaces = {};
+    window.draggedType = "";
+    let cityViewport = null;
+
+    // Initialize per‐type state
+    locationsTypes.forEach(type => {
+        allPlaces[type] = [];
+        nextPageTokens[type] = null;
+        loadingPlaces[type] = false;
+    });
+
+    // toggle filters panel
+    document.getElementById("toggleFiltersBtn").addEventListener("click", function () {
+        const fs = document.getElementById("filtersSection");
+        fs.style.display = fs.style.display === "none" ? "block" : "none";
+        this.textContent = fs.style.display === "none" ? "Show Filters" : "Hide Filters";
+    });
+
+    function fetchTopLocations() {
+        const tabsContainer = document.getElementById("locationTabs");
+        const contentContainer = document.getElementById("locationTabContent");
+        tabsContainer.innerHTML = "";
+        contentContainer.innerHTML = "";
+
+        const selectedBudget = document.getElementById("budgetFilter").value;
+        const minRating = parseFloat(document.getElementById("ratingFilter").value) || 1;
+        const minReviews = parseInt(document.getElementById("reviewsFilter").value) || 0;
+
+        // 1) get city geometry & viewport
+        const masterSvc = new google.maps.places.PlacesService(document.createElement("div"));
+        masterSvc.getDetails({ placeId: "@placeId" }, (city, status) => {
+            if (status !== google.maps.places.PlacesServiceStatus.OK) {
+                console.error("City lookup failed:", status);
+                return;
+            }
+
+            const viewport = city.geometry.viewport; // northeast/southwest bounds
+
+            // 2) build one tab+pane per category
+            locationsTypes.forEach((type, idx) => {
+                // Tab button
+                const tabLink = document.createElement("a");
+                tabLink.textContent = locationsTypeNames[type];
+                tabLink.dataset.type = type;
+                tabLink.classList.add("nav-link");
+                if (idx === 0) tabLink.classList.add("active");
+                tabLink.addEventListener("click", e => {
+                    e.preventDefault();
+                    document.querySelectorAll("#locationTabs .nav-link").forEach(l => l.classList.remove("active"));
+                    document.querySelectorAll("#locationTabContent > div").forEach(p => p.classList.remove("active"));
+                    tabLink.classList.add("active");
+                    pane.classList.add("active");
+                });
+                const li = document.createElement("li");
+                li.appendChild(tabLink);
+                tabsContainer.appendChild(li);
+
+                // Content pane
+                const pane = document.createElement("div");
+                pane.id = type;
+                if (idx === 0) pane.classList.add("active");
+                contentContainer.appendChild(pane);
+
+                // 3) nearbySearch *within bounds* instead of fixed radius
+                const svc = new google.maps.places.PlacesService(document.createElement("div"));
+
+                // BUILD THE REQUEST
+                let request = { bounds: viewport };
+                if (type === "restaurant") {
+                    request.keyword = "restaurant";
+                } else {
+                    request.type = type;
+                }
+
+                // RUN THE SEARCH
+                svc.nearbySearch(request, (results, stat) => {
+                    if (stat !== google.maps.places.PlacesServiceStatus.OK || !results.length) return;
+
+                    // 4) filter & sort by rating first, then review count
+                    const filtered = results
+                        .filter(r => r.rating >= minRating && r.user_ratings_total >= minReviews)
+                        .filter(r => {
+                            if (selectedBudget === "all") return true;
+                            const p = r.price_level;
+                            return (
+                                (selectedBudget === "free" && p === 0) ||
+                                (selectedBudget === "low" && p === 1) ||
+                                (selectedBudget === "moderate" && p === 2) ||
+                                (selectedBudget === "high" && p >= 3)
+                            );
+                        })
+                        .filter(r => type !== "restaurant" || !r.types.includes("lodging"))
+                        .sort((a, b) => {
+                            if (b.user_ratings_total !== a.user_ratings_total) return b.user_ratings_total - a.user_ratings_total;
+                            return b.rating - a.rating;
+                        })
+                        .slice(0, 10);
+
+                    filtered.forEach(place => {
+                        // build the item: header + details + button
+                        const item = document.createElement("div");
+                        const header = document.createElement("div");
+                        
+                        const details = document.createElement("div");
+
+                        // header: image + name + rating + price symbols
+                        header.classList.add("activity-header");
+                        header.style.cssText = "display:flex;align-items:center;cursor:pointer";
+                        header.setAttribute("draggable", "true");
+                        header.onclick = () => toggleDetails(header);
+                        header.addEventListener("dragstart", e => {
+                            // allow copy
+                            e.dataTransfer.effectAllowed = "copy";
+                            e.dataTransfer.setData("text/plain", "");
+
+                            e.dataTransfer.setData("application/json",
+                                JSON.stringify({ name: place.name, placeId: place.place_id }));
+                            window.draggedType = type;
+                        });
+
+                        // price as $, $$, etc.
+                        const priceSymbols = place.price_level
+                            ? "$".repeat(place.price_level)
+                            : "N/A";
+
+                        const imgUrl = place.photos?.[0]?.getUrl({ maxWidth: 100 })
+                            || "https://via.placeholder.com/100?text=No+Image";
+
+                        header.innerHTML = `
+                    <img src="${imgUrl}" width="100" height="100"
+                         style="margin-right:10px;border-radius:6px;object-fit:cover">
+                    <div>
+                      <strong>${place.name}</strong><br>
+                      ${place.rating.toFixed(1)} ★ (${place.user_ratings_total})<br>
+                      <small>${priceSymbols}</small>
+                    </div>
+                  `;
+
+                        // details placeholder
+                        details.classList.add("activity-details");
+                        details.style.cssText = "display:none;margin-top:8px;padding:10px;border:1px solid #ccc;border-radius:6px;background:#f9f9f9";
+                        details.innerHTML = `<em>Loading details…</em>`;
+
+                        // add‐to‐schedule button
+                        const addBtn = document.createElement("button");
+                        addBtn.textContent = "+";
+                        addBtn.title = "Add to schedule";
+                        addBtn.classList.add("add-btn");
+                        addBtn.onclick = (e) => {
+                            e.stopPropagation();   // ← prevent the header’s toggleDetails from firing
+                            const targetHour = selectedSlot ? +selectedSlot.dataset.hour : 8;
+                            addEvent(place.name, type, targetHour, place.place_id);
+                        };
+                        header.appendChild(addBtn);
+
+                        // 4) Now assemble the item: header (with button) then details
+                        item.append(header, details);
+
+                        // 5) Finally, stick it into the tab pane
+                        pane.appendChild(item);
+
+                        // fetch full details
+                        svc.getDetails({
+                            placeId: place.place_id,
+                            fields: [
+                                "formatted_address",
+                                "formatted_phone_number",
+                                "website",
+                                "opening_hours",
+                                "reviews",
+                                "editorial_summary",
+                                "types"
+                            ]
+                        }, (full, st2) => {
+                            if (st2 !== google.maps.places.PlacesServiceStatus.OK) {
+                                details.innerHTML = `<p><em>Details unavailable.</em></p>`;
+                                return;
+                            }
+
+                            // build tags from types
+                            const tags = (full.types || [])
+                                .filter(t => ["no_smoking", "free_wifi", "parking", "wheelchair_accessible"].includes(t))
+                                .map(t => `<span class="tag">${t.replace(/_/g, " ")}</span>`)
+                                .join(" ") || "None";
+
+                            // opening hours if available
+                            const hours = full.opening_hours?.weekday_text
+                                ? `<h5>Hours</h5><ul>${full.opening_hours.weekday_text.map(d => `<li>${d}</li>`).join("")}</ul>`
+                                : "";
+
+                            // top 2 reviews
+                            const revs = (full.reviews || []).slice(0, 2)
+                                .map(r => `<div><strong>${r.author_name}</strong> (${r.rating}★)<p>${r.text}</p></div>`)
+                                .join("") || "<em>No reviews.</em>";
+
+                            details.innerHTML = `
+                      <p><strong>Address:</strong> ${full.formatted_address}</p>
+                      <p><strong>Phone:</strong> ${full.formatted_phone_number || "N/A"}</p>
+                      <p><strong>Website:</strong>
+                         ${full.website
+                                    ? `<a href="${full.website}" target="_blank">${full.website}</a>`
+                                    : "N/A"}</p>
+                      ${hours}
+                      <h5>Tags</h5><div>${tags}</div>
+                      <h5>Top Reviews</h5><div>${revs}</div>
+                      <h5>About</h5><p>${full.editorial_summary || "No description."}</p>
+                      <p><a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
+                            target="_blank">View on Google Maps</a></p>
+                    `;
+                        });
+                    });
+                });
+            });
+        });
+    }
+
+    // re‐wire filter inputs:
+    document.getElementById("budgetFilter").addEventListener("change", fetchTopLocations);
+    document.getElementById("ratingFilter").addEventListener("input", fetchTopLocations);
+    document.getElementById("reviewsFilter").addEventListener("input", fetchTopLocations);
+
+    // toggle details helper
+    window.toggleDetails = function (header) {
+        document.querySelectorAll(".activity-details").forEach(d => { if (d !== header.nextSibling) d.style.display = "none"; });
+        const det = header.nextSibling;
+        det.style.display = det.style.display === "none" ? "block" : "none";
+    };
+
+    // ======================================================
+    // DAY NAVIGATION & SAVE
+    // ======================================================
+    document.getElementById("prevDayBtn").addEventListener("click", function () {
+        let newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() - 1);
+        const scheduleStartDate = new Date(scheduleDate);
+        if (newDate >= scheduleStartDate) {
+            currentDate = newDate;
+            updateCalendarForCurrentDate();
+        } else {
+            alert("You have reached the beginning of the schedule.");
+        }
+    });
+
+    document.getElementById("nextDayBtn").addEventListener("click", function () {
+        let newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + 1);
+        if (newDate <= scheduleEndDate) {
+            currentDate = newDate;
+            updateCalendarForCurrentDate();
+        } else {
+            alert("You have reached the end of the schedule.");
+        }
+    });
+
+    window.addEventListener("load", function () {
+        updateCalendarForCurrentDate();
+        fetchTopLocations();
+    });
+
+    document.getElementById("routeBtn").addEventListener("click", () => {
+        if (!events.length) {
+            alert("No locations scheduled for today!");
+            return;
+        }
+
+        // First, sort a copy of events by their start hour/minute
+        const sorted = events
+            .slice()  // clone so we don’t mutate original
+            .sort((a, b) => {
+                // a.start and b.start are floats, e.g. 8.5 for 8:30am
+                return a.start - b.start;
+            });
+
+        // Extract the names in chronological order:
+        const names = sorted.map(ev => ev.name);
+
+
+        // Your hotel name from the Razor model
+        const hotelName = "@ViewBag.Schedule.Hotel_Name";
+        const encodedHotel = encodeURIComponent(hotelName);
+
+        const waypoints = names
+            .filter(name => name !== hotelName)
+            .map(name => encodeURIComponent(name))
+            .join("|");
+
+        let url = [
+            "https://www.google.com/maps/dir/?api=1",
+            `origin=${encodedHotel}`,
+            `destination=${encodedHotel}`,
+            "travelmode=driving"
+        ].join("&");
+
+        if (waypoints) {
+            url += `&waypoints=${waypoints}`;
+        }
+
+        window.open(url, "_blank");
+    });
+
+</script>
+

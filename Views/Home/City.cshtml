@@ -3,8 +3,8 @@
     var apiKey = ViewData["GoogleApiKey"];
     var scheduleId = ViewBag.Schedule.Schedule_Id;
 }
+@await Html.PartialAsync("_ProgressFlowChart")
 
-<h1>Select City</h1>
 <div class="form-group">
     <input type="text" id="searchBox" class="form-control" placeholder="Search for a city" />
     <button id="submitCityButton" class="btn btn-primary mt-2">Save City</button>
@@ -15,6 +15,7 @@
 
 <script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places,geometry"></script>
 <script>
+    window.currentProgressStep = 'city';
     const scheduleId = '@scheduleId'; // Pass the Schedule_Id to JavaScript
     let selectedPlace = null;
 

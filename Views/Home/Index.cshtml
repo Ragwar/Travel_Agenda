@@ -3,6 +3,7 @@
     var apiKey = ViewData["GoogleApiKey"];
     var currentUser = await UserManager.GetUserAsync(User);
     var Schedule = ViewBag.Schedule;
+    
 }
 
 @using Microsoft.AspNetCore.Identity
@@ -11,10 +12,7 @@
 
 @if (SignInManager.IsSignedIn(User))
 {
-    <div class="text-center">
-        <h1 class="display-4">Want to create a new schedule?</h1>
-        <h1 class="display-4">Let's start with selecting your city break period:</h1>
-    </div>
+    @await Html.PartialAsync("_ProgressFlowChart")
     <br>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -39,6 +37,7 @@ else
 }
 
 <script>
+    window.currentProgressStep = 'dates';
     // Initialize Flatpickr with range mode and allow single date
     flatpickr("#dateRange", {
         mode: "range",

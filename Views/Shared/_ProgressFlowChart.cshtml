@@ -1,0 +1,366 @@
+﻿<!-- Progress Flow Chart Partial View (_ProgressFlowChart.cshtml) -->
+<div class="flowchart-container">
+    <div class="progress-flowchart" id="progressFlowchart">
+        <!-- Steps will be dynamically generated -->
+    </div>
+</div>
+
+<style type="text/css">
+    .progress-flowchart {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+        padding: clamp(10px, 2vw, 20px);
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 12px;
+        gap: clamp(5px, 1vw, 10px);
+        min-height: clamp(80px, 12vw, 120px);
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        min-width: clamp(80px, 12vw, 120px);
+        flex-shrink: 0;
+    }
+
+    .step-circle {
+        width: clamp(35px, 6vw, 50px);
+        height: clamp(35px, 6vw, 50px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: clamp(14px, 2.5vw, 18px);
+        color: white;
+        margin-bottom: clamp(4px, 1vw, 8px);
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .step-title {
+        font-size: clamp(10px, 1.5vw, 12px);
+        font-weight: 600;
+        text-align: center;
+        color: #333;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .step-description {
+        font-size: clamp(8px, 1.2vw, 10px);
+        color: #666;
+        text-align: center;
+        margin-top: clamp(2px, 0.5vw, 4px);
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    /* Step states */
+    .step.completed .step-circle {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        animation: pulse 2s infinite;
+    }
+
+    .step.current .step-circle {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+    }
+
+    .step.upcoming .step-circle {
+        background: #e0e0e0;
+        color: #999;
+    }
+
+    /* Arrows between steps */
+    .arrow {
+        width: 0;
+        height: 0;
+        border-left: clamp(10px, 2vw, 15px) solid #ffd700;
+        border-top: clamp(6px, 1.2vw, 10px) solid transparent;
+        border-bottom: clamp(6px, 1.2vw, 10px) solid transparent;
+        margin: 0 clamp(5px, 1vw, 10px);
+        align-self: flex-start;
+        margin-top: clamp(17px, 3vw, 20px);
+        flex-shrink: 0;
+    }
+
+    .arrow.completed {
+        border-left-color: #667eea;
+    }
+
+    .arrow.upcoming {
+        border-left-color: #e0e0e0;
+    }
+
+    /* Icons */
+    .step-icon {
+        font-size: clamp(14px, 2.5vw, 20px);
+    }
+
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        50% {
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        100% {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    }
+
+    /* Header styling */
+    .flowchart-header {
+        text-align: center;
+        margin-bottom: 10px;
+        color: #333;
+        font-size: clamp(14px, 2vw, 16px);
+        font-weight: 600;
+    }
+
+    /* Step counter styling */
+    .step-counter {
+        text-align: center;
+        margin-top: 8px;
+        font-size: clamp(11px, 1.5vw, 13px);
+        color: #666;
+        font-weight: 500;
+    }
+
+    /* Very small screens - hide descriptions and make more compact */
+    @@media (max-width: 480px) {
+        .step-description {
+            display: none;
+        }
+        
+        .step-title {
+            font-size: 9px;
+            line-height: 1.1;
+        }
+        
+        .progress-flowchart {
+            padding: 8px;
+            gap: 3px;
+        }
+        
+        .step {
+            min-width: 60px;
+        }
+        
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        
+        .step-icon {
+            font-size: 12px;
+        }
+        
+        .arrow {
+            border-left-width: 8px;
+            border-top-width: 5px;
+            border-bottom-width: 5px;
+            margin: 0 3px;
+            margin-top: 15px;
+        }
+    }
+
+    /* Extra small screens */
+    @@media (max-width: 360px) {
+        .step {
+            min-width: 50px;
+        }
+        
+        .step-circle {
+            width: 25px;
+            height: 25px;
+            font-size: 10px;
+        }
+        
+        .step-icon {
+            font-size: 10px;
+        }
+        
+        .step-title {
+            font-size: 8px;
+        }
+        
+        .arrow {
+            border-left-width: 6px;
+            border-top-width: 4px;
+            border-bottom-width: 4px;
+            margin-top: 12px;
+        }
+    }
+</style>
+
+<script>
+    // Configuration for all steps
+    const progressSteps = [
+        {
+            id: 'dates',
+            number: '1',
+            title: 'Select Dates',
+            description: 'Choose your travel period',
+            icon: '📅'
+        },
+        {
+            id: 'city',
+            number: '2',
+            title: 'Choose City',
+            description: 'Pick your destination',
+            icon: '🏙️'
+        },
+        {
+            id: 'residence',
+            number: '3',
+            title: 'Select Residence',
+            description: 'Find your accommodation',
+            icon: '🏨'
+        },
+        {
+            id: 'activities',
+            number: '4',
+            title: 'Plan Activities',
+            description: 'Choose locations & activities',
+            icon: '🎯'
+        },
+        {
+            id: 'schedule',
+            number: '5',
+            title: 'Create Schedule',
+            description: 'Organize your itinerary',
+            icon: '📋'
+        }
+    ];
+
+    function getVisibleSteps(currentStep) {
+        const currentIndex = progressSteps.findIndex(s => s.id === currentStep);
+        const screenWidth = window.innerWidth;
+        
+        // Determine how many steps to show based on screen size
+        let visibleSteps = [];
+        
+        if (screenWidth >= 1000) {
+            // Desktop: show all steps
+            visibleSteps = [...progressSteps];
+        } else if (screenWidth >= 600) {
+            // Medium screens: show current step and surrounding steps (3 total)
+            const start = Math.max(0, currentIndex - 1);
+            const end = Math.min(progressSteps.length, start + 3);
+            visibleSteps = progressSteps.slice(start, end);
+        } else if (screenWidth >= 480) {
+            // Small screens: show current and next step (2 total)
+            const start = currentIndex;
+            const end = Math.min(progressSteps.length, start + 2);
+            visibleSteps = progressSteps.slice(start, end);
+        } else {
+            // Very small screens: show only current step
+            visibleSteps = [progressSteps[currentIndex]];
+        }
+        
+        return visibleSteps;
+    }
+
+    function createProgressFlowchart(currentStep = 'dates') {
+        const container = document.getElementById('progressFlowchart');
+        if (!container) return;
+
+        container.innerHTML = '';
+        
+        const visibleSteps = getVisibleSteps(currentStep);
+        const currentIndex = progressSteps.findIndex(s => s.id === currentStep);
+
+        visibleSteps.forEach((step, visibleIndex) => {
+            const originalIndex = progressSteps.findIndex(s => s.id === step.id);
+            
+            // Create step element
+            const stepEl = document.createElement('div');
+            stepEl.className = 'step';
+
+            // Determine step state
+            if (originalIndex < currentIndex) {
+                stepEl.classList.add('completed');
+            } else if (originalIndex === currentIndex) {
+                stepEl.classList.add('current');
+            } else {
+                stepEl.classList.add('upcoming');
+            }
+
+            stepEl.innerHTML = `
+                <div class="step-circle">
+                    <span class="step-icon">${step.icon}</span>
+                </div>
+                <div class="step-title">${step.title}</div>
+                <div class="step-description">${step.description}</div>
+            `;
+
+            container.appendChild(stepEl);
+
+            // Add arrow if not the last visible step
+            if (visibleIndex < visibleSteps.length - 1) {
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+
+                if (originalIndex < currentIndex) {
+                    arrow.classList.add('completed');
+                } else {
+                    arrow.classList.add('upcoming');
+                }
+
+                container.appendChild(arrow);
+            }
+        });
+        
+        // Add step counter for context when not all steps are visible
+        if (visibleSteps.length < progressSteps.length) {
+            addStepCounter(currentIndex + 1, progressSteps.length);
+        }
+    }
+    
+    function addStepCounter(current, total) {
+        const container = document.getElementById('progressFlowchart');
+        const counter = document.createElement('div');
+        counter.className = 'step-counter';
+        counter.innerHTML = `Step ${current} of ${total}`;
+        container.parentNode.insertBefore(counter, container.nextSibling);
+        
+        // Remove any existing counter first
+        const existingCounter = container.parentNode.querySelector('.step-counter:not(:last-child)');
+        if (existingCounter) {
+            existingCounter.remove();
+        }
+    }
+
+    // Function to update the flowchart - call this from your views
+    function updateProgressFlowchart(currentStep) {
+        createProgressFlowchart(currentStep);
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get the current step from the page or set a default
+        const currentStep = window.currentProgressStep || 'dates';
+        createProgressFlowchart(currentStep);
+    });
+
+    // Re-render on window resize to adjust visible steps
+    window.addEventListener('resize', function() {
+        const currentStep = window.currentProgressStep || 'dates';
+        createProgressFlowchart(currentStep);
+    });
+</script>

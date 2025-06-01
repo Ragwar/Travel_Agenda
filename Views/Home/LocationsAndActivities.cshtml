@@ -12,36 +12,12 @@
     var apiKey = ViewBag.GoogleApiKey;
 }
 
-<h1>Top Locations in @cityName</h1>
-<!-- Button to Show/Hide Filters -->
-<button id="toggleFiltersBtn" class="btn btn-primary mb-3">Show Filters</button>
+@await Html.PartialAsync("_ProgressFlowChart")
 
 <!-- Main container: Left for locations/tabs, right for calendar -->
 <div style="display: flex; justify-content: space-between; margin-top: 20px;">
     <!-- Locations & Tabs -->
     <div style="width: 60%; padding-right: 20px;">
-        <!-- Filters Section -->
-        <div id="filtersSection" style="display: none;">
-            <div class="mb-3">
-                <label for="budgetFilter">Filter by Budget:</label>
-                <select id="budgetFilter" class="form-select">
-                    <option value="all">All</option>
-                    <option value="free">No cost</option>
-                    <option value="low">Low</option>
-                    <option value="moderate">Moderate</option>
-                    <option value="high">High</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="ratingFilter">Minimum Rating:</label>
-                <input type="number" id="ratingFilter" class="form-control" min="1" max="5" step="0.1" value="1">
-            </div>
-            <div class="mb-3">
-                <label for="reviewsFilter">Minimum Reviews:</label>
-                <input type="number" id="reviewsFilter" class="form-control" min="0" value="0">
-            </div>
-        </div>
-
         <!-- Tab Navigation -->
         <ul class="nav-tabs" id="locationTabs"></ul>
         <!-- Tab Content -->
@@ -60,7 +36,7 @@
                 <div id="hourSlotsContainer"></div>
             </div>
         </div>
-       
+
         <button id="routeBtn" style="margin-top: 10px; margin-left: 10px;">
             Go to Google Maps
         </button>
@@ -72,7 +48,7 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places,geometry" async defer></script>
 
 <script>
-    
+    window.currentProgressStep = 'activities';
     const googleApiKey = "@apiKey";    // from your Razor ViewData
 
     // Serialize saved activities from the ViewBag.
@@ -99,8 +75,14 @@
     const hourSlotsScroll = document.getElementById("hourSlotsScroll");
     hourSlotsScroll.style.height = (visibleSlots * slotHeight) + "px";
     setTimeout(() => {
-        hourSlotsScroll.scrollTop = ((defaultScrollStart - fullStartHour) * slotHeight);
-    }, 0);
+        if (place.photos && place.photos.length > 0) {
+            try {
+                imgElement.src = place.photos[0].getUrl({ maxWidth: 100 });
+            } catch (error) {
+                imgElement.src = "https://via.placeholder.com/100?text=No+Image";
+            }
+        }
+    }, Math.random() * 1000); // Random delay up to 1 second
 
     let selectedSlot = null;
     // Set current date from the schedule start date.
@@ -191,6 +173,18 @@
         shopping_mall: 2,
         museum: 3
     };
+
+    function getFilterValues() {
+        const budgetFilter = document.getElementById("budgetFilter");
+        const ratingFilter = document.getElementById("ratingFilter");
+        const reviewsFilter = document.getElementById("reviewsFilter");
+
+        return {
+            selectedBudget: budgetFilter ? budgetFilter.value : "all",
+            minRating: ratingFilter ? parseFloat(ratingFilter.value) || 1 : 1,
+            minReviews: reviewsFilter ? parseInt(reviewsFilter.value) || 0 : 0
+        };
+    }
 
     // Utility: Check if a time range is free (no overlapping event)
     function isRangeFree(start, duration, ignoreEvent) {
@@ -288,13 +282,13 @@
                 e.dataTransfer.setDragImage(dragIcon, 20, 10);
 
                 e.dataTransfer.effectAllowed = "move";
-               
+
 
                 // payloads
                 e.dataTransfer.setData("application/json",
                     JSON.stringify({ name: calendarEvent.name, placeId: calendarEvent.placeId }));
                 e.dataTransfer.setData("text/plain", calendarEvent.name);
-                 
+
                 setTimeout(() => {
                     if (dragIcon.parentNode === document.body) {
                         document.body.removeChild(dragIcon);
@@ -593,8 +587,9 @@
     // ===================================================
     // GOOGLE PLACES & LOCATIONS TABS
     // ===================================================
-    const locationsTypes = ["restaurant", "hotel", "park", "museum", "shopping_mall"];
+    const locationsTypes = ["search", "restaurant", "hotel", "park", "museum", "shopping_mall"];
     const locationsTypeNames = {
+        search: "Search",
         restaurant: "Restaurants",
         hotel: "Hotels",
         park: "Parks",
@@ -614,22 +609,11 @@
         loadingPlaces[type] = false;
     });
 
-    // toggle filters panel
-    document.getElementById("toggleFiltersBtn").addEventListener("click", function () {
-        const fs = document.getElementById("filtersSection");
-        fs.style.display = fs.style.display === "none" ? "block" : "none";
-        this.textContent = fs.style.display === "none" ? "Show Filters" : "Hide Filters";
-    });
-
     function fetchTopLocations() {
         const tabsContainer = document.getElementById("locationTabs");
         const contentContainer = document.getElementById("locationTabContent");
         tabsContainer.innerHTML = "";
         contentContainer.innerHTML = "";
-
-        const selectedBudget = document.getElementById("budgetFilter").value;
-        const minRating = parseFloat(document.getElementById("ratingFilter").value) || 1;
-        const minReviews = parseInt(document.getElementById("reviewsFilter").value) || 0;
 
         // 1) get city geometry & viewport
         const masterSvc = new google.maps.places.PlacesService(document.createElement("div"));
@@ -666,6 +650,71 @@
                 if (idx === 0) pane.classList.add("active");
                 contentContainer.appendChild(pane);
 
+                if (type === "search") {
+                    const searchContainer = document.createElement("div");
+                    searchContainer.className = "search-container";
+                    searchContainer.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" class="search-input" placeholder="Search for places..." style="flex: 1;" />
+                    <button class="search-btn">Search</button>
+                    <button id="toggleFiltersBtn" class="filter-btn" title="Toggle Filters">🔍</button>
+                </div>
+                <div id="filtersSection" style="display: none; background: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px; align-items: end;">
+                        <div style="flex: 1;">
+                            <label for="budgetFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Budget:</label>
+                            <select id="budgetFilter" style="width: 100%; padding: 4px; font-size: 12px;">
+                                <option value="all">All</option>
+                                <option value="free">Free</option>
+                                <option value="low">$</option>
+                                <option value="moderate">$$</option>
+                                <option value="high">$$$+</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="ratingFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Min Rating:</label>
+                            <input type="number" id="ratingFilter" min="1" max="5" step="0.1" value="1"
+                                   style="width: 100%; padding: 4px; font-size: 12px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="reviewsFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Min Reviews:</label>
+                            <input type="number" id="reviewsFilter" min="0" value="0"
+                                   style="width: 100%; padding: 4px; font-size: 12px;">
+                        </div>
+                    </div>
+                </div>
+            `;
+                    pane.appendChild(searchContainer);
+
+                    const searchInput = searchContainer.querySelector('.search-input');
+                    const searchBtn = searchContainer.querySelector('.search-btn');
+
+                    // ADD THE TOGGLE FILTERS EVENT LISTENER HERE (after the DOM elements exist):
+                    const toggleFiltersBtn = searchContainer.querySelector('#toggleFiltersBtn');
+                    toggleFiltersBtn.addEventListener('click', function () {
+                        const fs = document.getElementById('filtersSection');
+                        fs.style.display = fs.style.display === 'none' ? 'block' : 'none';
+                    });
+
+                    // ADD FILTER EVENT LISTENERS HERE (after the elements are created):
+                    document.getElementById("budgetFilter").addEventListener("change", fetchTopLocations);
+                    document.getElementById("ratingFilter").addEventListener("input", fetchTopLocations);
+                    document.getElementById("reviewsFilter").addEventListener("input", fetchTopLocations);
+
+                    searchBtn.addEventListener('click', () => {
+                        const searchTerm = searchInput.value.trim();
+                        performCustomSearch(searchTerm, pane);
+                    });
+
+                    searchInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            const searchTerm = searchInput.value.trim();
+                            performCustomSearch(searchTerm, pane);
+                        }
+                    });
+                    return;
+                }
+
                 // 3) nearbySearch *within bounds* instead of fixed radius
                 const svc = new google.maps.places.PlacesService(document.createElement("div"));
 
@@ -680,6 +729,10 @@
                 // RUN THE SEARCH
                 svc.nearbySearch(request, (results, stat) => {
                     if (stat !== google.maps.places.PlacesServiceStatus.OK || !results.length) return;
+
+                    // Get filter values safely
+                    const filters = getFilterValues();
+                    const { selectedBudget, minRating, minReviews } = filters;
 
                     // 4) filter & sort by rating first, then review count
                     const filtered = results
@@ -699,13 +752,12 @@
                             if (b.user_ratings_total !== a.user_ratings_total) return b.user_ratings_total - a.user_ratings_total;
                             return b.rating - a.rating;
                         })
-                        .slice(0, 10);
+                        .slice(0, 50);
 
                     filtered.forEach(place => {
                         // build the item: header + details + button
                         const item = document.createElement("div");
                         const header = document.createElement("div");
-                        
                         const details = document.createElement("div");
 
                         // header: image + name + rating + price symbols
@@ -717,7 +769,6 @@
                             // allow copy
                             e.dataTransfer.effectAllowed = "copy";
                             e.dataTransfer.setData("text/plain", "");
-
                             e.dataTransfer.setData("application/json",
                                 JSON.stringify({ name: place.name, placeId: place.place_id }));
                             window.draggedType = type;
@@ -732,14 +783,14 @@
                             || "https://via.placeholder.com/100?text=No+Image";
 
                         header.innerHTML = `
-                    <img src="${imgUrl}" width="100" height="100"
-                         style="margin-right:10px;border-radius:6px;object-fit:cover">
-                    <div>
-                      <strong>${place.name}</strong><br>
-                      ${place.rating.toFixed(1)} ★ (${place.user_ratings_total})<br>
-                      <small>${priceSymbols}</small>
-                    </div>
-                  `;
+                                <img src="${imgUrl}" width="100" height="100"
+                                     style="margin-right:10px;border-radius:6px;object-fit:cover">
+                                <div>
+                                  <strong>${place.name}</strong><br>
+                                  ${place.rating.toFixed(1)} ★ (${place.user_ratings_total})<br>
+                                  <small>${priceSymbols}</small>
+                                </div>
+                              `;
 
                         // details placeholder
                         details.classList.add("activity-details");
@@ -752,7 +803,7 @@
                         addBtn.title = "Add to schedule";
                         addBtn.classList.add("add-btn");
                         addBtn.onclick = (e) => {
-                            e.stopPropagation();   // ← prevent the header’s toggleDetails from firing
+                            e.stopPropagation();   // ← prevent the header's toggleDetails from firing
                             const targetHour = selectedSlot ? +selectedSlot.dataset.hour : 8;
                             addEvent(place.name, type, targetHour, place.place_id);
                         };
@@ -799,19 +850,19 @@
                                 .join("") || "<em>No reviews.</em>";
 
                             details.innerHTML = `
-                      <p><strong>Address:</strong> ${full.formatted_address}</p>
-                      <p><strong>Phone:</strong> ${full.formatted_phone_number || "N/A"}</p>
-                      <p><strong>Website:</strong>
-                         ${full.website
+                                  <p><strong>Address:</strong> ${full.formatted_address}</p>
+                                  <p><strong>Phone:</strong> ${full.formatted_phone_number || "N/A"}</p>
+                                  <p><strong>Website:</strong>
+                                     ${full.website
                                     ? `<a href="${full.website}" target="_blank">${full.website}</a>`
                                     : "N/A"}</p>
-                      ${hours}
-                      <h5>Tags</h5><div>${tags}</div>
-                      <h5>Top Reviews</h5><div>${revs}</div>
-                      <h5>About</h5><p>${full.editorial_summary || "No description."}</p>
-                      <p><a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
-                            target="_blank">View on Google Maps</a></p>
-                    `;
+                                  ${hours}
+                                  <h5>Tags</h5><div>${tags}</div>
+                                  <h5>Top Reviews</h5><div>${revs}</div>
+                                  <h5>About</h5><p>${full.editorial_summary || "No description."}</p>
+                                  <p><a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
+                                        target="_blank">View on Google Maps</a></p>
+                                `;
                         });
                     });
                 });
@@ -819,10 +870,208 @@
         });
     }
 
-    // re‐wire filter inputs:
-    document.getElementById("budgetFilter").addEventListener("change", fetchTopLocations);
-    document.getElementById("ratingFilter").addEventListener("input", fetchTopLocations);
-    document.getElementById("reviewsFilter").addEventListener("input", fetchTopLocations);
+    function performCustomSearch(searchTerm, targetPane) {
+        if (!searchTerm.trim()) {
+            alert("Please enter a search term");
+            return;
+        }
+
+        const searchBtn = targetPane.querySelector('.search-btn');
+        searchBtn.disabled = true;
+        searchBtn.textContent = "Searching...";
+
+        // Clear previous results but keep the search container
+        const existingResults = targetPane.querySelectorAll('.search-result-item');
+        existingResults.forEach(item => item.remove());
+
+        const masterSvc = new google.maps.places.PlacesService(document.createElement("div"));
+        masterSvc.getDetails({ placeId: "@placeId" }, (city, status) => {
+            if (status !== google.maps.places.PlacesServiceStatus.OK) {
+                console.error("City lookup failed:", status);
+                searchBtn.disabled = false;
+                searchBtn.textContent = "Search";
+                return;
+            }
+
+            const viewport = city.geometry.viewport;
+            const svc = new google.maps.places.PlacesService(document.createElement("div"));
+
+            const request = {
+                bounds: viewport,
+                keyword: searchTerm
+            };
+
+            svc.nearbySearch(request, (results, stat) => {
+                searchBtn.disabled = false;
+                searchBtn.textContent = "Search";
+
+                if (stat !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
+                    const noResults = document.createElement("div");
+                    noResults.className = "search-result-item";
+                    noResults.innerHTML = `<p><em>No results found for "${searchTerm}"</em></p>`;
+                    targetPane.appendChild(noResults);
+                    return;
+                }
+
+                // Get current filter values
+                const selectedBudget = document.getElementById("budgetFilter").value;
+                const minRating = parseFloat(document.getElementById("ratingFilter").value) || 1;
+                const minReviews = parseInt(document.getElementById("reviewsFilter").value) || 0;
+
+                // Filter and sort results
+                const filtered = results
+                    .filter(r => r.rating >= minRating && r.user_ratings_total >= minReviews)
+                    .filter(r => {
+                        if (selectedBudget === "all") return true;
+                        const p = r.price_level;
+                        return (
+                            (selectedBudget === "free" && p === 0) ||
+                            (selectedBudget === "low" && p === 1) ||
+                            (selectedBudget === "moderate" && p === 2) ||
+                            (selectedBudget === "high" && p >= 3)
+                        );
+                    })
+                    .sort((a, b) => {
+                        if (b.user_ratings_total !== a.user_ratings_total) return b.user_ratings_total - a.user_ratings_total;
+                        return b.rating - a.rating;
+                    })
+                    .slice(0, 30);
+
+                filtered.forEach(place => {
+                    const item = document.createElement("div");
+                    item.className = "search-result-item";
+
+                    const header = document.createElement("div");
+                    const details = document.createElement("div");
+
+                    header.classList.add("activity-header");
+                    header.style.cssText = "display:flex;align-items:center;cursor:pointer";
+                    header.setAttribute("draggable", "true");
+                    header.onclick = () => toggleDetails(header);
+                    header.addEventListener("dragstart", e => {
+                        e.dataTransfer.effectAllowed = "copy";
+                        e.dataTransfer.setData("text/plain", "");
+                        e.dataTransfer.setData("application/json",
+                            JSON.stringify({ name: place.name, placeId: place.place_id }));
+
+                        // Determine type based on place types for drag behavior
+                        const placeTypes = place.types || [];
+                        if (placeTypes.includes('restaurant') || placeTypes.includes('food')) {
+                            window.draggedType = "restaurant";
+                        } else if (placeTypes.includes('lodging')) {
+                            window.draggedType = "hotel";
+                        } else if (placeTypes.includes('park')) {
+                            window.draggedType = "park";
+                        } else if (placeTypes.includes('museum')) {
+                            window.draggedType = "museum";
+                        } else if (placeTypes.includes('shopping_mall') || placeTypes.includes('store')) {
+                            window.draggedType = "shopping_mall";
+                        } else {
+                            window.draggedType = "restaurant"; // default
+                        }
+                    });
+
+                    const priceSymbols = place.price_level
+                        ? "$".repeat(place.price_level)
+                        : "N/A";
+
+                    const imgUrl = place.photos?.[0]?.getUrl({ maxWidth: 100 })
+                        || "https://via.placeholder.com/100?text=No+Image";
+
+                    header.innerHTML = `
+                            <img src="${imgUrl}" width="100" height="100"
+                                 style="margin-right:10px;border-radius:6px;object-fit:cover">
+                            <div>
+                              <strong>${place.name}</strong><br>
+                              ${place.rating.toFixed(1)} ★ (${place.user_ratings_total})<br>
+                              <small>${priceSymbols}</small>
+                            </div>
+                          `;
+
+                    details.classList.add("activity-details");
+                    details.style.cssText = "display:none;margin-top:8px;padding:10px;border:1px solid #ccc;border-radius:6px;background:#f9f9f9";
+                    details.innerHTML = `<em>Loading details…</em>`;
+
+                    const addBtn = document.createElement("button");
+                    addBtn.textContent = "+";
+                    addBtn.title = "Add to schedule";
+                    addBtn.classList.add("add-btn");
+                    addBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        const targetHour = selectedSlot ? +selectedSlot.dataset.hour : 8;
+
+                        // Determine type for scheduling
+                        const placeTypes = place.types || [];
+                        let scheduleType = "restaurant"; // default
+                        if (placeTypes.includes('restaurant') || placeTypes.includes('food')) {
+                            scheduleType = "restaurant";
+                        } else if (placeTypes.includes('lodging')) {
+                            scheduleType = "hotel";
+                        } else if (placeTypes.includes('park')) {
+                            scheduleType = "park";
+                        } else if (placeTypes.includes('museum')) {
+                            scheduleType = "museum";
+                        } else if (placeTypes.includes('shopping_mall') || placeTypes.includes('store')) {
+                            scheduleType = "shopping_mall";
+                        }
+
+                        addEvent(place.name, scheduleType, targetHour, place.place_id);
+                    };
+                    header.appendChild(addBtn);
+
+                    item.append(header, details);
+                    targetPane.appendChild(item);
+
+                    // Fetch full details
+                    svc.getDetails({
+                        placeId: place.place_id,
+                        fields: [
+                            "formatted_address",
+                            "formatted_phone_number",
+                            "website",
+                            "opening_hours",
+                            "reviews",
+                            "editorial_summary",
+                            "types"
+                        ]
+                    }, (full, st2) => {
+                        if (st2 !== google.maps.places.PlacesServiceStatus.OK) {
+                            details.innerHTML = `<p><em>Details unavailable.</em></p>`;
+                            return;
+                        }
+
+                        const tags = (full.types || [])
+                            .filter(t => ["no_smoking", "free_wifi", "parking", "wheelchair_accessible"].includes(t))
+                            .map(t => `<span class="tag">${t.replace(/_/g, " ")}</span>`)
+                            .join(" ") || "None";
+
+                        const hours = full.opening_hours?.weekday_text
+                            ? `<h5>Hours</h5><ul>${full.opening_hours.weekday_text.map(d => `<li>${d}</li>`).join("")}</ul>`
+                            : "";
+
+                        const revs = (full.reviews || []).slice(0, 2)
+                            .map(r => `<div><strong>${r.author_name}</strong> (${r.rating}★)<p>${r.text}</p></div>`)
+                            .join("") || "<em>No reviews.</em>";
+
+                        details.innerHTML = `
+                              <p><strong>Address:</strong> ${full.formatted_address}</p>
+                              <p><strong>Phone:</strong> ${full.formatted_phone_number || "N/A"}</p>
+                              <p><strong>Website:</strong>
+                                 ${full.website
+                                ? `<a href="${full.website}" target="_blank">${full.website}</a>`
+                                : "N/A"}</p>
+                              ${hours}
+                              <h5>Tags</h5><div>${tags}</div>
+                              <h5>Top Reviews</h5><div>${revs}</div>
+                              <h5>About</h5><p>${full.editorial_summary || "No description."}</p>
+                              <p><a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
+                                    target="_blank">View on Google Maps</a></p>
+                            `;
+                    });
+                });
+            });
+        });
+    }
 
     // toggle details helper
     window.toggleDetails = function (header) {

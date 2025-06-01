@@ -147,7 +147,8 @@
 </head>
 <body>
     <div class="container mt-4">
-        <h1>Select Residence</h1>
+
+        @await Html.PartialAsync("_ProgressFlowChart")
         <input type="hidden" id="scheduleId" value="@scheduleId" />
 
         <ul class="nav nav-tabs">
@@ -201,6 +202,8 @@
 
     <script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places"></script>
     <script>
+        window.currentProgressStep = 'residence';
+
         let map, service, addrMap, geocoder, addressMarker, geocodedResult;
         let selectedHotel = null;
         const scheduleId = document.getElementById('scheduleId').value;
