@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "sRhnXi7mwETgJ3XcvxocUuLolEFVTZPHIkoUpQTceiWL8HjKWbh+dtdsTjYy7zfOrEJQsmlZ9KT8AbIauBv8nA==",
+  "dgSpecHash": "axZ8yLvvvto=",
   "success": true,
   "projectFilePath": "W:\\TravelAgenda\\Travel_Agenda\\TravelAgenda.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Lisaru\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
+    "C:\\Users\\Lisaru\\.nuget\\packages\\azure.ai.openai\\2.2.0-beta.4\\azure.ai.openai.2.2.0-beta.4.nupkg.sha512",
+    "C:\\Users\\Lisaru\\.nuget\\packages\\azure.core\\1.44.1\\azure.core.1.44.1.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\daypilot\\5.0.303\\daypilot.5.0.303.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\googleapi\\5.6.0\\googleapi.5.6.0.nupkg.sha512",
@@ -144,11 +145,12 @@
     "C:\\Users\\Lisaru\\.nuget\\packages\\nuget.projectmodel\\6.11.0\\nuget.projectmodel.6.11.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\nuget.protocol\\6.11.0\\nuget.protocol.6.11.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\nuget.versioning\\6.11.0\\nuget.versioning.6.11.0.nupkg.sha512",
+    "C:\\Users\\Lisaru\\.nuget\\packages\\openai\\2.2.0-beta.4\\openai.2.2.0-beta.4.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.6\\sqlitepclraw.bundle_e_sqlite3.2.1.6.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\sqlitepclraw.core\\2.1.6\\sqlitepclraw.core.2.1.6.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.6\\sqlitepclraw.lib.e_sqlite3.2.1.6.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.6\\sqlitepclraw.provider.e_sqlite3.2.1.6.nupkg.sha512",
-    "C:\\Users\\Lisaru\\.nuget\\packages\\system.clientmodel\\1.0.0\\system.clientmodel.1.0.0.nupkg.sha512",
+    "C:\\Users\\Lisaru\\.nuget\\packages\\system.clientmodel\\1.4.0-beta.1\\system.clientmodel.1.4.0-beta.1.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.codedom\\5.0.0\\system.codedom.5.0.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.collections.immutable\\7.0.0\\system.collections.immutable.7.0.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.composition\\7.0.0\\system.composition.7.0.0.nupkg.sha512",
@@ -166,7 +168,7 @@
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.identitymodel.tokens.jwt\\6.35.0\\system.identitymodel.tokens.jwt.6.35.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.io.pipelines\\7.0.0\\system.io.pipelines.7.0.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.memory\\4.5.4\\system.memory.4.5.4.nupkg.sha512",
-    "C:\\Users\\Lisaru\\.nuget\\packages\\system.memory.data\\1.0.2\\system.memory.data.1.0.2.nupkg.sha512",
+    "C:\\Users\\Lisaru\\.nuget\\packages\\system.memory.data\\6.0.1\\system.memory.data.6.0.1.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.reflection.metadata\\7.0.0\\system.reflection.metadata.7.0.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.reflection.metadataloadcontext\\7.0.0\\system.reflection.metadataloadcontext.7.0.0.nupkg.sha512",
@@ -191,8 +193,10 @@
     {
       "code": "NU1701",
       "level": "Warning",
-      "warningLevel": 1,
       "message": "Package 'DayPilot 5.0.303' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net8.0'. This package may not be fully compatible with your project.",
+      "projectPath": "W:\\TravelAgenda\\Travel_Agenda\\TravelAgenda.csproj",
+      "warningLevel": 1,
+      "filePath": "W:\\TravelAgenda\\Travel_Agenda\\TravelAgenda.csproj",
       "libraryId": "DayPilot",
       "targetGraphs": [
         "net8.0"

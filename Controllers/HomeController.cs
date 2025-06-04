@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using OpenAI.Chat;
 using System.Diagnostics;
 using TravelAgenda.Data;
 using TravelAgenda.Models;
@@ -21,6 +22,7 @@ namespace TravelAgenda.Controllers
         private readonly IUserService _userService;
         private readonly string _googleApiKey;
         private readonly IWeatherService _weatherService;
+        private readonly ChatClient _chatClient;
 
         public HomeController(ApplicationDbContext context, IActivityService activityService, IScheduleService scheduleService, ISchedule_ActivityService schedule_activityProductService, IUserInfoService userInfoService, IUserService userService, IFavoritesService favoritesService, IConfiguration configuration, IWeatherService weatherService)
         {
@@ -34,6 +36,7 @@ namespace TravelAgenda.Controllers
             _context = context;
             _weatherService = weatherService;
         }
+
         public IActionResult Home()
         {
             return View();
@@ -42,7 +45,7 @@ namespace TravelAgenda.Controllers
         public IActionResult Index(string id)
         {
             ViewData["GoogleApiKey"] = _googleApiKey;
-            ViewBag.Schedules= _scheduleService.GetSchedulesByUserId(id);
+            ViewBag.Schedules = _scheduleService.GetSchedulesByUserId(id);
             return View();
         }
 
@@ -63,8 +66,7 @@ namespace TravelAgenda.Controllers
             ViewData["PlaceId"] = schedule.Place_Id;
             ViewData["GoogleApiKey"] = _googleApiKey;
 
-            
-            var weather =  _weatherService.GetForecastAsync(schedule.City_Name, (int)schedule.Nr_Days);
+            var weather = _weatherService.GetForecastAsync(schedule.City_Name, (int)schedule.Nr_Days);
             ViewData["WeatherForecast"] = weather;
 
             var activities = _schedule_activityProductService
@@ -99,7 +101,7 @@ namespace TravelAgenda.Controllers
                 return BadRequest("Invalid date format.");
             }
 
-            var user =  _userService.GetUserByName(User.Identity.Name);
+            var user = _userService.GetUserByName(User.Identity.Name);
             if (user == null)
             {
                 return NotFound("User not found.");
@@ -132,11 +134,8 @@ namespace TravelAgenda.Controllers
                 return BadRequest("Invalid model.");
             }
             // Save to database via the ScheduleService
-             _scheduleService.CreateSchedule(schedule);
-            //_context.Add(schedule);
-            //await _context.SaveChangesAsync();
+            _scheduleService.CreateSchedule(schedule);
 
-           // return Ok(new { redirectUrl = Url.Action("Activities", "Home") });
             return Ok(new { scheduleId = schedule.Schedule_Id });
         }
 
@@ -174,7 +173,6 @@ namespace TravelAgenda.Controllers
                 schedule.Place_Id = city.PlaceId;
 
                 _scheduleService.UpdateSchedule(schedule);
-                
 
                 return Ok("City saved successfully.");
             }
@@ -187,11 +185,9 @@ namespace TravelAgenda.Controllers
         public class ResidenceViewModel
         {
             public int Schedule_Id { get; set; }
-
             public string? Hotel_Id { get; set; }
             public string? Hotel_Name { get; set; }
         }
-
 
         [HttpPost]
         public IActionResult SaveResidence([FromBody] ResidenceViewModel vm)
@@ -211,14 +207,12 @@ namespace TravelAgenda.Controllers
             return Ok();
         }
 
-
         public class CityViewModel
         {
             public string Name { get; set; }
             public string PlaceId { get; set; }
             public int ScheduleId { get; set; }
         }
-
 
         public IActionResult Privacy()
         {
@@ -244,6 +238,7 @@ namespace TravelAgenda.Controllers
             }
             return View();
         }
+
         public class DateRangeViewModel
         {
             public string StartDate { get; set; }
@@ -253,18 +248,9 @@ namespace TravelAgenda.Controllers
         [HttpGet]
         public async Task<IActionResult> GetScheduleActivities(int id)
         {
-            // e.g. date in "yyyy-MM-dd" format
-            //var all = _schedule_activityProductService
-            //              .GetSchedule_ActivityByScheduleId(scheduleId);
             List<Schedule_Activity> Emi = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(id);
-            // filter to only those with Start_Date == date
-           //   var filtered = Emi
-           //       .Where(a => a.Start_Date.ToString("yyyy-MM-dd") == date)
-            //      .ToList();
-
             return Ok(Emi);
         }
-
 
         [HttpPost]
         public async Task<IActionResult> SaveScheduleActivities([FromBody] List<Schedule_Activity> activities)
@@ -334,13 +320,11 @@ namespace TravelAgenda.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteSchedule(int id)
         {
-
             Schedule schedule = _scheduleService.GetScheduleById(id);
             _scheduleService.DeleteSchedule(schedule);
 
             return Ok(new { success = true });
         }
-
 
         public IActionResult ViewSchedule(int id)
         {
@@ -348,11 +332,9 @@ namespace TravelAgenda.Controllers
             var activities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(schedule.Schedule_Id);
             ViewBag.Schedule = schedule;
             ViewBag.Activities = activities;
-            
+
             ViewData["GoogleApiKey"] = _googleApiKey;
             return View();
         }
-
-
     }
 }

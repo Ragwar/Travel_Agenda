@@ -26,14 +26,6 @@
             height: 100%;
         }
 
-        #hotel #filtersSection {
-            margin-bottom: 10px;
-        }
-
-        #hotel #toggleFiltersBtn {
-            margin-bottom: 10px;
-        }
-
         #hotel .hotel-list {
             flex: 1;
             overflow-y: auto;
@@ -43,61 +35,90 @@
         }
 
         .hotel-item {
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
             margin-bottom: 10px;
             display: flex;
             flex-direction: column;
+            background-color: #f8f9fa;
+            transition: box-shadow 0.2s ease;
         }
+
+            .hotel-item:hover {
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
 
         .hotel-header {
             display: flex;
             align-items: center;
-            padding: 6px;
+            padding: 10px;
             cursor: pointer;
         }
 
-            .hotel-header img {
-                width: 80px;
-                height: 80px;
-                object-fit: cover;
-                margin-right: 10px;
-                border-radius: 4px;
+        .hotel-image-container {
+            width: 80px;
+            height: 80px;
+            margin-right: 15px;
+            display: inline-block;
+            position: relative;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .hotel-header .info {
+            flex: 1;
+        }
+
+            .hotel-header .info strong {
+                display: block;
+                margin-bottom: 4px;
+                font-size: 16px;
             }
 
-            .hotel-header .info {
-                flex: 1;
+            .hotel-header .info small {
+                display: block;
+                color: #666;
             }
 
-                .hotel-header .info strong {
-                    display: block;
-                    margin-bottom: 4px;
-                }
+        .hotel-rating {
+            color: #666;
+            margin-bottom: 2px;
+        }
 
-                .hotel-header .info small {
-                    display: block;
-                    color: #666;
-                }
+        .hotel-price {
+            color: #28a745;
+            font-weight: 500;
+        }
 
         .hotel-details {
             display: none;
-            padding: 8px;
+            padding: 15px;
             border-top: 1px solid #ddd;
-            background: #f9f9f9;
+            background: #ffffff;
             font-size: 14px;
         }
 
             .hotel-details h5 {
-                margin-top: 8px;
+                margin-top: 12px;
+                margin-bottom: 8px;
+                color: #495057;
             }
 
             .hotel-details .tag {
-                background: #eee;
-                padding: 2px 6px;
+                background: #e9ecef;
+                padding: 4px 8px;
                 margin: 2px;
-                border-radius: 3px;
+                border-radius: 4px;
                 font-size: 12px;
                 display: inline-block;
+                color: #495057;
+            }
+
+            .hotel-details .review-item {
+                margin-bottom: 10px;
+                padding: 8px;
+                background: #f8f9fa;
+                border-radius: 4px;
             }
 
         #hotel .hotel-map-panel {
@@ -143,10 +164,29 @@
             padding: 10px;
             margin-top: 10px;
         }
+
+        /* Loading states */
+        .loading-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 12px;
+            background: #e9ecef;
+            border-radius: 8px;
+        }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
+    `<div class="container mt-4">
 
         @await Html.PartialAsync("_ProgressFlowChart")
         <input type="hidden" id="scheduleId" value="@scheduleId" />
@@ -165,21 +205,9 @@
             <div class="tab-pane fade show active" id="hotel">
                 <div class="hotel-container">
                     <div class="hotel-list-panel">
-                        <button id="toggleFiltersBtn" class="btn btn-secondary btn-sm">See Filters</button>
-                        <!-- filters hidden by default -->
-                        <div id="filtersSection" class="d-none">
-                            <div class="mb-2">
-                                <label class="form-label">Filter by Budget:</label>
-                                <select id="budgetFilter" class="form-select form-select-sm">
-                                    <option value="all">All</option>
-                                    <option value="free">No cost</option>
-                                    <option value="low">Low</option>
-                                    <option value="moderate">Moderate</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
+                        <div id="hotelListPanel" class="hotel-list">
+                            <div class="loading-indicator">Loading hotels...</div>
                         </div>
-                        <div id="hotelListPanel" class="hotel-list"></div>
                     </div>
                     <div class="hotel-map-panel">
                         <div id="map"></div>
@@ -209,11 +237,179 @@
         const scheduleId = document.getElementById('scheduleId').value;
         const CITY_PLACE_ID = "@cityPlaceId";
         const CITY_NAME = "@cityName";
+        const googleApiKey = "@apiKey";
 
         // infinite scroll state
         let nextPageToken = null;
         let loading = false;
         let allHotels = [];
+        let isInitialLoad = true;
+        let renderedHotelIds = new Set(); // Track which hotels have been rendered
+
+        // Fast image loader with Google Maps Static API fallback (same as city view)
+        class FastImageLoader {
+            constructor() {
+                this.queue = [];
+                this.isProcessing = false;
+                this.maxConcurrent = 3;
+                this.activeLoads = 0;
+                this.loadDelay = 300;
+            }
+
+            addToQueue(photoUrl, placeName, placeLocation, container) {
+                this.queue.push({ photoUrl, placeName, placeLocation, container });
+                this.processQueue();
+            }
+
+            async processQueue() {
+                if (this.isProcessing || this.queue.length === 0) {
+                    return;
+                }
+
+                this.isProcessing = true;
+
+                while (this.queue.length > 0 && this.activeLoads < this.maxConcurrent) {
+                    const item = this.queue.shift();
+                    this.loadImageFast(item);
+                    await this.delay(this.loadDelay);
+                }
+
+                this.isProcessing = false;
+            }
+
+            loadImageFast({ photoUrl, placeName, placeLocation, container }) {
+                this.activeLoads++;
+
+                const cleanup = () => {
+                    this.activeLoads--;
+                    this.processQueue();
+                };
+
+                if (photoUrl) {
+                    const img = new Image();
+                    let timeoutId;
+
+                    const onSuccess = () => {
+                        clearTimeout(timeoutId);
+                        img.style.width = "80px";
+                        img.style.height = "80px";
+                        img.style.borderRadius = "8px";
+                        img.style.objectFit = "cover";
+                        img.alt = placeName;
+
+                        container.innerHTML = '';
+                        container.appendChild(img);
+                        cleanup();
+                    };
+
+                    const onError = () => {
+                        clearTimeout(timeoutId);
+                        console.log(`Using map view for ${placeName}`);
+                        this.createMapView(placeName, placeLocation, container);
+                        cleanup();
+                    };
+
+                    timeoutId = setTimeout(onError, 2000);
+
+                    img.onload = onSuccess;
+                    img.onerror = onError;
+                    img.src = photoUrl;
+                } else {
+                    this.createMapView(placeName, placeLocation, container);
+                    cleanup();
+                }
+            }
+
+            createMapView(placeName, placeLocation, container) {
+                if (!placeLocation) {
+                    this.createFallbackImage(placeName, container);
+                    return;
+                }
+
+                const lat = placeLocation.lat();
+                const lng = placeLocation.lng();
+
+                const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
+                    `center=${lat},${lng}&` +
+                    `zoom=17&` +
+                    `size=80x80&` +
+                    `maptype=roadmap&` +
+                    `markers=color:red%7Clabel:•%7C${lat},${lng}&` +
+                    `style=feature:poi|visibility:on&` +
+                    `style=feature:transit|visibility:simplified&` +
+                    `key=${googleApiKey}`;
+
+                const img = document.createElement("img");
+                img.src = mapUrl;
+                img.style.width = "80px";
+                img.style.height = "80px";
+                img.style.borderRadius = "8px";
+                img.style.border = "2px solid #007bff";
+                img.alt = `Map view of ${placeName}`;
+                img.title = `Location: ${placeName}`;
+
+                img.onload = () => {
+                    container.innerHTML = '';
+                    container.appendChild(img);
+                };
+
+                img.onerror = () => {
+                    this.createFallbackImage(placeName, container);
+                };
+            }
+
+            createFallbackImage(placeName, container) {
+                container.innerHTML = `
+                                    <div style="
+                                        width: 80px;
+                                        height: 80px;
+                                        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                                        border-radius: 8px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        color: white;
+                                        font-size: 20px;
+                                        border: 2px solid #0056b3;
+                                    ">
+                                        🏨
+                                    </div>
+                                `;
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        const imageLoader = new FastImageLoader();
+
+        function createImageContainer(placeName) {
+            const container = document.createElement("div");
+            container.className = "hotel-image-container";
+
+            container.innerHTML = `
+                                <div class="loading-placeholder">
+                                    ⏳
+                                </div>
+                            `;
+
+            return container;
+        }
+
+        function getOptimizedPhotoUrl(photo) {
+            if (!photo) return null;
+
+            try {
+                return photo.getUrl({
+                    maxWidth: 80,
+                    maxHeight: 80
+                });
+            } catch (error) {
+                console.error('Error getting photo URL:', error);
+                return null;
+            }
+        }
 
         function initMap() {
             geocoder = new google.maps.Geocoder();
@@ -230,8 +426,8 @@
                 addrMap = new google.maps.Map(document.getElementById('mapAddress'), { center, zoom: 13 });
                 enableMapClickForAddress();
 
-                // load only first page; further pages on scroll
-                loadHotelsPage();
+                // Load initial batch of hotels
+                loadInitialHotels();
             });
 
             document.getElementById('hotelListPanel').addEventListener('scroll', () => {
@@ -239,6 +435,58 @@
                 if (!loading && panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 50) {
                     if (nextPageToken) loadHotelsPage(nextPageToken);
                 }
+            });
+        }
+
+        // Load multiple pages initially to get a good sorted list
+        function loadInitialHotels() {
+            const loadPromises = [];
+            let totalPagesToLoad = 3; // Load first 3 pages to get better sorting
+            let pagesLoaded = 0;
+            let tempToken = null;
+
+            function loadNextBatch() {
+                return new Promise((resolve) => {
+                    const params = {
+                        bounds: cityViewport,
+                        type: 'lodging',
+                        strictBounds: true
+                    };
+                    if (tempToken) params.pageToken = tempToken;
+
+                    service.nearbySearch(params, (results, status, pagination) => {
+                        if (status !== google.maps.places.PlacesServiceStatus.OK) {
+                            resolve();
+                            return;
+                        }
+
+                        // Filter out duplicates and add to allHotels
+                        const newUnique = results.filter(r =>
+                            !allHotels.some(existing => existing.place_id === r.place_id)
+                        );
+
+                        allHotels = allHotels.concat(newUnique);
+                        pagesLoaded++;
+
+                        if (pagination && pagination.hasNextPage && pagesLoaded < totalPagesToLoad) {
+                            tempToken = pagination.nextPage();
+                            // Small delay before next request
+                            setTimeout(() => {
+                                loadNextBatch().then(resolve);
+                            }, 1000);
+                        } else {
+                            nextPageToken = (pagination && pagination.hasNextPage) ? pagination.nextPage() : null;
+                            resolve();
+                        }
+                    });
+                });
+            }
+
+            loadNextBatch().then(() => {
+                // Sort once after loading initial batches
+                allHotels.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0));
+                isInitialLoad = false;
+                renderAllHotels();
             });
         }
 
@@ -255,14 +503,20 @@
                 loading = false;
                 if (status !== google.maps.places.PlacesServiceStatus.OK) return;
 
-                // filter out any result we’ve already added
+                // filter out any result we've already added
                 const newUnique = results.filter(r =>
                     !allHotels.some(existing => existing.place_id === r.place_id)
                 );
 
-                allHotels = allHotels.concat(newUnique);
-                allHotels.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0));
-                renderAllHotels();
+                if (newUnique.length > 0) {
+                    // Instead of re-sorting everything, insert new hotels in their proper positions
+                    newUnique.forEach(hotel => {
+                        const insertIndex = findInsertPosition(hotel);
+                        allHotels.splice(insertIndex, 0, hotel);
+                    });
+
+                    renderNewHotels(newUnique);
+                }
 
                 if (pagination && pagination.hasNextPage) {
                     nextPageToken = pagination.nextPage();
@@ -272,67 +526,137 @@
             });
         }
 
+        // Find the correct position to insert a new hotel to maintain sort order
+        function findInsertPosition(newHotel) {
+            const newReviews = newHotel.user_ratings_total || 0;
+
+            for (let i = 0; i < allHotels.length; i++) {
+                const existingReviews = allHotels[i].user_ratings_total || 0;
+                if (newReviews > existingReviews) {
+                    return i;
+                }
+            }
+            return allHotels.length;
+        }
+
+        // Render only new hotels without disturbing existing ones
+        function renderNewHotels(newHotels) {
+            const panel = document.getElementById('hotelListPanel');
+
+            newHotels.forEach(place => {
+                if (renderedHotelIds.has(place.place_id)) return;
+
+                const insertIndex = allHotels.findIndex(h => h.place_id === place.place_id);
+                const item = createHotelItem(place);
+
+                // Insert at correct position
+                if (insertIndex === 0) {
+                    panel.insertBefore(item, panel.firstChild);
+                } else if (insertIndex >= panel.children.length) {
+                    panel.appendChild(item);
+                } else {
+                    panel.insertBefore(item, panel.children[insertIndex]);
+                }
+
+                renderedHotelIds.add(place.place_id);
+            });
+        }
+
         function renderAllHotels() {
             const panel = document.getElementById('hotelListPanel');
             panel.innerHTML = '';
+            renderedHotelIds.clear();
+
             allHotels.forEach(place => {
-                const item = document.createElement('div');
-                item.className = 'hotel-item';
-
-                const rating = place.rating || 0;
-                const reviews = place.user_ratings_total || 0;
-                const price = place.price_level || 0;
-
-                const header = document.createElement('div');
-                header.className = 'hotel-header';
-                header.innerHTML = `
-                                            <img src="${place.photos?.[0]?.getUrl({ maxWidth: 100 }) || 'https://via.placeholder.com/80'}">
-                                            <div class="info">
-                                              <strong>${place.name}</strong><br>
-                                              ${rating.toFixed(1)} ★ (${reviews})<br>
-                                              <small>${price ? '$'.repeat(price) : 'N/A'}</small>
-                                            </div>`;
-                header.addEventListener('click', () => {
-                    map.panTo(place.geometry.location);
-                    map.setZoom(16);
-                    toggleHotelDetails(header.nextSibling);
-                    selectedHotel = place;
-                    document.getElementById('selectHotelBtn').disabled = false;
-                });
-                item.appendChild(header);
-
-                const details = document.createElement('div');
-                details.className = 'hotel-details';
-                details.innerHTML = '<em>Loading details…</em>';
-                item.appendChild(details);
+                const item = createHotelItem(place);
                 panel.appendChild(item);
-
-                service.getDetails({
-                    placeId: place.place_id,
-                    fields: ['formatted_address', 'formatted_phone_number', 'website', 'opening_hours', 'reviews', 'editorial_summary', 'types']
-                }, (full, st2) => {
-                    if (st2 !== google.maps.places.PlacesServiceStatus.OK) {
-                        details.innerHTML = '<p><em>Details unavailable.</em></p>';
-                        return;
-                    }
-                    const tags = (full.types || [])
-                        .filter(t => ['no_smoking', 'free_wifi', 'parking', 'wheelchair_accessible'].includes(t))
-                        .map(t => `<span class="tag">${t.replace(/_/g, ' ')}</span>`).join(' ') || 'None';
-                    const hours = full.opening_hours?.weekday_text
-                        ? `<h5>Hours</h5><ul>${full.opening_hours.weekday_text.map(d => `<li>${d}</li>`).join('')}</ul>` : '';
-                    const revs = (full.reviews || []).slice(0, 2)
-                        .map(r => `<div><strong>${r.author_name}</strong> (${r.rating}★)<p>${r.text}</p></div>`).join('') || '<em>No reviews.</em>';
-                    details.innerHTML = `
-                                                <p><strong>Address:</strong> ${full.formatted_address}</p>
-                                                <p><strong>Phone:</strong> ${full.formatted_phone_number || 'N/A'}</p>
-                                                <p><strong>Website:</strong> ${full.website ? `<a href="${full.website}" target="_blank">${full.website}</a>` : 'N/A'}</p>
-                                                ${hours}
-                                                <h5>Tags</h5><div>${tags}</div>
-                                                <h5>Top Reviews</h5><div>${revs}</div>
-                                                <h5>About</h5><p>${full.editorial_summary || 'No description.'}</p>
-                                            `;
-                });
+                renderedHotelIds.add(place.place_id);
             });
+        }
+
+        function createHotelItem(place) {
+            const item = document.createElement('div');
+            item.className = 'hotel-item';
+
+            const rating = place.rating || 0;
+            const reviews = place.user_ratings_total || 0;
+            const price = place.price_level || 0;
+
+            const header = document.createElement('div');
+            header.className = 'hotel-header';
+
+            // Create image container
+            const imageContainer = createImageContainer(place.name);
+
+            // Create info div
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'info';
+
+
+            infoDiv.innerHTML = `
+                                <strong>${place.name}</strong>
+                                <div class="hotel-rating">⭐ ${rating.toFixed(1)} (${reviews.toLocaleString()} reviews)</div>
+                            `;
+
+            header.appendChild(imageContainer);
+            header.appendChild(infoDiv);
+
+            header.addEventListener('click', () => {
+                map.panTo(place.geometry.location);
+                map.setZoom(16);
+                toggleHotelDetails(header.nextSibling);
+                selectedHotel = place;
+                document.getElementById('selectHotelBtn').disabled = false;
+            });
+            item.appendChild(header);
+
+            const details = document.createElement('div');
+            details.className = 'hotel-details';
+            details.innerHTML = '<em>Loading details…</em>';
+            item.appendChild(details);
+
+            // Load image using the fast image loader
+            const photoUrl = place.photos && place.photos.length > 0
+                ? getOptimizedPhotoUrl(place.photos[0])
+                : null;
+
+            imageLoader.addToQueue(
+                photoUrl,
+                place.name,
+                place.geometry.location,
+                imageContainer
+            );
+
+            service.getDetails({
+                placeId: place.place_id,
+                fields: ['formatted_address', 'formatted_phone_number', 'website', 'opening_hours', 'reviews', 'editorial_summary', 'types']
+            }, (full, st2) => {
+                if (st2 !== google.maps.places.PlacesServiceStatus.OK) {
+                    details.innerHTML = '<p><em>Details unavailable.</em></p>';
+                    return;
+                }
+                const tags = (full.types || [])
+                    .filter(t => ['no_smoking', 'free_wifi', 'parking', 'wheelchair_accessible'].includes(t))
+                    .map(t => `<span class="tag">${t.replace(/_/g, ' ')}</span>`).join(' ') || '<span class="tag">No special amenities listed</span>';
+
+                const hours = full.opening_hours?.weekday_text
+                    ? `<h5>Hours</h5><ul>${full.opening_hours.weekday_text.map(d => `<li>${d}</li>`).join('')}</ul>` : '';
+
+                const revs = (full.reviews || []).slice(0, 2)
+                    .map(r => `<div class="review-item"><strong>${r.author_name}</strong> <span style="color: #ffc107;">⭐ ${r.rating}</span><p style="margin: 4px 0 0 0;">${r.text}</p></div>`).join('') || '<em>No reviews available.</em>';
+
+                details.innerHTML = `
+                                    <p><strong>📍 Address:</strong> ${full.formatted_address}</p>
+                                    <p><strong>📞 Phone:</strong> ${full.formatted_phone_number || 'N/A'}</p>
+                                    <p><strong>🌐 Website:</strong> ${full.website ? `<a href="${full.website}" target="_blank" rel="noopener">${full.website}</a>` : 'N/A'}</p>
+                                    ${hours}
+                                    <h5>Amenities</h5><div>${tags}</div>
+                                    <h5>Recent Reviews</h5><div>${revs}</div>
+                                    <h5>About</h5><p>${full.editorial_summary?.overview || 'No description available.'}</p>
+                                `;
+            });
+
+            return item;
         }
 
         function toggleHotelDetails(el) {
@@ -340,7 +664,7 @@
                 .forEach(d => { if (d !== el) d.style.display = 'none'; });
             el.style.display = el.style.display === 'block' ? 'none' : 'block';
         }
-        
+
         document.getElementById('selectHotelBtn').addEventListener('click', () => {
             fetch('/Home/SaveResidence', {
                 method: 'POST',
@@ -350,14 +674,6 @@
                 ? window.location.href = `/Home/LocationsAndActivities?id=${scheduleId}`
                 : alert('Save failed')
             );
-        });
-
-        // toggle filters
-        document.getElementById('toggleFiltersBtn').addEventListener('click', () => {
-            const fs = document.getElementById('filtersSection');
-            fs.classList.toggle('d-none');
-            document.getElementById('toggleFiltersBtn').textContent =
-                fs.classList.contains('d-none') ? 'See Filters' : 'Hide Filters';
         });
 
         // ADDRESS TAB
@@ -409,11 +725,6 @@
         });
         function showAddressError(m) { const el = document.getElementById('addressError'); el.textContent = m; el.style.display = 'block'; }
         function clearAddressError() { document.getElementById('addressError').style.display = 'none'; }
-
-        // filter reload hotels
-        document.getElementById('budgetFilter').addEventListener('change', () => {
-            allHotels = []; nextPageToken = null; loadHotelsPage();
-        });
 
         window.addEventListener('load', initMap);
     </script>

@@ -40,7 +40,6 @@
         <button id="routeBtn" style="margin-top: 10px; margin-left: 10px;">
             Go to Google Maps
         </button>
-
     </div>
 </div>
 
@@ -64,7 +63,7 @@
     const fullEndHour = 25; // hours 1 to 24 (endHour is non-inclusive)
     const visibleSlots = 8;
     const defaultScrollStart = 8; // 8AM is default top visible hour
-
+    let contentLoadedFlags = {};
     const calendarHeaderEl = document.getElementById("calendarHeader");
     const scheduleDate = "@(ViewBag.Schedule?.Start_Date?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))";
     calendarHeaderEl.textContent = "Schedule for " + scheduleDate;
@@ -74,15 +73,6 @@
 
     const hourSlotsScroll = document.getElementById("hourSlotsScroll");
     hourSlotsScroll.style.height = (visibleSlots * slotHeight) + "px";
-    setTimeout(() => {
-        if (place.photos && place.photos.length > 0) {
-            try {
-                imgElement.src = place.photos[0].getUrl({ maxWidth: 100 });
-            } catch (error) {
-                imgElement.src = "https://via.placeholder.com/100?text=No+Image";
-            }
-        }
-    }, Math.random() * 1000); // Random delay up to 1 second
 
     let selectedSlot = null;
     // Set current date from the schedule start date.
@@ -179,13 +169,200 @@
         const ratingFilter = document.getElementById("ratingFilter");
         const reviewsFilter = document.getElementById("reviewsFilter");
 
+        // Return default values if elements don't exist yet
+        if (!budgetFilter || !ratingFilter || !reviewsFilter) {
+            console.warn("Filter elements not found, returning defaults");
+            return {
+                selectedBudget: "all",
+                minRating: 1.0,
+                minReviews: 0
+            };
+        }
+
         return {
-            selectedBudget: budgetFilter ? budgetFilter.value : "all",
-            minRating: ratingFilter ? parseFloat(ratingFilter.value) || 1 : 1,
-            minReviews: reviewsFilter ? parseInt(reviewsFilter.value) || 0 : 0
+            selectedBudget: budgetFilter.value,
+            minRating: parseFloat(ratingFilter.value) || 1.0,
+            minReviews: parseInt(reviewsFilter.value) || 0
         };
     }
 
+    function attachFilterEventListeners() {
+        const budgetFilter = document.getElementById("budgetFilter");
+        const ratingFilter = document.getElementById("ratingFilter");
+        const reviewsFilter = document.getElementById("reviewsFilter");
+
+        if (budgetFilter && ratingFilter && reviewsFilter) {
+            // Remove any existing listeners to prevent duplicates
+            budgetFilter.removeEventListener("change", handleFilterChange);
+            ratingFilter.removeEventListener("input", handleFilterChange);
+            reviewsFilter.removeEventListener("input", handleFilterChange);
+
+            // Add new listeners
+            budgetFilter.addEventListener("change", handleFilterChange);
+            ratingFilter.addEventListener("input", handleFilterChange);
+            reviewsFilter.addEventListener("input", handleFilterChange);
+
+            console.log("Filter event listeners attached successfully");
+        } else {
+            console.error("Could not attach filter event listeners - elements not found");
+        }
+    }
+    let filterTimeout;
+    function handleFilterChange() {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(() => {
+            applyFiltersToCurrentTab();
+        }, 150);
+    }
+
+    function initializeFilters() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(attachFilterEventListeners, 100);
+            });
+        } else {
+            setTimeout(attachFilterEventListeners, 100);
+        }
+    }
+
+    function applyFiltersToCurrentTab() {
+        // Get the currently active tab
+        const activeTab = document.querySelector("#locationTabs .nav-link.active");
+        if (!activeTab) return;
+
+        const currentType = activeTab.dataset.type;
+
+        // Skip if it's the filter tab or search tab
+        if (currentType === "filters" || currentType === "search") return;
+
+        // Don't apply filters if content isn't loaded yet
+        if (!contentLoadedFlags[currentType]) {
+            console.log(`Content for ${currentType} not loaded yet, skipping filter application`);
+            return;
+        }
+
+        // Ensure filter elements exist before proceeding
+        const budgetFilter = document.getElementById("budgetFilter");
+        const ratingFilter = document.getElementById("ratingFilter");
+        const reviewsFilter = document.getElementById("reviewsFilter");
+
+        if (!budgetFilter || !ratingFilter || !reviewsFilter) {
+            console.warn("Filter elements not ready, retrying in 100ms...");
+            setTimeout(applyFiltersToCurrentTab, 100);
+            return;
+        }
+
+        // Get filter values
+        const filters = getFilterValues();
+        const { selectedBudget, minRating, minReviews } = filters;
+
+        // Get the current tab pane
+        const currentPane = document.getElementById(currentType);
+        if (!currentPane) return;
+
+        // Get all activity items in the current pane (both regular and search results)
+        const activityItems = currentPane.querySelectorAll('.activity-header');
+
+        activityItems.forEach(header => {
+            const item = header.parentElement;
+
+            // Extract rating and review count from the header HTML
+            const headerText = header.innerHTML;
+
+            // More robust regex patterns
+            const ratingMatch = headerText.match(/(\d+(?:\.\d+)?)\s*★\s*\((\d+)\)/);
+
+            if (!ratingMatch) {
+                item.style.display = 'block'; // Show if we can't parse
+                return;
+            }
+
+            const rating = parseFloat(ratingMatch[1]);
+            const reviewCount = parseInt(ratingMatch[2]);
+
+            // Extract price level - look for $ symbols not followed by word characters
+            let priceLevel = 0;
+            if (headerText.includes("Free")) {
+                priceLevel = 0;
+            } else {
+                const priceMatch = headerText.match(/\$+(?!\w)/);
+                priceLevel = priceMatch ? priceMatch[0].length : 0;
+            }
+
+            // Apply filters
+            let shouldShow = true;
+
+            // Rating filter
+            if (rating < minRating) shouldShow = false;
+
+            // Review count filter
+            if (reviewCount < minReviews) shouldShow = false;
+
+            // Budget filter
+            if (selectedBudget !== "all") {
+                let matchesBudget = false;
+                if (selectedBudget === "free" && (priceLevel === 0 || headerText.includes("Free"))) {
+                    matchesBudget = true;
+                } else if (selectedBudget === "low" && priceLevel === 1) {
+                    matchesBudget = true;
+                } else if (selectedBudget === "moderate" && priceLevel === 2) {
+                    matchesBudget = true;
+                } else if (selectedBudget === "high" && priceLevel >= 3) {
+                    matchesBudget = true;
+                }
+
+                if (!matchesBudget) shouldShow = false;
+            }
+
+            // Show/hide the item
+            item.style.display = shouldShow ? 'block' : 'none';
+        });
+    }
+
+    function createFiltersSection() {
+        const contentContainer = document.getElementById("locationTabContent");
+
+        // Check if filters section already exists
+        if (document.getElementById("filtersSection")) {
+            return;
+        }
+
+        const filtersSection = document.createElement("div");
+        filtersSection.id = "filtersSection";
+        filtersSection.style.cssText = "display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;";
+        filtersSection.innerHTML = `
+            <div style="display: flex; gap: 15px; align-items: end;">
+                <div style="flex: 1;">
+                    <label for="budgetFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Budget:</label>
+                    <select id="budgetFilter" style="width: 100%; padding: 4px; font-size: 12px;">
+                        <option value="all">All</option>
+                        <option value="free">Free</option>
+                        <option value="low">$</option>
+                        <option value="moderate">$$</option>
+                        <option value="high">$$$+</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label for="ratingFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Min Rating:</label>
+                    <input type="number" id="ratingFilter" min="1" max="5" step="0.1" value="1"
+                           style="width: 100%; padding: 4px; font-size: 12px;">
+                </div>
+                <div style="flex: 1;">
+                    <label for="reviewsFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Min Reviews:</label>
+                    <input type="number" id="reviewsFilter" min="0" value="0"
+                           style="width: 100%; padding: 4px; font-size: 12px;">
+                </div>
+            </div>
+        `;
+        contentContainer.appendChild(filtersSection);
+
+        // Attach event listeners immediately after creating the elements
+        document.getElementById("budgetFilter").addEventListener("change", handleFilterChange);
+        document.getElementById("ratingFilter").addEventListener("input", handleFilterChange);
+        document.getElementById("reviewsFilter").addEventListener("input", handleFilterChange);
+
+        console.log("Filters section created and event listeners attached");
+    }
     // Utility: Check if a time range is free (no overlapping event)
     function isRangeFree(start, duration, ignoreEvent) {
         const eps = 0.0001;
@@ -584,18 +761,260 @@
 
     }
 
+
+        // ===================================================
+    // FAST IMAGE LOADER WITH GOOGLE MAPS STATIC API FALLBACK
+    // ===================================================
+    class FastImageLoader {
+        constructor() {
+            this.queue = [];
+            this.isProcessing = false;
+            this.maxConcurrent = 3;
+            this.activeLoads = 0;
+            this.loadDelay = 300;
+        }
+
+        addToQueue(photoUrl, placeName, placeLocation, container, size = 100) {
+            this.queue.push({ photoUrl, placeName, placeLocation, container, size });
+            this.processQueue();
+        }
+
+        async processQueue() {
+            if (this.isProcessing || this.queue.length === 0) {
+                return;
+            }
+
+            this.isProcessing = true;
+
+            while (this.queue.length > 0 && this.activeLoads < this.maxConcurrent) {
+                const item = this.queue.shift();
+                this.loadImageFast(item);
+                await this.delay(this.loadDelay);
+            }
+
+            this.isProcessing = false;
+        }
+
+        loadImageFast({ photoUrl, placeName, placeLocation, container, size }) {
+            this.activeLoads++;
+
+            const cleanup = () => {
+                this.activeLoads--;
+                this.processQueue();
+            };
+
+            if (photoUrl) {
+                const img = new Image();
+                let timeoutId;
+
+                const onSuccess = () => {
+                    clearTimeout(timeoutId);
+                    img.style.width = `${size}px`;
+                    img.style.height = `${size}px`;
+                    img.style.borderRadius = "8px";
+                    img.style.objectFit = "cover";
+                    img.alt = placeName;
+
+                    container.innerHTML = '';
+                    container.appendChild(img);
+                    cleanup();
+                };
+
+                const onError = () => {
+                    clearTimeout(timeoutId);
+                    console.log(`Using map view for ${placeName}`);
+                    this.createMapView(placeName, placeLocation, container, size);
+                    cleanup();
+                };
+
+                timeoutId = setTimeout(onError, 2000);
+
+                img.onload = onSuccess;
+                img.onerror = onError;
+                img.src = photoUrl;
+            } else {
+                this.createMapView(placeName, placeLocation, container, size);
+                cleanup();
+            }
+        }
+
+        createMapView(placeName, placeLocation, container, size) {
+            if (!placeLocation) {
+                this.createFallbackImage(placeName, container, size);
+                return;
+            }
+
+            const lat = placeLocation.lat();
+            const lng = placeLocation.lng();
+
+            const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
+                `center=${lat},${lng}&` +
+                `zoom=17&` +
+                `size=${size}x${size}&` +
+                `maptype=roadmap&` +
+                `markers=color:red%7Clabel:•%7C${lat},${lng}&` +
+                `style=feature:poi|visibility:on&` +
+                `style=feature:transit|visibility:simplified&` +
+                `key=${googleApiKey}`;
+
+            const img = document.createElement("img");
+            img.src = mapUrl;
+            img.style.width = `${size}px`;
+            img.style.height = `${size}px`;
+            img.style.borderRadius = "8px";
+            img.style.border = "2px solid #007bff";
+            img.alt = `Map view of ${placeName}`;
+            img.title = `Location: ${placeName}`;
+
+            img.onload = () => {
+                container.innerHTML = '';
+                container.appendChild(img);
+            };
+
+            img.onerror = () => {
+                this.createFallbackImage(placeName, container, size);
+            };
+        }
+
+        createFallbackImage(placeName, container, size, type = 'default') {
+            const typeIcons = {
+                restaurant: '🍽️',
+                hotel: '🏨',
+                park: '🌳',
+                museum: '🏛️',
+                shopping_mall: '🛍️',
+                search: '📍',
+                default: '📍'
+            };
+
+            const typeColors = {
+                restaurant: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+                hotel: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+                park: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                museum: 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)',
+                shopping_mall: 'linear-gradient(135deg, #fd79a8 0%, #e84393 100%)',
+                search: 'linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)',
+                default: 'linear-gradient(135deg, #636e72 0%, #2d3436 100%)'
+            };
+
+            container.innerHTML = `
+                <div style="
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: ${typeColors[type] || typeColors.default};
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: ${size > 80 ? '24px' : '20px'};
+                    border: 2px solid rgba(255,255,255,0.3);
+                ">
+                    ${typeIcons[type] || typeIcons.default}
+                </div>
+            `;
+        }
+
+        delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    }
+
+            // ===================================================
+        // HELPER FUNCTIONS AND CONSTANTS
+        // ===================================================
+
+        // Enhanced location types with icons
+        const locationsTypes = ["search", "restaurant", "hotel", "park", "museum", "shopping_mall"];
+        const locationsTypeNames = {
+            search: "🔍 Search",
+            restaurant: "🍽️ Restaurants",
+            hotel: "🏨 Hotels",
+            park: "🌳 Parks",
+            museum: "🏛️ Museums",
+            shopping_mall: "🛍️ Shopping"
+        };
+
+        const typeIcons = {
+            restaurant: '🍽️',
+            hotel: '🏨',
+            park: '🌳',
+            museum: '🏛️',
+            shopping_mall: '🛍️',
+            search: '🔍'
+        };
+
+        // Initialize the image loader
+        const imageLoader = new FastImageLoader();
+
+        // Create enhanced image container with loading state
+        function createImageContainer(placeName, size = 100) {
+            const container = document.createElement("div");
+            container.style.width = `${size}px`;
+            container.style.height = `${size}px`;
+            container.style.marginRight = "15px";
+            container.style.display = "inline-block";
+            container.style.position = "relative";
+            container.style.backgroundColor = "#f8f9fa";
+            container.style.borderRadius = "8px";
+
+            container.innerHTML = `
+                <div style="
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #6c757d;
+                    font-size: 12px;
+                    background: #e9ecef;
+                    border-radius: 8px;
+                ">
+                    ⏳
+                </div>
+            `;
+
+            return container;
+        }
+
+        // Get optimized photo URL from Google Places
+        function getOptimizedPhotoUrl(photo, size = 100) {
+            if (!photo) return null;
+
+            try {
+                return photo.getUrl({
+                    maxWidth: size,
+                    maxHeight: size
+                });
+            } catch (error) {
+                console.error('Error getting photo URL:', error);
+                return null;
+            }
+        }
+
+        // Enhanced toggle details helper with smooth animations
+        window.toggleDetails = function (header) {
+            document.querySelectorAll(".activity-details").forEach(d => {
+                if (d !== header.nextSibling) {
+                    d.style.display = "none";
+                }
+            });
+
+            const det = header.nextSibling;
+            if (det.style.display === "none" || det.style.display === "") {
+                det.style.display = "block";
+                // Smooth scroll to the opened details
+                setTimeout(() => {
+                    det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            } else {
+                det.style.display = "none";
+            }
+        };
     // ===================================================
     // GOOGLE PLACES & LOCATIONS TABS
     // ===================================================
-    const locationsTypes = ["search", "restaurant", "hotel", "park", "museum", "shopping_mall"];
-    const locationsTypeNames = {
-        search: "Search",
-        restaurant: "Restaurants",
-        hotel: "Hotels",
-        park: "Parks",
-        museum: "Museums",
-        shopping_mall: "Shopping Malls"
-    };
+   
     const allPlaces = {};
     const nextPageTokens = {};
     const loadingPlaces = {};
@@ -610,133 +1029,860 @@
     });
 
     function fetchTopLocations() {
-        const tabsContainer = document.getElementById("locationTabs");
-        const contentContainer = document.getElementById("locationTabContent");
-        tabsContainer.innerHTML = "";
-        contentContainer.innerHTML = "";
+            const tabsContainer = document.getElementById("locationTabs");
+            const contentContainer = document.getElementById("locationTabContent");
+            tabsContainer.innerHTML = "";
+            contentContainer.innerHTML = "";
 
-        // 1) get city geometry & viewport
-        const masterSvc = new google.maps.places.PlacesService(document.createElement("div"));
-        masterSvc.getDetails({ placeId: "@placeId" }, (city, status) => {
-            if (status !== google.maps.places.PlacesServiceStatus.OK) {
-                console.error("City lookup failed:", status);
-                return;
-            }
+            // Create filters section FIRST, before creating tabs
+            createFiltersSection();
 
-            const viewport = city.geometry.viewport; // northeast/southwest bounds
+            // Add filter tab as the first tab
+            const filterTab = document.createElement("li");
+            const filterLink = document.createElement("a");
+            filterLink.innerHTML = "🔍"; // Filter icon
+            filterLink.dataset.type = "filters";
+            filterLink.classList.add("nav-link", "filter-tab");
+            filterLink.title = "Filters";
+            filterLink.addEventListener("click", e => {
+                e.preventDefault();
+                const filtersSection = document.getElementById("filtersSection");
 
-            // 2) build one tab+pane per category
-            locationsTypes.forEach((type, idx) => {
-                // Tab button
-                const tabLink = document.createElement("a");
-                tabLink.textContent = locationsTypeNames[type];
-                tabLink.dataset.type = type;
-                tabLink.classList.add("nav-link");
-                if (idx === 0) tabLink.classList.add("active");
-                tabLink.addEventListener("click", e => {
-                    e.preventDefault();
-                    document.querySelectorAll("#locationTabs .nav-link").forEach(l => l.classList.remove("active"));
-                    document.querySelectorAll("#locationTabContent > div").forEach(p => p.classList.remove("active"));
-                    tabLink.classList.add("active");
-                    pane.classList.add("active");
-                });
-                const li = document.createElement("li");
-                li.appendChild(tabLink);
-                tabsContainer.appendChild(li);
+                if (filtersSection.style.display === "none" || filtersSection.style.display === "") {
+                    filtersSection.style.display = "block";
+                    filterLink.classList.add("active");
+                } else {
+                    filtersSection.style.display = "none";
+                    filterLink.classList.remove("active");
+                }
+            });
+            filterTab.appendChild(filterLink);
+            tabsContainer.appendChild(filterTab);
 
-                // Content pane
-                const pane = document.createElement("div");
-                pane.id = type;
-                if (idx === 0) pane.classList.add("active");
-                contentContainer.appendChild(pane);
-
-                if (type === "search") {
-                    const searchContainer = document.createElement("div");
-                    searchContainer.className = "search-container";
-                    searchContainer.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <input type="text" class="search-input" placeholder="Search for places..." style="flex: 1;" />
-                    <button class="search-btn">Search</button>
-                    <button id="toggleFiltersBtn" class="filter-btn" title="Toggle Filters">🔍</button>
-                </div>
-                <div id="filtersSection" style="display: none; background: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-                    <div style="display: flex; gap: 10px; align-items: end;">
-                        <div style="flex: 1;">
-                            <label for="budgetFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Budget:</label>
-                            <select id="budgetFilter" style="width: 100%; padding: 4px; font-size: 12px;">
-                                <option value="all">All</option>
-                                <option value="free">Free</option>
-                                <option value="low">$</option>
-                                <option value="moderate">$$</option>
-                                <option value="high">$$$+</option>
-                            </select>
-                        </div>
-                        <div style="flex: 1;">
-                            <label for="ratingFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Min Rating:</label>
-                            <input type="number" id="ratingFilter" min="1" max="5" step="0.1" value="1"
-                                   style="width: 100%; padding: 4px; font-size: 12px;">
-                        </div>
-                        <div style="flex: 1;">
-                            <label for="reviewsFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Min Reviews:</label>
-                            <input type="number" id="reviewsFilter" min="0" value="0"
-                                   style="width: 100%; padding: 4px; font-size: 12px;">
-                        </div>
-                    </div>
-                </div>
-            `;
-                    pane.appendChild(searchContainer);
-
-                    const searchInput = searchContainer.querySelector('.search-input');
-                    const searchBtn = searchContainer.querySelector('.search-btn');
-
-                    // ADD THE TOGGLE FILTERS EVENT LISTENER HERE (after the DOM elements exist):
-                    const toggleFiltersBtn = searchContainer.querySelector('#toggleFiltersBtn');
-                    toggleFiltersBtn.addEventListener('click', function () {
-                        const fs = document.getElementById('filtersSection');
-                        fs.style.display = fs.style.display === 'none' ? 'block' : 'none';
-                    });
-
-                    // ADD FILTER EVENT LISTENERS HERE (after the elements are created):
-                    document.getElementById("budgetFilter").addEventListener("change", fetchTopLocations);
-                    document.getElementById("ratingFilter").addEventListener("input", fetchTopLocations);
-                    document.getElementById("reviewsFilter").addEventListener("input", fetchTopLocations);
-
-                    searchBtn.addEventListener('click', () => {
-                        const searchTerm = searchInput.value.trim();
-                        performCustomSearch(searchTerm, pane);
-                    });
-
-                    searchInput.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') {
-                            const searchTerm = searchInput.value.trim();
-                            performCustomSearch(searchTerm, pane);
-                        }
-                    });
+            // 1) get city geometry & viewport
+            const masterSvc = new google.maps.places.PlacesService(document.createElement("div"));
+            masterSvc.getDetails({ placeId: "@placeId" }, (city, status) => {
+                if (status !== google.maps.places.PlacesServiceStatus.OK) {
+                    console.error("City lookup failed:", status);
                     return;
                 }
 
-                // 3) nearbySearch *within bounds* instead of fixed radius
-                const svc = new google.maps.places.PlacesService(document.createElement("div"));
+                cityViewport = city.geometry.viewport; // Store for later use
 
-                // BUILD THE REQUEST
-                let request = { bounds: viewport };
-                if (type === "restaurant") {
-                    request.keyword = "restaurant";
-                } else {
-                    request.type = type;
+                // 2) build one tab+pane per category
+                locationsTypes.forEach((type, idx) => {
+                    // Tab button with enhanced styling
+                    const tabLink = document.createElement("a");
+                    tabLink.innerHTML = locationsTypeNames[type];
+                    tabLink.dataset.type = type;
+                    tabLink.classList.add("nav-link");
+                    tabLink.style.cssText = `
+                        padding: 10px 15px;
+                        margin: 0 2px;
+                        border-radius: 6px;
+                        transition: all 0.3s ease;
+                        text-decoration: none;
+                        border: 1px solid transparent;
+                    `;
+
+                    if (idx === 0) {
+                        tabLink.classList.add("active");
+                        tabLink.style.backgroundColor = "#007bff";
+                        tabLink.style.color = "white";
+                    }
+
+                    tabLink.addEventListener("click", e => {
+                        e.preventDefault();
+                        document.querySelectorAll("#locationTabs .nav-link").forEach(l => {
+                            l.classList.remove("active");
+                            l.style.backgroundColor = "";
+                            l.style.color = "";
+                        });
+                        document.querySelectorAll("#locationTabContent > div").forEach(p => p.classList.remove("active"));
+
+                        tabLink.classList.add("active");
+                        tabLink.style.backgroundColor = "#007bff";
+                        tabLink.style.color = "white";
+                        pane.classList.add("active");
+
+                        // Apply filters after tab switch if content is loaded
+                        setTimeout(() => {
+                            if (contentLoadedFlags[type]) {
+                                applyFiltersToCurrentTab();
+                            }
+                        }, 100);
+                    });
+
+                    const li = document.createElement("li");
+                    li.appendChild(tabLink);
+                    tabsContainer.appendChild(li);
+
+                    // Content pane with enhanced styling
+                    const pane = document.createElement("div");
+                    pane.id = type;
+                    pane.style.cssText = `
+                        min-height: 400px;
+                        background: #f8f9fa;
+                        border-radius: 8px;
+                    `;
+
+                    if (idx === 0) pane.classList.add("active");
+                    contentContainer.appendChild(pane);
+
+                    if (type === "search") {
+                        const searchContainer = document.createElement("div");
+                        searchContainer.className = "search-container";
+                        searchContainer.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <span style="font-size: 20px;">🔍</span>
+                                <input type="text" class="search-input" placeholder="Search for places..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;" />
+                                <button class="search-btn" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Search</button>
+                            </div>
+                        `;
+                        pane.appendChild(searchContainer);
+
+                        const searchInput = searchContainer.querySelector('.search-input');
+                        const searchBtn = searchContainer.querySelector('.search-btn');
+
+                        searchBtn.addEventListener('click', () => {
+                            const searchTerm = searchInput.value.trim();
+                            performCustomSearch(searchTerm, pane);
+                        });
+
+                        searchInput.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') {
+                                const searchTerm = searchInput.value.trim();
+                                performCustomSearch(searchTerm, pane);
+                            }
+                        });
+                        return;
+                    }
+
+                    // Add loading indicator with beautiful styling
+                    const loadingDiv = document.createElement("div");
+                    loadingDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">${typeIcons[type]}</div>
+                            <div style="font-size: 18px; font-weight: 500;">Loading top ${locationsTypeNames[type].replace(/🔍|🍽️|🏨|🌳|🏛️|🛍️/, '').trim()}...</div>
+                            <div style="margin-top: 10px; font-size: 14px; color: #999;">Finding the best rated places for you</div>
+                        </div>
+                    `;
+                    pane.appendChild(loadingDiv);
+
+                    // Build and execute the search request
+                    loadLocationsByType(type, pane, loadingDiv, cityViewport);
+                });
+            });
+        }
+
+             // Enhanced category filtering functions
+    function isStrictlyOfType(place, targetType) {
+        if (!place.types || place.types.length === 0) return false;
+
+        // Define strict type mappings
+        const strictTypeCategories = {
+            restaurant: {
+                required: ['restaurant', 'meal_takeaway', 'meal_delivery', 'food', 'cafe', 'bar'],
+                forbidden: ['lodging', 'hotel', 'resort', 'park', 'museum', 'shopping_mall', 'store']
+            },
+            hotel: {
+                required: ['lodging', 'hotel', 'resort', 'hostel', 'motel', 'bed_and_breakfast', 'guest_house', 'serviced_apartment'],
+                forbidden: ['restaurant', 'park', 'museum', 'shopping_mall']
+            },
+            park: {
+                required: ['park', 'natural_feature', 'campground', 'rv_park'],
+                forbidden: ['restaurant', 'lodging', 'hotel', 'museum', 'shopping_mall', 'store']
+            },
+            museum: {
+                required: ['museum', 'art_gallery', 'library', 'cultural_center'],
+                forbidden: ['restaurant', 'lodging', 'hotel', 'park', 'shopping_mall', 'store']
+            },
+            shopping_mall: {
+                required: ['shopping_mall', 'department_store', 'store', 'clothing_store', 'shoe_store', 'electronics_store', 'furniture_store', 'home_goods_store'],
+                forbidden: ['restaurant', 'lodging', 'hotel', 'park', 'museum']
+            }
+        };
+
+        const category = strictTypeCategories[targetType];
+        if (!category) return false;
+
+        // Check if place has any forbidden types
+        const hasForbiddenType = place.types.some(type => category.forbidden.includes(type));
+        if (hasForbiddenType) {
+            console.log(`Excluding ${place.name} from ${targetType}: has forbidden type(s) - ${place.types.filter(t => category.forbidden.includes(t)).join(', ')}`);
+            return false;
+        }
+
+        // Check if place has any required types
+        const hasRequiredType = place.types.some(type => category.required.includes(type));
+        if (!hasRequiredType) {
+            console.log(`Excluding ${place.name} from ${targetType}: missing required type. Has: ${place.types.join(', ')}`);
+            return false;
+        }
+
+        return true;
+    }
+
+    function filterByNameKeywords(place, targetType) {
+        const name = place.name.toLowerCase();
+
+        // Additional name-based filtering for edge cases
+        const nameFilters = {
+            restaurant: {
+                forbidden: ['park', 'museum', 'hotel', 'mall', 'shopping']
+            },
+            hotel: {
+                forbidden: ['park', 'museum', 'restaurant']
+            },
+            park: {
+                forbidden: ['hotel', 'restaurant', 'museum', 'mall', 'shopping'],
+                required: ['park', 'garden', 'square', 'green']
+            },
+            museum: {
+                forbidden: ['park', 'hotel', 'restaurant', 'mall', 'shopping'],
+                required: ['museum', 'gallery', 'cultural', 'history', 'art']
+            },
+            shopping_mall: {
+                forbidden: ['park', 'hotel', 'restaurant', 'museum'],
+                required: ['mall', 'shopping', 'center', 'store', 'market']
+            }
+        };
+
+        const filter = nameFilters[targetType];
+        if (!filter) return true;
+
+        // Check forbidden keywords in name
+        if (filter.forbidden && filter.forbidden.some(keyword => name.includes(keyword))) {
+            console.log(`Excluding ${place.name} from ${targetType}: forbidden keyword in name`);
+            return false;
+        }
+
+        // For certain categories, require specific keywords in name
+        if (filter.required && !filter.required.some(keyword => name.includes(keyword))) {
+            // Only apply strict name requirements for parks and museums
+            if (targetType === 'park' || targetType === 'museum') {
+                console.log(`Excluding ${place.name} from ${targetType}: missing required keyword in name`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Updated comprehensive search function with strict filtering
+    function loadLocationsByType(type, pane, loadingDiv, viewport) {
+        console.log(`Starting comprehensive search for ${type} locations with strict filtering`);
+
+        // Get city name for targeted searches
+        const cityName = "@ViewBag.CityName" || "this area";
+
+        // Define search categories with multiple targeted search terms
+        const searchCategories = {
+            restaurant: {
+                searchTerms: [
+                    `best restaurants ${cityName}`,
+                    `top rated restaurants ${cityName}`,
+                    `most popular restaurants ${cityName}`,
+                    `fine dining ${cityName}`,
+                    `local cuisine ${cityName}`
+                ]
+            },
+            hotel: {
+                searchTerms: [
+                    `best hotels ${cityName}`,
+                    `top rated hotels ${cityName}`,
+                    `luxury hotels ${cityName}`,
+                    `accommodation ${cityName}`,
+                    `boutique hotels ${cityName}`
+                ]
+            },
+            park: {
+                searchTerms: [
+                    `parks in ${cityName}`,
+                    `public parks ${cityName}`,
+                    `gardens ${cityName}`,
+                    `green spaces ${cityName}`,
+                    `recreational areas ${cityName}`
+                ]
+            },
+            museum: {
+                searchTerms: [
+                    `museums in ${cityName}`,
+                    `art galleries ${cityName}`,
+                    `cultural sites ${cityName}`,
+                    `history museums ${cityName}`,
+                    `exhibitions ${cityName}`
+                ]
+            },
+            shopping_mall: {
+                searchTerms: [
+                    `shopping malls ${cityName}`,
+                    `shopping centers ${cityName}`,
+                    `retail stores ${cityName}`,
+                    `markets ${cityName}`,
+                    `shopping areas ${cityName}`
+                ]
+            }
+        };
+
+        async function performComprehensiveSearch() {
+            const service = new google.maps.places.PlacesService(document.createElement("div"));
+            let allResults = [];
+
+            try {
+                // 1. Nearby search for baseline results
+                console.log(`Performing nearby search for ${type}`);
+                const nearbyResults = await new Promise((resolve) => {
+                    const nearbyRequest = {
+                        bounds: viewport,
+                        type: type === "restaurant" ? undefined : type,
+                        keyword: type === "restaurant" ? "restaurant" : type,
+                        rankBy: google.maps.places.RankBy.PROMINENCE
+                    };
+
+                    service.nearbySearch(nearbyRequest, (results, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK) {
+                            resolve(results || []);
+                        } else {
+                            resolve([]);
+                        }
+                    });
+                });
+
+                allResults.push(...nearbyResults);
+                console.log(`Nearby search found ${nearbyResults.length} places`);
+
+                // 2. Text searches for highly-rated places
+                const searchTerms = searchCategories[type]?.searchTerms || [`${type} in ${cityName}`];
+
+                for (const searchTerm of searchTerms) {
+                    console.log(`Searching for: ${searchTerm}`);
+
+                    const textResults = await new Promise((resolve) => {
+                        service.textSearch({
+                            query: searchTerm,
+                            bounds: viewport
+                        }, (results, status) => {
+                            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                                resolve(results || []);
+                            } else {
+                                console.warn(`Search failed for "${searchTerm}":`, status);
+                                resolve([]);
+                            }
+                        });
+                    });
+
+                    allResults.push(...textResults);
+                    console.log(`Text search "${searchTerm}" found ${textResults.length} places`);
+
+                    // Add delay to avoid rate limiting
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
 
-                // RUN THE SEARCH
+                // 3. Remove duplicates based on place_id
+                const uniqueResults = allResults.filter((place, index, self) =>
+                    index === self.findIndex(p => p.place_id === place.place_id)
+                );
+
+                console.log(`Total unique places found: ${uniqueResults.length}`);
+
+                // 4. Apply STRICT category filtering
+                console.log(`Applying strict ${type} filtering...`);
+                let categoryFilteredResults = uniqueResults.filter(place => {
+                    // Apply strict type checking
+                    if (!isStrictlyOfType(place, type)) {
+                        return false;
+                    }
+
+                    // Apply name-based filtering
+                    if (!filterByNameKeywords(place, type)) {
+                        return false;
+                    }
+
+                    return true;
+                });
+
+                console.log(`After strict category filtering: ${categoryFilteredResults.length} places`);
+
+                // 5. Filter for quality results
+                let qualityResults = categoryFilteredResults.filter(result =>
+                    result.rating &&
+                    result.user_ratings_total &&
+                    result.user_ratings_total > 5 && // Minimum review threshold
+                    result.rating >= 3.0 // Minimum rating threshold
+                );
+
+                console.log(`Quality filtered results: ${qualityResults.length}`);
+
+                // 6. Apply user filters
+                const filters = getFilterValues();
+                const { selectedBudget, minRating, minReviews } = filters;
+
+                const filteredResults = qualityResults
+                    .filter(r => r.rating >= minRating && r.user_ratings_total >= minReviews)
+                    .filter(r => {
+                        if (selectedBudget === "all") return true;
+                        const p = r.price_level;
+                        return (
+                            (selectedBudget === "free" && (p === 0 || p === undefined)) ||
+                            (selectedBudget === "low" && p === 1) ||
+                            (selectedBudget === "moderate" && p === 2) ||
+                            (selectedBudget === "high" && p >= 3)
+                        );
+                    });
+
+                // 7. Enhanced sorting - prioritize by review count first (popularity), then rating
+                const sortedResults = filteredResults.sort((a, b) => {
+                    // Primary sort: Review count (more reviews = more popular/established)
+                    const reviewDiff = b.user_ratings_total - a.user_ratings_total;
+                    if (Math.abs(reviewDiff) > 100) return reviewDiff;
+
+                    // Secondary sort: Rating
+                    const ratingDiff = b.rating - a.rating;
+                    if (Math.abs(ratingDiff) >= 0.2) return ratingDiff;
+
+                    // Tertiary sort: Balanced score
+                    const scoreA = a.rating * Math.log(a.user_ratings_total + 1);
+                    const scoreB = b.rating * Math.log(b.user_ratings_total + 1);
+                    return scoreB - scoreA;
+                });
+
+                console.log(`Final sorted results for ${type}: ${sortedResults.length}`);
+
+                if (sortedResults.length > 0) {
+                    console.log(`Top 5 ${type} places:`, sortedResults.slice(0, 5).map(p =>
+                        `${p.name}: ${p.rating}★ (${p.user_ratings_total.toLocaleString()} reviews) - Types: ${(p.types || []).join(', ')}`
+                    ));
+                }
+
+                return sortedResults.slice(0, 50); // Top 50 results
+
+            } catch (error) {
+                console.error(`Error in comprehensive search for ${type}:`, error);
+                return [];
+            }
+        }
+
+        // Execute the comprehensive search
+        performComprehensiveSearch().then(finalResults => {
+            // Remove loading indicator
+            loadingDiv.remove();
+
+            if (finalResults.length === 0) {
+                pane.innerHTML += `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">${typeIcons[type]}</div>
+                        <div style="font-size: 18px;">No ${locationsTypeNames[type].replace(/🔍|🍽️|🏨|🌳|🏛️|🛍️/, '').trim().toLowerCase()} found in this area</div>
+                        <div style="font-size: 14px; margin-top: 10px; color: #666;">Try adjusting your filters or search in a different area</div>
+                    </div>
+                `;
+                return;
+            }
+
+            console.log(`Displaying ${finalResults.length} strictly categorized ${type} locations`);
+
+            // Create places with enhanced styling
+            finalResults.forEach((place, index) => {
+                createEnhancedPlaceItem(place, index, type, pane, new google.maps.places.PlacesService(document.createElement("div")));
+            });
+
+            // Mark this tab's content as loaded
+            contentLoadedFlags[type] = true;
+
+            // Apply filters after all places are loaded for this type
+            setTimeout(() => {
+                if (pane.classList.contains('active')) {
+                    applyFiltersToCurrentTab();
+                }
+            }, 200);
+        }).catch(error => {
+            console.error(`Failed to load ${type} locations:`, error);
+            loadingDiv.remove();
+            pane.innerHTML += `
+                <div style="text-align: center; padding: 40px; color: #dc3545;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                    <div style="font-size: 18px;">Error loading ${locationsTypeNames[type].replace(/🔍|🍽️|🏨|🌳|🏛️|🛍️/, '').trim().toLowerCase()}</div>
+                    <div style="font-size: 14px; margin-top: 10px;">Please try again later</div>
+                </div>
+            `;
+        });
+    }    
+    function createEnhancedPlaceItem(place, index, type, pane, svc) {
+            // Enhanced item styling
+            const item = document.createElement("div");
+            item.style.cssText = `
+                margin-bottom: 15px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                overflow: hidden;
+            `;
+
+            // Add hover effect
+            item.addEventListener('mouseenter', () => {
+                item.style.transform = 'translateY(-2px)';
+                item.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.transform = 'translateY(0)';
+                item.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            });
+
+            const header = document.createElement("div");
+            const details = document.createElement("div");
+
+            // Enhanced header styling
+            header.classList.add("activity-header");
+            header.style.cssText = `
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                padding: 15px;
+                position: relative;
+            `;
+            header.setAttribute("draggable", "true");
+            header.onclick = () => toggleDetails(header);
+            header.addEventListener("dragstart", e => {
+                e.dataTransfer.effectAllowed = "copy";
+                e.dataTransfer.setData("text/plain", "");
+                e.dataTransfer.setData("application/json",
+                    JSON.stringify({ name: place.name, placeId: place.place_id }));
+                window.draggedType = type;
+            });
+
+            // Create image container with enhanced styling
+            const imageContainer = createImageContainer(place.name, 100);
+
+            // Enhanced info section
+            const infoDiv = document.createElement("div");
+            infoDiv.style.cssText = "flex: 1; min-width: 0;"; // min-width: 0 helps with text overflow
+
+            // Price display with better styling
+            const priceSymbols = place.price_level && place.price_level > 0
+                ? "$".repeat(place.price_level)
+                : (place.price_level === 0 ? "Free" : "");
+
+            const priceDisplay = priceSymbols ? `
+                <div style="display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;">
+                    <span style="color: #28a745; font-weight: 500;">💰 ${priceSymbols}</span>
+                </div>
+            ` : '';
+
+            infoDiv.innerHTML = `
+                <div style="margin-bottom: 8px;">
+                    <strong style="font-size: 18px; color: #333; display: block; margin-bottom: 4px;">${place.name}</strong>
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <span style="color: #ffc107; font-weight: 500;">⭐ ${place.rating.toFixed(1)}</span>
+                        <span style="color: #666; font-size: 14px;">(${place.user_ratings_total.toLocaleString()} reviews)</span>
+                        ${priceDisplay}
+                    </div>
+                </div>
+                <div style="color: #999; font-size: 14px;">
+                    📍 ${place.vicinity || place.formatted_address || 'Location available'}
+                </div>
+            `;
+
+            header.appendChild(imageContainer);
+            header.appendChild(infoDiv);
+
+            // Enhanced details styling
+            details.classList.add("activity-details");
+            details.style.cssText = `
+                display: none;
+                padding: 20px;
+                border-top: 1px solid #eee;
+                background: #f8f9fa;
+                font-size: 14px;
+            `;
+            details.innerHTML = `
+                <div style="text-align: center; color: #666; padding: 20px;">
+                    <div style="font-size: 20px; margin-bottom: 10px;">⏳</div>
+                    <em>Loading detailed information...</em>
+                </div>
+            `;
+
+            // Enhanced add button
+            const addBtn = createAddButton(place, type);
+            header.appendChild(addBtn);
+
+            item.append(header, details);
+            pane.appendChild(item);
+
+            // Load image using the fast image loader with type-specific fallback
+            const photoUrl = place.photos && place.photos.length > 0
+                ? getOptimizedPhotoUrl(place.photos[0], 100)
+                : null;
+
+            imageLoader.addToQueue(
+                photoUrl,
+                place.name,
+                place.geometry.location,
+                imageContainer,
+                100
+            );
+
+            // Set fallback type for better icons
+            setTimeout(() => {
+                if (!photoUrl || imageContainer.querySelector('img') === null) {
+                    imageLoader.createFallbackImage(place.name, imageContainer, 100, type);
+                }
+            }, 3000);
+
+            // Fetch enhanced details
+            loadPlaceDetails(place, details, svc);
+        }
+    function loadPlaceDetails(place, details, svc) {
+            svc.getDetails({
+                placeId: place.place_id,
+                fields: [
+                    "formatted_address",
+                    "formatted_phone_number",
+                    "website",
+                    "opening_hours",
+                    "reviews",
+                    "editorial_summary",
+                    "types"
+                ]
+            }, (full, st2) => {
+                if (st2 !== google.maps.places.PlacesServiceStatus.OK) {
+                    details.innerHTML = `
+                        <div style="text-align: center; color: #999; padding: 20px;">
+                            <div style="font-size: 20px; margin-bottom: 10px;">❌</div>
+                            <p><em>Detailed information unavailable.</em></p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Enhanced tags with better styling
+                const amenityTypes = ["no_smoking", "free_wifi", "parking", "wheelchair_accessible", "air_conditioning", "pet_friendly"];
+                const tags = (full.types || [])
+                    .filter(t => amenityTypes.includes(t))
+                    .map(t => `
+                        <span style="
+                            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                            color: #1976d2;
+                            padding: 4px 8px;
+                            margin: 2px;
+                            border-radius: 12px;
+                            font-size: 12px;
+                            display: inline-block;
+                            border: 1px solid #90caf9;
+                        ">${t.replace(/_/g, " ")}</span>
+                    `).join(" ") || `<span style="color: #999; font-style: italic;">No special amenities listed</span>`;
+
+                // Enhanced opening hours
+                const hours = full.opening_hours?.weekday_text
+                    ? `
+                        <div style="margin: 15px 0;">
+                            <h5 style="margin: 0 0 8px 0; color: #495057; display: flex; align-items: center; gap: 8px;">
+                                🕒 Opening Hours
+                            </h5>
+                            <div style="background: white; padding: 10px; border-radius: 6px; border-left: 4px solid #007bff;">
+                                ${full.opening_hours.weekday_text.map(d => `<div style="margin: 2px 0; font-size: 13px;">${d}</div>`).join("")}
+                            </div>
+                        </div>
+                    ` : "";
+
+                // Enhanced reviews with better styling
+                const revs = (full.reviews || []).slice(0, 2)
+                    .map(r => `
+                        <div style="
+                            margin-bottom: 12px;
+                            padding: 12px;
+                            background: white;
+                            border-radius: 8px;
+                            border-left: 4px solid #ffc107;
+                        ">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <strong style="color: #333;">${r.author_name}</strong>
+                                <span style="color: #ffc107; font-weight: 500;">⭐ ${r.rating}</span>
+                            </div>
+                            <p style="margin: 0; color: #666; font-size: 13px; line-height: 1.4;">${r.text}</p>
+                        </div>
+                    `).join("") || `<div style="color: #999; font-style: italic; text-align: center; padding: 10px;">No reviews available</div>`;
+
+                details.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h5 style="margin: 0 0 10px 0; color: #495057; display: flex; align-items: center; gap: 8px;">
+                                📍 Contact Information
+                            </h5>
+                            <div style="background: white; padding: 12px; border-radius: 6px;">
+                                <p style="margin: 5px 0;"><strong>Address:</strong><br><span style="color: #666;">${full.formatted_address}</span></p>
+                                <p style="margin: 5px 0;"><strong>Phone:</strong><br><span style="color: #666;">${full.formatted_phone_number || 'N/A'}</span></p>
+                                <p style="margin: 5px 0;"><strong>Website:</strong><br>
+                                    ${full.website
+                                        ? `<a href="${full.website}" target="_blank" style="color: #007bff; text-decoration: none;">${full.website}</a>`
+                                        : '<span style="color: #666;">N/A</span>'
+                                    }
+                                </p>
+                            </div>
+                            ${hours}
+                        </div>
+                        <div>
+                            <h5 style="margin: 0 0 10px 0; color: #495057; display: flex; align-items: center; gap: 8px;">
+                                ⭐ Reviews & Amenities
+                            </h5>
+                            <div style="margin-bottom: 15px;">
+                                <h6 style="margin: 0 0 8px 0; color: #666;">Amenities</h6>
+                                <div>${tags}</div>
+                            </div>
+                            <div>
+                                <h6 style="margin: 0 0 8px 0; color: #666;">Recent Reviews</h6>
+                                <div style="max-height: 200px; overflow-y: auto;">${revs}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #28a745;">
+                        <h5 style="margin: 0 0 8px 0; color: #495057; display: flex; align-items: center; gap: 8px;">
+                            ℹ️ About This Place
+                        </h5>
+                        <p style="margin: 0; color: #666; line-height: 1.5;">${full.editorial_summary?.overview || "No description available."}</p>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
+                           target="_blank"
+                           style="
+                               display: inline-flex;
+                               align-items: center;
+                               gap: 8px;
+                               padding: 10px 20px;
+                               background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+                               color: white;
+                               text-decoration: none;
+                               border-radius: 6px;
+                               font-weight: 500;
+                               transition: transform 0.2s ease;
+                           "
+                           onmouseover="this.style.transform='scale(1.05)'"
+                           onmouseout="this.style.transform='scale(1)'">
+                            🗺️ View on Google Maps
+                        </a>
+                    </div>
+                `;
+            });
+        }
+        // Enhanced add button creation
+    function createAddButton(place, type) {
+            const addBtn = document.createElement("button");
+            addBtn.innerHTML = "➕";
+            addBtn.title = "Add to schedule";
+            addBtn.style.cssText = `
+                position: absolute;
+                bottom: 15px;
+                right: 15px;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: none;
+                background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                color: white;
+                font-size: 16px;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+
+            addBtn.addEventListener('mouseenter', () => {
+                addBtn.style.transform = 'scale(1.1)';
+                addBtn.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
+            });
+            addBtn.addEventListener('mouseleave', () => {
+                addBtn.style.transform = 'scale(1)';
+                addBtn.style.boxShadow = '0 2px 8px rgba(40, 167, 69, 0.3)';
+            });
+
+            addBtn.onclick = (e) => {
+                e.stopPropagation();
+                const targetHour = selectedSlot ? +selectedSlot.dataset.hour : 8;
+                addEvent(place.name, type, targetHour, place.place_id);
+
+                // Visual feedback
+                addBtn.innerHTML = "✓";
+                addBtn.style.background = "linear-gradient(135deg, #28a745 0%, #20c997 100%)";
+                setTimeout(() => {
+                    addBtn.innerHTML = "➕";
+                }, 1000);
+            };
+
+            return addBtn;
+        }
+    function performCustomSearch(searchTerm, targetPane) {
+            if (!searchTerm.trim()) {
+                alert("Please enter a search term");
+                return;
+            }
+
+            const searchBtn = targetPane.querySelector('.search-btn');
+            searchBtn.disabled = true;
+            searchBtn.textContent = "Searching...";
+
+            // Clear previous results but keep the search container
+            const existingResults = targetPane.querySelectorAll('.search-result-item');
+            existingResults.forEach(item => item.remove());
+
+            // Add loading indicator
+            const loadingDiv = document.createElement("div");
+            loadingDiv.className = "search-result-item";
+            loadingDiv.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
+                    <div style="font-size: 18px; font-weight: 500;">Searching for "${searchTerm}"...</div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #999;">Finding the best places for you</div>
+                </div>
+            `;
+            targetPane.appendChild(loadingDiv);
+
+            const masterSvc = new google.maps.places.PlacesService(document.createElement("div"));
+            masterSvc.getDetails({ placeId: "@placeId" }, (city, status) => {
+                if (status !== google.maps.places.PlacesServiceStatus.OK) {
+                    console.error("City lookup failed:", status);
+                    searchBtn.disabled = false;
+                    searchBtn.textContent = "Search";
+                    loadingDiv.remove();
+                    return;
+                }
+
+                const viewport = city.geometry.viewport;
+                const svc = new google.maps.places.PlacesService(document.createElement("div"));
+
+                const request = {
+                    bounds: viewport,
+                    keyword: searchTerm
+                };
+
                 svc.nearbySearch(request, (results, stat) => {
-                    if (stat !== google.maps.places.PlacesServiceStatus.OK || !results.length) return;
+                    searchBtn.disabled = false;
+                    searchBtn.textContent = "Search";
+                    loadingDiv.remove();
 
-                    // Get filter values safely
-                    const filters = getFilterValues();
-                    const { selectedBudget, minRating, minReviews } = filters;
+                    if (stat !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
+                        const noResults = document.createElement("div");
+                        noResults.className = "search-result-item";
+                        noResults.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: #999;">
+                                <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
+                                <div style="font-size: 18px;">No results found for "${searchTerm}"</div>
+                                <p style="margin-top: 10px; font-size: 14px;">Try a different search term or check your spelling</p>
+                            </div>
+                        `;
+                        targetPane.appendChild(noResults);
+                        return;
+                    }
 
-                    // 4) filter & sort by rating first, then review count
+                    // Get current filter values
+                    const selectedBudget = document.getElementById("budgetFilter")?.value || "all";
+                    const minRating = parseFloat(document.getElementById("ratingFilter")?.value) || 1;
+                    const minReviews = parseInt(document.getElementById("reviewsFilter")?.value) || 0;
+
+                    // Filter and sort results
                     const filtered = results
-                        .filter(r => r.rating >= minRating && r.user_ratings_total >= minReviews)
+                        .filter(r => r.rating && r.user_ratings_total && r.rating >= minRating && r.user_ratings_total >= minReviews)
                         .filter(r => {
                             if (selectedBudget === "all") return true;
                             const p = r.price_level;
@@ -747,333 +1893,237 @@
                                 (selectedBudget === "high" && p >= 3)
                             );
                         })
-                        .filter(r => type !== "restaurant" || !r.types.includes("lodging"))
                         .sort((a, b) => {
-                            if (b.user_ratings_total !== a.user_ratings_total) return b.user_ratings_total - a.user_ratings_total;
+                            const reviewDiff = b.user_ratings_total - a.user_ratings_total;
+                            if (Math.abs(reviewDiff) > 50) return reviewDiff;
                             return b.rating - a.rating;
                         })
-                        .slice(0, 50);
+                        .slice(0, 30);
 
-                    filtered.forEach(place => {
-                        // build the item: header + details + button
-                        const item = document.createElement("div");
-                        const header = document.createElement("div");
-                        const details = document.createElement("div");
+                    if (filtered.length === 0) {
+                        const noResults = document.createElement("div");
+                        noResults.className = "search-result-item";
+                        noResults.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: #999;">
+                                <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
+                                <div style="font-size: 18px;">No results matching your criteria</div>
+                                <p style="margin-top: 10px; font-size: 14px;">Try adjusting your filters or search term</p>
+                            </div>
+                        `;
+                        targetPane.appendChild(noResults);
+                        return;
+                    }
 
-                        // header: image + name + rating + price symbols
-                        header.classList.add("activity-header");
-                        header.style.cssText = "display:flex;align-items:center;cursor:pointer";
-                        header.setAttribute("draggable", "true");
-                        header.onclick = () => toggleDetails(header);
-                        header.addEventListener("dragstart", e => {
-                            // allow copy
-                            e.dataTransfer.effectAllowed = "copy";
-                            e.dataTransfer.setData("text/plain", "");
-                            e.dataTransfer.setData("application/json",
-                                JSON.stringify({ name: place.name, placeId: place.place_id }));
-                            window.draggedType = type;
-                        });
-
-                        // price as $, $$, etc.
-                        const priceSymbols = place.price_level
-                            ? "$".repeat(place.price_level)
-                            : "N/A";
-
-                        const imgUrl = place.photos?.[0]?.getUrl({ maxWidth: 100 })
-                            || "https://via.placeholder.com/100?text=No+Image";
-
-                        header.innerHTML = `
-                                <img src="${imgUrl}" width="100" height="100"
-                                     style="margin-right:10px;border-radius:6px;object-fit:cover">
-                                <div>
-                                  <strong>${place.name}</strong><br>
-                                  ${place.rating.toFixed(1)} ★ (${place.user_ratings_total})<br>
-                                  <small>${priceSymbols}</small>
-                                </div>
-                              `;
-
-                        // details placeholder
-                        details.classList.add("activity-details");
-                        details.style.cssText = "display:none;margin-top:8px;padding:10px;border:1px solid #ccc;border-radius:6px;background:#f9f9f9";
-                        details.innerHTML = `<em>Loading details…</em>`;
-
-                        // add‐to‐schedule button
-                        const addBtn = document.createElement("button");
-                        addBtn.textContent = "+";
-                        addBtn.title = "Add to schedule";
-                        addBtn.classList.add("add-btn");
-                        addBtn.onclick = (e) => {
-                            e.stopPropagation();   // ← prevent the header's toggleDetails from firing
-                            const targetHour = selectedSlot ? +selectedSlot.dataset.hour : 8;
-                            addEvent(place.name, type, targetHour, place.place_id);
-                        };
-                        header.appendChild(addBtn);
-
-                        // 4) Now assemble the item: header (with button) then details
-                        item.append(header, details);
-
-                        // 5) Finally, stick it into the tab pane
-                        pane.appendChild(item);
-
-                        // fetch full details
-                        svc.getDetails({
-                            placeId: place.place_id,
-                            fields: [
-                                "formatted_address",
-                                "formatted_phone_number",
-                                "website",
-                                "opening_hours",
-                                "reviews",
-                                "editorial_summary",
-                                "types"
-                            ]
-                        }, (full, st2) => {
-                            if (st2 !== google.maps.places.PlacesServiceStatus.OK) {
-                                details.innerHTML = `<p><em>Details unavailable.</em></p>`;
-                                return;
-                            }
-
-                            // build tags from types
-                            const tags = (full.types || [])
-                                .filter(t => ["no_smoking", "free_wifi", "parking", "wheelchair_accessible"].includes(t))
-                                .map(t => `<span class="tag">${t.replace(/_/g, " ")}</span>`)
-                                .join(" ") || "None";
-
-                            // opening hours if available
-                            const hours = full.opening_hours?.weekday_text
-                                ? `<h5>Hours</h5><ul>${full.opening_hours.weekday_text.map(d => `<li>${d}</li>`).join("")}</ul>`
-                                : "";
-
-                            // top 2 reviews
-                            const revs = (full.reviews || []).slice(0, 2)
-                                .map(r => `<div><strong>${r.author_name}</strong> (${r.rating}★)<p>${r.text}</p></div>`)
-                                .join("") || "<em>No reviews.</em>";
-
-                            details.innerHTML = `
-                                  <p><strong>Address:</strong> ${full.formatted_address}</p>
-                                  <p><strong>Phone:</strong> ${full.formatted_phone_number || "N/A"}</p>
-                                  <p><strong>Website:</strong>
-                                     ${full.website
-                                    ? `<a href="${full.website}" target="_blank">${full.website}</a>`
-                                    : "N/A"}</p>
-                                  ${hours}
-                                  <h5>Tags</h5><div>${tags}</div>
-                                  <h5>Top Reviews</h5><div>${revs}</div>
-                                  <h5>About</h5><p>${full.editorial_summary || "No description."}</p>
-                                  <p><a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
-                                        target="_blank">View on Google Maps</a></p>
-                                `;
-                        });
+                    // Create search results with enhanced styling
+                    filtered.forEach((place, index) => {
+                        createSearchResultItem(place, index, targetPane, svc);
                     });
+
+                    setTimeout(() => applyFiltersToCurrentTab(), 200);
                 });
             });
-        });
-    }
-
-    function performCustomSearch(searchTerm, targetPane) {
-        if (!searchTerm.trim()) {
-            alert("Please enter a search term");
-            return;
         }
 
-        const searchBtn = targetPane.querySelector('.search-btn');
-        searchBtn.disabled = true;
-        searchBtn.textContent = "Searching...";
+        // ===================================================
+    // CREATE ENHANCED SEARCH RESULT ITEM
+    // ===================================================
+    function createSearchResultItem(place, index, targetPane, svc) {
+        const item = document.createElement("div");
+        item.className = "search-result-item";
+        item.style.cssText = `
+            margin-bottom: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        `;
 
-        // Clear previous results but keep the search container
-        const existingResults = targetPane.querySelectorAll('.search-result-item');
-        existingResults.forEach(item => item.remove());
+        // Add hover effect
+        item.addEventListener('mouseenter', () => {
+            item.style.transform = 'translateY(-2px)';
+            item.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+        });
+        item.addEventListener('mouseleave', () => {
+            item.style.transform = 'translateY(0)';
+            item.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        });
 
-        const masterSvc = new google.maps.places.PlacesService(document.createElement("div"));
-        masterSvc.getDetails({ placeId: "@placeId" }, (city, status) => {
-            if (status !== google.maps.places.PlacesServiceStatus.OK) {
-                console.error("City lookup failed:", status);
-                searchBtn.disabled = false;
-                searchBtn.textContent = "Search";
-                return;
+        const header = document.createElement("div");
+        const details = document.createElement("div");
+
+        header.classList.add("activity-header");
+        header.style.cssText = `
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px;
+            position: relative;
+        `;
+        header.setAttribute("draggable", "true");
+        header.onclick = () => toggleDetails(header);
+        header.addEventListener("dragstart", e => {
+            e.dataTransfer.effectAllowed = "copy";
+            e.dataTransfer.setData("text/plain", "");
+            e.dataTransfer.setData("application/json",
+                JSON.stringify({ name: place.name, placeId: place.place_id }));
+
+            // Determine type based on place types for drag behavior
+            const placeTypes = place.types || [];
+            if (placeTypes.includes('restaurant') || placeTypes.includes('food')) {
+                window.draggedType = "restaurant";
+            } else if (placeTypes.includes('lodging')) {
+                window.draggedType = "hotel";
+            } else if (placeTypes.includes('park')) {
+                window.draggedType = "park";
+            } else if (placeTypes.includes('museum')) {
+                window.draggedType = "museum";
+            } else if (placeTypes.includes('shopping_mall') || placeTypes.includes('store')) {
+                window.draggedType = "shopping_mall";
+            } else {
+                window.draggedType = "search"; // default for search results
+            }
+        });
+
+        // Create image container
+        const imageContainer = createImageContainer(place.name, 100);
+
+        // Enhanced info section
+        const infoDiv = document.createElement("div");
+        infoDiv.style.cssText = "flex: 1; min-width: 0;";
+
+        const priceSymbols = place.price_level && place.price_level > 0
+            ? "$".repeat(place.price_level)
+            : (place.price_level === 0 ? "Free" : "");
+
+        const priceDisplay = priceSymbols ? `
+            <div style="display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;">
+                <span style="color: #28a745; font-weight: 500;">💰 ${priceSymbols}</span>
+            </div>
+        ` : '';
+
+
+        infoDiv.innerHTML = `
+            <div style="margin-bottom: 8px;">
+                <strong style="font-size: 18px; color: #333; display: block; margin-bottom: 4px;">${place.name}</strong>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <span style="color: #ffc107; font-weight: 500;">⭐ ${place.rating.toFixed(1)}</span>
+                    <span style="color: #666; font-size: 14px;">(${place.user_ratings_total.toLocaleString()} reviews)</span>
+                    ${priceDisplay}
+                </div>
+            </div>
+            <div style="color: #999; font-size: 14px;">
+                📍 ${place.vicinity || place.formatted_address || 'Location available'}
+            </div>
+        `;
+
+        header.appendChild(imageContainer);
+        header.appendChild(infoDiv);
+
+        details.classList.add("activity-details");
+        details.style.cssText = `
+            display: none;
+            padding: 20px;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+            font-size: 14px;
+        `;
+        details.innerHTML = `
+            <div style="text-align: center; color: #666; padding: 20px;">
+                <div style="font-size: 20px; margin-bottom: 10px;">⏳</div>
+                <em>Loading detailed information...</em>
+            </div>
+        `;
+
+        // Enhanced add button for search results
+        const addBtn = document.createElement("button");
+        addBtn.innerHTML = "➕";
+        addBtn.title = "Add to schedule";
+        addBtn.style.cssText = `
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+
+        addBtn.addEventListener('mouseenter', () => {
+            addBtn.style.transform = 'scale(1.1)';
+            addBtn.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
+        });
+        addBtn.addEventListener('mouseleave', () => {
+            addBtn.style.transform = 'scale(1)';
+            addBtn.style.boxShadow = '0 2px 8px rgba(40, 167, 69, 0.3)';
+        });
+
+        addBtn.onclick = (e) => {
+            e.stopPropagation();
+            const targetHour = selectedSlot ? +selectedSlot.dataset.hour : 8;
+
+            // Determine type for scheduling
+            const placeTypes = place.types || [];
+            let scheduleType = "restaurant"; // default
+            if (placeTypes.includes('restaurant') || placeTypes.includes('food')) {
+                scheduleType = "restaurant";
+            } else if (placeTypes.includes('lodging')) {
+                scheduleType = "hotel";
+            } else if (placeTypes.includes('park')) {
+                scheduleType = "park";
+            } else if (placeTypes.includes('museum')) {
+                scheduleType = "museum";
+            } else if (placeTypes.includes('shopping_mall') || placeTypes.includes('store')) {
+                scheduleType = "shopping_mall";
             }
 
-            const viewport = city.geometry.viewport;
-            const svc = new google.maps.places.PlacesService(document.createElement("div"));
+            addEvent(place.name, scheduleType, targetHour, place.place_id);
 
-            const request = {
-                bounds: viewport,
-                keyword: searchTerm
-            };
+            // Visual feedback
+            addBtn.innerHTML = "✓";
+            addBtn.style.background = "linear-gradient(135deg, #28a745 0%, #20c997 100%)";
+            setTimeout(() => {
+                addBtn.innerHTML = "➕";
+            }, 1000);
+        };
 
-            svc.nearbySearch(request, (results, stat) => {
-                searchBtn.disabled = false;
-                searchBtn.textContent = "Search";
+        header.appendChild(addBtn);
+        item.append(header, details);
+        targetPane.appendChild(item);
 
-                if (stat !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
-                    const noResults = document.createElement("div");
-                    noResults.className = "search-result-item";
-                    noResults.innerHTML = `<p><em>No results found for "${searchTerm}"</em></p>`;
-                    targetPane.appendChild(noResults);
-                    return;
-                }
+        // Load image using the fast image loader
+        const photoUrl = place.photos && place.photos.length > 0
+            ? getOptimizedPhotoUrl(place.photos[0], 100)
+            : null;
 
-                // Get current filter values
-                const selectedBudget = document.getElementById("budgetFilter").value;
-                const minRating = parseFloat(document.getElementById("ratingFilter").value) || 1;
-                const minReviews = parseInt(document.getElementById("reviewsFilter").value) || 0;
+        imageLoader.addToQueue(
+            photoUrl,
+            place.name,
+            place.geometry.location,
+            imageContainer,
+            100
+        );
 
-                // Filter and sort results
-                const filtered = results
-                    .filter(r => r.rating >= minRating && r.user_ratings_total >= minReviews)
-                    .filter(r => {
-                        if (selectedBudget === "all") return true;
-                        const p = r.price_level;
-                        return (
-                            (selectedBudget === "free" && p === 0) ||
-                            (selectedBudget === "low" && p === 1) ||
-                            (selectedBudget === "moderate" && p === 2) ||
-                            (selectedBudget === "high" && p >= 3)
-                        );
-                    })
-                    .sort((a, b) => {
-                        if (b.user_ratings_total !== a.user_ratings_total) return b.user_ratings_total - a.user_ratings_total;
-                        return b.rating - a.rating;
-                    })
-                    .slice(0, 30);
+        // Set fallback type for better icons (search type)
+        setTimeout(() => {
+            if (!photoUrl || imageContainer.querySelector('img') === null) {
+                imageLoader.createFallbackImage(place.name, imageContainer, 100, 'search');
+            }
+        }, 3000);
 
-                filtered.forEach(place => {
-                    const item = document.createElement("div");
-                    item.className = "search-result-item";
-
-                    const header = document.createElement("div");
-                    const details = document.createElement("div");
-
-                    header.classList.add("activity-header");
-                    header.style.cssText = "display:flex;align-items:center;cursor:pointer";
-                    header.setAttribute("draggable", "true");
-                    header.onclick = () => toggleDetails(header);
-                    header.addEventListener("dragstart", e => {
-                        e.dataTransfer.effectAllowed = "copy";
-                        e.dataTransfer.setData("text/plain", "");
-                        e.dataTransfer.setData("application/json",
-                            JSON.stringify({ name: place.name, placeId: place.place_id }));
-
-                        // Determine type based on place types for drag behavior
-                        const placeTypes = place.types || [];
-                        if (placeTypes.includes('restaurant') || placeTypes.includes('food')) {
-                            window.draggedType = "restaurant";
-                        } else if (placeTypes.includes('lodging')) {
-                            window.draggedType = "hotel";
-                        } else if (placeTypes.includes('park')) {
-                            window.draggedType = "park";
-                        } else if (placeTypes.includes('museum')) {
-                            window.draggedType = "museum";
-                        } else if (placeTypes.includes('shopping_mall') || placeTypes.includes('store')) {
-                            window.draggedType = "shopping_mall";
-                        } else {
-                            window.draggedType = "restaurant"; // default
-                        }
-                    });
-
-                    const priceSymbols = place.price_level
-                        ? "$".repeat(place.price_level)
-                        : "N/A";
-
-                    const imgUrl = place.photos?.[0]?.getUrl({ maxWidth: 100 })
-                        || "https://via.placeholder.com/100?text=No+Image";
-
-                    header.innerHTML = `
-                            <img src="${imgUrl}" width="100" height="100"
-                                 style="margin-right:10px;border-radius:6px;object-fit:cover">
-                            <div>
-                              <strong>${place.name}</strong><br>
-                              ${place.rating.toFixed(1)} ★ (${place.user_ratings_total})<br>
-                              <small>${priceSymbols}</small>
-                            </div>
-                          `;
-
-                    details.classList.add("activity-details");
-                    details.style.cssText = "display:none;margin-top:8px;padding:10px;border:1px solid #ccc;border-radius:6px;background:#f9f9f9";
-                    details.innerHTML = `<em>Loading details…</em>`;
-
-                    const addBtn = document.createElement("button");
-                    addBtn.textContent = "+";
-                    addBtn.title = "Add to schedule";
-                    addBtn.classList.add("add-btn");
-                    addBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        const targetHour = selectedSlot ? +selectedSlot.dataset.hour : 8;
-
-                        // Determine type for scheduling
-                        const placeTypes = place.types || [];
-                        let scheduleType = "restaurant"; // default
-                        if (placeTypes.includes('restaurant') || placeTypes.includes('food')) {
-                            scheduleType = "restaurant";
-                        } else if (placeTypes.includes('lodging')) {
-                            scheduleType = "hotel";
-                        } else if (placeTypes.includes('park')) {
-                            scheduleType = "park";
-                        } else if (placeTypes.includes('museum')) {
-                            scheduleType = "museum";
-                        } else if (placeTypes.includes('shopping_mall') || placeTypes.includes('store')) {
-                            scheduleType = "shopping_mall";
-                        }
-
-                        addEvent(place.name, scheduleType, targetHour, place.place_id);
-                    };
-                    header.appendChild(addBtn);
-
-                    item.append(header, details);
-                    targetPane.appendChild(item);
-
-                    // Fetch full details
-                    svc.getDetails({
-                        placeId: place.place_id,
-                        fields: [
-                            "formatted_address",
-                            "formatted_phone_number",
-                            "website",
-                            "opening_hours",
-                            "reviews",
-                            "editorial_summary",
-                            "types"
-                        ]
-                    }, (full, st2) => {
-                        if (st2 !== google.maps.places.PlacesServiceStatus.OK) {
-                            details.innerHTML = `<p><em>Details unavailable.</em></p>`;
-                            return;
-                        }
-
-                        const tags = (full.types || [])
-                            .filter(t => ["no_smoking", "free_wifi", "parking", "wheelchair_accessible"].includes(t))
-                            .map(t => `<span class="tag">${t.replace(/_/g, " ")}</span>`)
-                            .join(" ") || "None";
-
-                        const hours = full.opening_hours?.weekday_text
-                            ? `<h5>Hours</h5><ul>${full.opening_hours.weekday_text.map(d => `<li>${d}</li>`).join("")}</ul>`
-                            : "";
-
-                        const revs = (full.reviews || []).slice(0, 2)
-                            .map(r => `<div><strong>${r.author_name}</strong> (${r.rating}★)<p>${r.text}</p></div>`)
-                            .join("") || "<em>No reviews.</em>";
-
-                        details.innerHTML = `
-                              <p><strong>Address:</strong> ${full.formatted_address}</p>
-                              <p><strong>Phone:</strong> ${full.formatted_phone_number || "N/A"}</p>
-                              <p><strong>Website:</strong>
-                                 ${full.website
-                                ? `<a href="${full.website}" target="_blank">${full.website}</a>`
-                                : "N/A"}</p>
-                              ${hours}
-                              <h5>Tags</h5><div>${tags}</div>
-                              <h5>Top Reviews</h5><div>${revs}</div>
-                              <h5>About</h5><p>${full.editorial_summary || "No description."}</p>
-                              <p><a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
-                                    target="_blank">View on Google Maps</a></p>
-                            `;
-                    });
-                });
-            });
-        });
+        // Fetch full details (reuse the same function)
+        loadPlaceDetails(place, details, svc);
     }
-
-    // toggle details helper
+        // toggle details helper
     window.toggleDetails = function (header) {
         document.querySelectorAll(".activity-details").forEach(d => { if (d !== header.nextSibling) d.style.display = "none"; });
         const det = header.nextSibling;
@@ -1108,6 +2158,8 @@
 
     window.addEventListener("load", function () {
         updateCalendarForCurrentDate();
+
+        // Then fetch locations
         fetchTopLocations();
     });
 
@@ -1151,5 +2203,4 @@
 
         window.open(url, "_blank");
     });
-
 </script>

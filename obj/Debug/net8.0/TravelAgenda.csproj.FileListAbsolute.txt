@@ -392,14 +392,12 @@ W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Composition.Runtime.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Composition.TypedParts.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Drawing.Common.dll
-W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Formats.Asn1.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Memory.Data.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Reflection.MetadataLoadContext.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Runtime.Caching.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Security.Permissions.dll
-W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Text.Json.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Windows.Extensions.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\af\Humanizer.resources.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\ar\Humanizer.resources.dll
@@ -583,11 +581,6 @@ W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\TravelAgenda.RazorAssemblyInfo.cs
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\TravelAgenda.sourcelink.json
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets.build.json
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets.development.json
-W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets\msbuild.TravelAgenda.Microsoft.AspNetCore.StaticWebAssets.props
-W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets\msbuild.build.TravelAgenda.props
-W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.TravelAgenda.props
-W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.TravelAgenda.props
-W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets.pack.json
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\scopedcss\bundle\TravelAgenda.styles.css
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\scopedcss\projectbundle\TravelAgenda.bundle.scp.css
@@ -598,3 +591,9 @@ W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\TravelAgenda.pdb
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\TravelAgenda.genruntimeconfig.cache
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\ref\TravelAgenda.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\DayPilot.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\Azure.AI.OpenAI.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\OpenAI.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\TravelAgenda.staticwebassets.endpoints.json
+W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets.build.json.cache
+W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
