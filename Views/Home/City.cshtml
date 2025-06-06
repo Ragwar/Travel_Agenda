@@ -228,60 +228,103 @@
         });
     }
 
-    async function fetchTopLocations(location, viewport) {
+       async function fetchTopLocations(location, viewport) {
         const resultsContainer = document.getElementById("locations");
         resultsContainer.innerHTML = "";
 
         const cityName = selectedPlace.name;
         console.log(`Searching for top locations in ${cityName}`);
 
+        // Calculate city bounds and radius more accurately
+        const cityBounds = viewport;
+        let searchRadius = 5000; // Start with 5km default
+
+        if (cityBounds) {
+            // Calculate approximate radius based on viewport bounds
+            const ne = cityBounds.getNorthEast();
+            const sw = cityBounds.getSouthWest();
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(ne, sw);
+            searchRadius = Math.min(Math.max(distance / 4, 2000), 10000); // Between 2km and 10km
+        }
+
         const categories = [
             {
                 type: "restaurant",
                 searchTerms: [
-                    `best restaurants ${cityName}`,
-                    `top rated restaurants ${cityName}`,
-                    `most popular restaurants ${cityName}`
+                    `restaurants in ${cityName}`,
+                    `dining ${cityName}`,
+                    `food ${cityName}`
                 ]
             },
             {
                 type: "hotel",
                 searchTerms: [
-                    `best hotels ${cityName}`,
-                    `top rated hotels ${cityName}`,
-                    `luxury hotels ${cityName}`
+                    `hotels in ${cityName}`,
+                    `accommodation ${cityName}`,
+                    `lodging ${cityName}`
                 ]
             },
             {
                 type: "park",
                 searchTerms: [
-                    `popular parks ${cityName}`,
-                    `best parks ${cityName}`,
-                    `top attractions parks ${cityName}`
+                    `parks in ${cityName}`,
+                    `attractions ${cityName}`,
+                    `recreation ${cityName}`
                 ]
             },
             {
                 type: "museum",
                 searchTerms: [
-                    `best museums ${cityName}`,
-                    `top museums ${cityName}`,
-                    `popular museums ${cityName}`
+                    `museums in ${cityName}`,
+                    `culture ${cityName}`,
+                    `galleries ${cityName}`
                 ]
             }
         ];
+
+        // Function to check if a place is within city bounds
+        function isWithinCityBounds(place) {
+            if (!place.geometry || !place.geometry.location) return false;
+
+            const placeLocation = place.geometry.location;
+
+            // If we have viewport bounds, use them
+            if (cityBounds) {
+                return cityBounds.contains(placeLocation);
+            }
+
+            // Fallback: check distance from city center
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                location,
+                placeLocation
+            );
+
+            return distance <= searchRadius;
+        }
+
+        // Function to check if place address contains city name
+        function addressContainsCity(place) {
+            if (!place.formatted_address && !place.vicinity) return false;
+
+            const address = (place.formatted_address || place.vicinity || '').toLowerCase();
+            const cityLower = cityName.toLowerCase();
+
+            // Check if city name appears in address
+            return address.includes(cityLower);
+        }
 
         for (let categoryIndex = 0; categoryIndex < categories.length; categoryIndex++) {
             const category = categories[categoryIndex];
 
             setTimeout(async () => {
-                console.log(`Processing ${category.type} for ${cityName}`);
+                console.log(`Processing ${category.type} for ${cityName} with radius ${searchRadius}m`);
 
                 const section = document.createElement("div");
                 section.classList.add("mt-3");
                 section.innerHTML = `
                     <h3>Top ${category.type.charAt(0).toUpperCase() + category.type.slice(1)}s</h3>
                     <div class="loading-message">
-                        🔍 Searching for the most reviewed ${category.type}s in ${cityName}...
+                        🔍 Searching for ${category.type}s in ${cityName}...
                     </div>
                 `;
                 resultsContainer.appendChild(section);
@@ -289,9 +332,10 @@
                 const service = new google.maps.places.PlacesService(document.createElement("div"));
                 let allResults = [];
 
+                // Use stricter nearby search with calculated radius
                 const nearbyRequest = {
                     location: location,
-                    radius: 15000,
+                    radius: searchRadius,
                     type: category.type,
                 };
 
@@ -301,19 +345,26 @@
                             if (status === google.maps.places.PlacesServiceStatus.OK) {
                                 resolve(results || []);
                             } else {
+                                console.log(`Nearby search failed for ${category.type}:`, status);
                                 resolve([]);
                             }
                         });
                     });
 
-                    allResults.push(...nearbyResults);
+                    // Filter nearby results to ensure they're within bounds
+                    const filteredNearby = nearbyResults.filter(place =>
+                        isWithinCityBounds(place) || addressContainsCity(place)
+                    );
 
+                    allResults.push(...filteredNearby);
+
+                    // Use more specific text searches
                     for (const searchTerm of category.searchTerms) {
                         const textResults = await new Promise((resolve) => {
                             service.textSearch({
                                 query: searchTerm,
                                 location: location,
-                                radius: 20000
+                                radius: searchRadius
                             }, (results, status) => {
                                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                                     resolve(results || []);
@@ -323,25 +374,51 @@
                             });
                         });
 
-                        allResults.push(...textResults);
-                        await new Promise(resolve => setTimeout(resolve, 500));
+                        // Filter text search results more strictly
+                        const filteredTextResults = textResults.filter(place => {
+                            // Must pass both location and address checks for text search results
+                            return (isWithinCityBounds(place) || addressContainsCity(place)) &&
+                                   // Additional check: ensure it's not from a completely different city
+                                   !place.formatted_address?.toLowerCase().includes('other major city names here');
+                        });
+
+                        allResults.push(...filteredTextResults);
+                        await new Promise(resolve => setTimeout(resolve, 800)); // Longer delay to respect API limits
                     }
 
+                    // Remove duplicates
                     const uniqueResults = allResults.filter((place, index, self) =>
                         index === self.findIndex(p => p.place_id === place.place_id)
                     );
 
+                    // Apply additional filtering
                     let filteredResults = uniqueResults
-                        .filter(result => result.rating && result.user_ratings_total && result.user_ratings_total > 10);
+                        .filter(result => {
+                            // Must have rating and reasonable review count
+                            if (!result.rating || !result.user_ratings_total || result.user_ratings_total < 5) {
+                                return false;
+                            }
 
+                            // Double-check location bounds
+                            if (!isWithinCityBounds(result) && !addressContainsCity(result)) {
+                                console.log(`Excluding ${result.name} - outside city bounds`);
+                                return false;
+                            }
+
+                            return true;
+                        });
+
+                    // Special filtering for restaurants
                     if (category.type === "restaurant") {
                         filteredResults = filterRestaurants(filteredResults);
                     }
 
+                    // Sort by review count and rating
                     filteredResults = filteredResults
                         .sort((a, b) => {
+                            // Prioritize places with more reviews, then by rating
                             const reviewDiff = b.user_ratings_total - a.user_ratings_total;
-                            if (Math.abs(reviewDiff) > 50) return reviewDiff;
+                            if (Math.abs(reviewDiff) > 100) return reviewDiff;
                             return b.rating - a.rating;
                         });
 
@@ -349,7 +426,7 @@
                     if (loadingMsg) loadingMsg.remove();
 
                     if (filteredResults.length === 0) {
-                        section.innerHTML += `<p class="no-results-message">No highly-reviewed ${category.type}s found in this area.</p>`;
+                        section.innerHTML += `<p class="no-results-message">No ${category.type}s found within ${cityName} city limits.</p>`;
                         return;
                     }
 
@@ -392,7 +469,7 @@
                         );
                     });
 
-                    console.log(`Found ${topResults.length} top ${category.type}s for ${cityName}`);
+                    console.log(`Found ${topResults.length} ${category.type}s within ${cityName} bounds`);
 
                 } catch (error) {
                     console.error(`Error fetching ${category.type}s:`, error);
@@ -403,10 +480,9 @@
                     }
                 }
 
-            }, categoryIndex * 1000);
+            }, categoryIndex * 1200); // Increased delay between categories
         }
     }
-
     function initAutocomplete() {
         const input = document.getElementById("searchBox");
 

@@ -7,6 +7,10 @@
       "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:views\\home\\locationsandactivities.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\views\\home\\city.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:views\\home\\city.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\wwwroot\\css\\locationsandactivities.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
       "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:wwwroot\\css\\locationsandactivities.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
     },
@@ -48,11 +52,24 @@
         },
         {
           "DockedWidth": 1219,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "City.cshtml",
+              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\City.cshtml",
+              "RelativeDocumentMoniker": "Views\\Home\\City.cshtml",
+              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\City.cshtml",
+              "RelativeToolTip": "Views\\Home\\City.cshtml",
+              "ViewState": "AgIAAAgCAAAAAAAAAAAgwCgCAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-06-06T19:55:56.198Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "LocationsAndActivities.css",
               "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\css\\LocationsAndActivities.css",
               "RelativeDocumentMoniker": "wwwroot\\css\\LocationsAndActivities.css",
@@ -60,8 +77,7 @@
               "RelativeToolTip": "wwwroot\\css\\LocationsAndActivities.css",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2025-06-06T16:31:36.655Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-06T16:31:36.655Z"
             },
             {
               "$type": "Document",
@@ -71,14 +87,14 @@
               "RelativeDocumentMoniker": "Views\\Home\\LocationsAndActivities.cshtml",
               "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\LocationsAndActivities.cshtml",
               "RelativeToolTip": "Views\\Home\\LocationsAndActivities.cshtml",
-              "ViewState": "AgIAADkHAAAAAAAAAAAswFAHAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAFYDAAAAAAAAAAAiwGsDAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-05-25T17:22:21.178Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "CalendarCity.css",
               "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\wwwroot\\css\\CalendarCity.css",
               "RelativeDocumentMoniker": "wwwroot\\css\\CalendarCity.css",
@@ -86,12 +102,11 @@
               "RelativeToolTip": "wwwroot\\css\\CalendarCity.css",
               "ViewState": "AgIAAK4AAAAAAAAAAAAgwLgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2025-06-06T16:05:34.111Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-06T16:05:34.111Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "Residence.cshtml",
               "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\Residence.cshtml",
               "RelativeDocumentMoniker": "Views\\Home\\Residence.cshtml",
@@ -99,12 +114,11 @@
               "RelativeToolTip": "Views\\Home\\Residence.cshtml",
               "ViewState": "AgIAAMICAAAAAAAAAAAmwNoCAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-06-06T16:41:52.543Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-06T16:41:52.543Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "appsettings.json",
               "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\appsettings.json",
               "RelativeDocumentMoniker": "appsettings.json",
@@ -116,7 +130,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "HomeController.cs",
               "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Controllers\\HomeController.cs",
               "RelativeDocumentMoniker": "Controllers\\HomeController.cs",
