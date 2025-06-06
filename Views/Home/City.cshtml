@@ -1,17 +1,30 @@
 ﻿@{
-    ViewData["Title"] = "Activities";
+    ViewData["Title"] = "City";
     var apiKey = ViewData["GoogleApiKey"];
     var scheduleId = ViewBag.Schedule.Schedule_Id;
 }
 @await Html.PartialAsync("_ProgressFlowChart")
+<link rel="stylesheet" href="~/css/CalendarCity.css" />
+<div class="city-layout">
+    <div class="city-search-panel">
+        <div class="form-group">
+            <input type="text" id="searchBox" class="form-control" placeholder="Search for a city" />
+            <button id="submitCityButton" class="btn btn-primary mt-2">Save City</button>
+        </div>
 
-<div class="form-group">
-    <input type="text" id="searchBox" class="form-control" placeholder="Search for a city" />
-    <button id="submitCityButton" class="btn btn-primary mt-2">Save City</button>
+        <h2>Top Locations in <span id="selectedCityName">...</span></h2>
+        <div id="locations" class="mt-4"></div>
+    </div>
+
+    <div class="city-map-panel">
+        <div id="cityMap"></div>
+        <div id="cityInfo" class="city-info-panel" style="display: none;">
+            <h4 id="cityInfoName">City Information</h4>
+            <p id="cityInfoAddress"></p>
+            <p id="cityInfoCoordinates"></p>
+        </div>
+    </div>
 </div>
-
-<h2>Top Locations in <span id="selectedCityName">...</span></h2>
-<div id="locations" class="mt-4"></div>
 
 <script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places,geometry"></script>
 <script>
@@ -19,6 +32,37 @@
     const scheduleId = '@scheduleId';
     let selectedPlace = null;
     const googleApiKey = '@apiKey';
+    let cityMap;
+
+    // Initialize the city map
+    function initCityMap() {
+        // Default center (can be any location, will be updated when city is selected)
+        const defaultCenter = { lat: 40.7128, lng: -74.0060 }; // New York as default
+
+        cityMap = new google.maps.Map(document.getElementById("cityMap"), {
+            zoom: 10,
+            center: defaultCenter,
+            mapTypeControl: true,
+            streetViewControl: true,
+            fullscreenControl: true
+        });
+    }
+
+    // Update map when city is selected
+    function updateCityMap(place) {
+        if (!cityMap) return;
+
+        const location = place.geometry.location;
+        const viewport = place.geometry.viewport;
+
+        // Fit map to city bounds
+        if (viewport) {
+            cityMap.fitBounds(viewport);
+        } else {
+            cityMap.setCenter(location);
+            cityMap.setZoom(12);
+        }
+    }
 
     // Fast image loader with Google Maps Static API fallback
     class FastImageLoader {
@@ -65,10 +109,7 @@
 
                 const onSuccess = () => {
                     clearTimeout(timeoutId);
-                    img.style.width = "100px";
-                    img.style.height = "100px";
-                    img.style.borderRadius = "8px";
-                    img.style.objectFit = "cover";
+                    img.className = 'location-image';
                     img.alt = placeName;
 
                     container.innerHTML = '';
@@ -108,17 +149,13 @@
                 `zoom=17&` +
                 `size=100x100&` +
                 `maptype=roadmap&` +
-                `markers=color:red%7Clabel:•%7C${lat},${lng}&` +
                 `style=feature:poi|visibility:on&` +
                 `style=feature:transit|visibility:simplified&` +
                 `key=${googleApiKey}`;
 
             const img = document.createElement("img");
             img.src = mapUrl;
-            img.style.width = "100px";
-            img.style.height = "100px";
-            img.style.borderRadius = "8px";
-            img.style.border = "2px solid #007bff";
+            img.className = 'map-image';
             img.alt = `Map view of ${placeName}`;
             img.title = `Location: ${placeName}`;
 
@@ -133,22 +170,7 @@
         }
 
         createFallbackImage(placeName, container) {
-            container.innerHTML = `
-                    <div style="
-                        width: 100px;
-                        height: 100px;
-                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-                        border-radius: 8px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: white;
-                        font-size: 24px;
-                        border: 2px solid #198754;
-                    ">
-                        📍
-                    </div>
-                `;
+            container.innerHTML = `<div class="fallback-image">📍</div>`;
         }
 
         delay(ms) {
@@ -160,30 +182,8 @@
 
     function createImageContainer(placeName) {
         const container = document.createElement("div");
-        container.style.width = "100px";
-        container.style.height = "100px";
-        container.style.marginRight = "15px";
-        container.style.display = "inline-block";
-        container.style.position = "relative";
-        container.style.backgroundColor = "#f8f9fa";
-        container.style.borderRadius = "8px";
-
-        container.innerHTML = `
-                <div style="
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: #6c757d;
-                    font-size: 12px;
-                    background: #e9ecef;
-                    border-radius: 8px;
-                ">
-                    ⏳
-                </div>
-            `;
-
+        container.className = 'image-container';
+        container.innerHTML = `<div class="image-loading">⏳</div>`;
         return container;
     }
 
@@ -279,11 +279,11 @@
                 const section = document.createElement("div");
                 section.classList.add("mt-3");
                 section.innerHTML = `
-                        <h3>Top ${category.type.charAt(0).toUpperCase() + category.type.slice(1)}s</h3>
-                        <div class="loading-message" style="color: #666; font-style: italic;">
-                            🔍 Searching for the most reviewed ${category.type}s in ${cityName}...
-                        </div>
-                    `;
+                    <h3>Top ${category.type.charAt(0).toUpperCase() + category.type.slice(1)}s</h3>
+                    <div class="loading-message">
+                        🔍 Searching for the most reviewed ${category.type}s in ${cityName}...
+                    </div>
+                `;
                 resultsContainer.appendChild(section);
 
                 const service = new google.maps.places.PlacesService(document.createElement("div"));
@@ -349,7 +349,7 @@
                     if (loadingMsg) loadingMsg.remove();
 
                     if (filteredResults.length === 0) {
-                        section.innerHTML += `<p style="color: #999; font-style: italic;">No highly-reviewed ${category.type}s found in this area.</p>`;
+                        section.innerHTML += `<p class="no-results-message">No highly-reviewed ${category.type}s found in this area.</p>`;
                         return;
                     }
 
@@ -361,28 +361,23 @@
                             : null;
 
                         const item = document.createElement("div");
-                        item.classList.add("mb-3");
-                        item.style.padding = "10px";
-                        item.style.border = "1px solid #dee2e6";
-                        item.style.borderRadius = "8px";
-                        item.style.backgroundColor = "#f8f9fa";
+                        item.className = 'mb-3 location-item';
 
                         const container = document.createElement("div");
-                        container.style.display = "flex";
-                        container.style.alignItems = "center";
+                        container.className = 'location-container';
 
                         const imageContainer = createImageContainer(result.name);
 
                         const textDiv = document.createElement("div");
-                        const priceDisplay = result.price_level ? `<br><small style="color: #28a745;">💰 ${'$'.repeat(result.price_level)}</small>` : '';
+                        const priceDisplay = result.price_level ? `<br><small class="location-price">💰 ${'$'.repeat(result.price_level)}</small>` : '';
 
                         textDiv.innerHTML = `
-                                <strong>${result.name}</strong>
-                                <br>
-                                <span style="color: #666;">⭐ ${result.rating} (${result.user_ratings_total.toLocaleString()} reviews)</span><br>
-                                <small style="color: #999;">📍 ${result.formatted_address || result.vicinity || 'Location available'}</small>
-                                ${priceDisplay}
-                            `;
+                            <strong>${result.name}</strong>
+                            <br>
+                            <span class="location-rating">⭐ ${result.rating} (${result.user_ratings_total.toLocaleString()} reviews)</span><br>
+                            <small class="location-address">📍 ${result.formatted_address || result.vicinity || 'Location available'}</small>
+                            ${priceDisplay}
+                        `;
 
                         container.appendChild(imageContainer);
                         container.appendChild(textDiv);
@@ -404,7 +399,7 @@
                     const loadingMsg = section.querySelector('.loading-message');
                     if (loadingMsg) {
                         loadingMsg.textContent = `Error loading ${category.type}s. Please try again.`;
-                        loadingMsg.style.color = '#dc3545';
+                        loadingMsg.className = 'error-message';
                     }
                 }
 
@@ -434,6 +429,11 @@
             };
 
             document.getElementById("selectedCityName").textContent = selectedPlace.name;
+
+            // Update the city map
+            updateCityMap(place);
+
+            // Fetch top locations
             fetchTopLocations(selectedPlace.location, place.geometry.viewport);
         });
     }
@@ -459,16 +459,19 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-            .then(response => {
-                if (response.ok) {
-                    const redirectUrl = `/Home/Residence?id=${scheduleId}`;
-                    window.location.href = redirectUrl;
-                } else {
-                    alert("Failed to save city.");
-                }
-            })
-            .catch(error => console.error('Error:', error));
+        .then(response => {
+            if (response.ok) {
+                const redirectUrl = `/Home/Residence?id=${scheduleId}`;
+                window.location.href = redirectUrl;
+            } else {
+                alert("Failed to save city.");
+            }
+        })
+        .catch(error => console.error('Error:', error));
     });
 
-    google.maps.event.addDomListener(window, "load", initAutocomplete);
+    google.maps.event.addDomListener(window, "load", () => {
+        initCityMap();
+        initAutocomplete();
+    });
 </script>

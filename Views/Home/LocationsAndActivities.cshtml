@@ -164,205 +164,6 @@
         museum: 3
     };
 
-    function getFilterValues() {
-        const budgetFilter = document.getElementById("budgetFilter");
-        const ratingFilter = document.getElementById("ratingFilter");
-        const reviewsFilter = document.getElementById("reviewsFilter");
-
-        // Return default values if elements don't exist yet
-        if (!budgetFilter || !ratingFilter || !reviewsFilter) {
-            console.warn("Filter elements not found, returning defaults");
-            return {
-                selectedBudget: "all",
-                minRating: 1.0,
-                minReviews: 0
-            };
-        }
-
-        return {
-            selectedBudget: budgetFilter.value,
-            minRating: parseFloat(ratingFilter.value) || 1.0,
-            minReviews: parseInt(reviewsFilter.value) || 0
-        };
-    }
-
-    function attachFilterEventListeners() {
-        const budgetFilter = document.getElementById("budgetFilter");
-        const ratingFilter = document.getElementById("ratingFilter");
-        const reviewsFilter = document.getElementById("reviewsFilter");
-
-        if (budgetFilter && ratingFilter && reviewsFilter) {
-            // Remove any existing listeners to prevent duplicates
-            budgetFilter.removeEventListener("change", handleFilterChange);
-            ratingFilter.removeEventListener("input", handleFilterChange);
-            reviewsFilter.removeEventListener("input", handleFilterChange);
-
-            // Add new listeners
-            budgetFilter.addEventListener("change", handleFilterChange);
-            ratingFilter.addEventListener("input", handleFilterChange);
-            reviewsFilter.addEventListener("input", handleFilterChange);
-
-            console.log("Filter event listeners attached successfully");
-        } else {
-            console.error("Could not attach filter event listeners - elements not found");
-        }
-    }
-    let filterTimeout;
-    function handleFilterChange() {
-        clearTimeout(filterTimeout);
-        filterTimeout = setTimeout(() => {
-            applyFiltersToCurrentTab();
-        }, 150);
-    }
-
-    function initializeFilters() {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(attachFilterEventListeners, 100);
-            });
-        } else {
-            setTimeout(attachFilterEventListeners, 100);
-        }
-    }
-
-    function applyFiltersToCurrentTab() {
-        // Get the currently active tab
-        const activeTab = document.querySelector("#locationTabs .nav-link.active");
-        if (!activeTab) return;
-
-        const currentType = activeTab.dataset.type;
-
-        // Skip if it's the filter tab or search tab
-        if (currentType === "filters" || currentType === "search") return;
-
-        // Don't apply filters if content isn't loaded yet
-        if (!contentLoadedFlags[currentType]) {
-            console.log(`Content for ${currentType} not loaded yet, skipping filter application`);
-            return;
-        }
-
-        // Ensure filter elements exist before proceeding
-        const budgetFilter = document.getElementById("budgetFilter");
-        const ratingFilter = document.getElementById("ratingFilter");
-        const reviewsFilter = document.getElementById("reviewsFilter");
-
-        if (!budgetFilter || !ratingFilter || !reviewsFilter) {
-            console.warn("Filter elements not ready, retrying in 100ms...");
-            setTimeout(applyFiltersToCurrentTab, 100);
-            return;
-        }
-
-        // Get filter values
-        const filters = getFilterValues();
-        const { selectedBudget, minRating, minReviews } = filters;
-
-        // Get the current tab pane
-        const currentPane = document.getElementById(currentType);
-        if (!currentPane) return;
-
-        // Get all activity items in the current pane (both regular and search results)
-        const activityItems = currentPane.querySelectorAll('.activity-header');
-
-        activityItems.forEach(header => {
-            const item = header.parentElement;
-
-            // Extract rating and review count from the header HTML
-            const headerText = header.innerHTML;
-
-            // More robust regex patterns
-            const ratingMatch = headerText.match(/(\d+(?:\.\d+)?)\s*★\s*\((\d+)\)/);
-
-            if (!ratingMatch) {
-                item.style.display = 'block'; // Show if we can't parse
-                return;
-            }
-
-            const rating = parseFloat(ratingMatch[1]);
-            const reviewCount = parseInt(ratingMatch[2]);
-
-            // Extract price level - look for $ symbols not followed by word characters
-            let priceLevel = 0;
-            if (headerText.includes("Free")) {
-                priceLevel = 0;
-            } else {
-                const priceMatch = headerText.match(/\$+(?!\w)/);
-                priceLevel = priceMatch ? priceMatch[0].length : 0;
-            }
-
-            // Apply filters
-            let shouldShow = true;
-
-            // Rating filter
-            if (rating < minRating) shouldShow = false;
-
-            // Review count filter
-            if (reviewCount < minReviews) shouldShow = false;
-
-            // Budget filter
-            if (selectedBudget !== "all") {
-                let matchesBudget = false;
-                if (selectedBudget === "free" && (priceLevel === 0 || headerText.includes("Free"))) {
-                    matchesBudget = true;
-                } else if (selectedBudget === "low" && priceLevel === 1) {
-                    matchesBudget = true;
-                } else if (selectedBudget === "moderate" && priceLevel === 2) {
-                    matchesBudget = true;
-                } else if (selectedBudget === "high" && priceLevel >= 3) {
-                    matchesBudget = true;
-                }
-
-                if (!matchesBudget) shouldShow = false;
-            }
-
-            // Show/hide the item
-            item.style.display = shouldShow ? 'block' : 'none';
-        });
-    }
-
-    function createFiltersSection() {
-        const contentContainer = document.getElementById("locationTabContent");
-
-        // Check if filters section already exists
-        if (document.getElementById("filtersSection")) {
-            return;
-        }
-
-        const filtersSection = document.createElement("div");
-        filtersSection.id = "filtersSection";
-        filtersSection.style.cssText = "display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;";
-        filtersSection.innerHTML = `
-            <div style="display: flex; gap: 15px; align-items: end;">
-                <div style="flex: 1;">
-                    <label for="budgetFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Budget:</label>
-                    <select id="budgetFilter" style="width: 100%; padding: 4px; font-size: 12px;">
-                        <option value="all">All</option>
-                        <option value="free">Free</option>
-                        <option value="low">$</option>
-                        <option value="moderate">$$</option>
-                        <option value="high">$$$+</option>
-                    </select>
-                </div>
-                <div style="flex: 1;">
-                    <label for="ratingFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Min Rating:</label>
-                    <input type="number" id="ratingFilter" min="1" max="5" step="0.1" value="1"
-                           style="width: 100%; padding: 4px; font-size: 12px;">
-                </div>
-                <div style="flex: 1;">
-                    <label for="reviewsFilter" style="font-size: 12px; display: block; margin-bottom: 2px;">Min Reviews:</label>
-                    <input type="number" id="reviewsFilter" min="0" value="0"
-                           style="width: 100%; padding: 4px; font-size: 12px;">
-                </div>
-            </div>
-        `;
-        contentContainer.appendChild(filtersSection);
-
-        // Attach event listeners immediately after creating the elements
-        document.getElementById("budgetFilter").addEventListener("change", handleFilterChange);
-        document.getElementById("ratingFilter").addEventListener("input", handleFilterChange);
-        document.getElementById("reviewsFilter").addEventListener("input", handleFilterChange);
-
-        console.log("Filters section created and event listeners attached");
-    }
     // Utility: Check if a time range is free (no overlapping event)
     function isRangeFree(start, duration, ignoreEvent) {
         const eps = 0.0001;
@@ -924,6 +725,40 @@
         // HELPER FUNCTIONS AND CONSTANTS
         // ===================================================
 
+            function isLocationInCityBounds(place, cityBounds) {
+        if (!place.geometry || !place.geometry.location || !cityBounds) {
+            return false;
+        }
+
+        const location = place.geometry.location;
+        const lat = typeof location.lat === 'function' ? location.lat() : location.lat;
+        const lng = typeof location.lng === 'function' ? location.lng() : location.lng;
+
+        const northeast = cityBounds.getNorthEast();
+        const southwest = cityBounds.getSouthWest();
+
+        return lat <= northeast.lat() &&
+               lat >= southwest.lat() &&
+               lng <= northeast.lng() &&
+               lng >= southwest.lng();
+    }
+
+    function isPlaceInTargetCity(place, targetCityName) {
+        const address = (place.vicinity || place.formatted_address || '').toLowerCase();
+        const cityLower = targetCityName.toLowerCase();
+
+        // Handle different city name formats
+        const cityVariations = [
+            cityLower,
+            cityLower.replace(/\s+/g, ''), // Remove spaces
+            cityLower.split(' ')[0], // First word only
+            cityLower.replace(/city|town|municipality/gi, '').trim()
+        ];
+
+        return cityVariations.some(variation =>
+            variation && address.includes(variation)
+        );
+    }
         // Enhanced location types with icons
         const locationsTypes = ["search", "restaurant", "hotel", "park", "museum", "shopping_mall"];
         const locationsTypeNames = {
@@ -1014,7 +849,7 @@
     // ===================================================
     // GOOGLE PLACES & LOCATIONS TABS
     // ===================================================
-   
+
     const allPlaces = {};
     const nextPageTokens = {};
     const loadingPlaces = {};
@@ -1033,31 +868,6 @@
             const contentContainer = document.getElementById("locationTabContent");
             tabsContainer.innerHTML = "";
             contentContainer.innerHTML = "";
-
-            // Create filters section FIRST, before creating tabs
-            createFiltersSection();
-
-            // Add filter tab as the first tab
-            const filterTab = document.createElement("li");
-            const filterLink = document.createElement("a");
-            filterLink.innerHTML = "🔍"; // Filter icon
-            filterLink.dataset.type = "filters";
-            filterLink.classList.add("nav-link", "filter-tab");
-            filterLink.title = "Filters";
-            filterLink.addEventListener("click", e => {
-                e.preventDefault();
-                const filtersSection = document.getElementById("filtersSection");
-
-                if (filtersSection.style.display === "none" || filtersSection.style.display === "") {
-                    filtersSection.style.display = "block";
-                    filterLink.classList.add("active");
-                } else {
-                    filtersSection.style.display = "none";
-                    filterLink.classList.remove("active");
-                }
-            });
-            filterTab.appendChild(filterLink);
-            tabsContainer.appendChild(filterTab);
 
             // 1) get city geometry & viewport
             const masterSvc = new google.maps.places.PlacesService(document.createElement("div"));
@@ -1268,10 +1078,60 @@
 
         return true;
     }
+        function applyFiltersToCurrentTab() {
+        const activeTab = document.querySelector("#locationTabs .nav-link.active");
+        if (!activeTab) return;
 
+        const currentType = activeTab.dataset.type;
+
+        if (currentType === "filters" || currentType === "search") return;
+
+        if (!contentLoadedFlags[currentType]) {
+            console.log(`Content for ${currentType} not loaded yet, skipping filter application`);
+            return;
+        }
+
+        const currentPane = document.getElementById(currentType);
+        if (!currentPane) return;
+
+        // Show all items (no filtering)
+        const activityItems = currentPane.querySelectorAll('.activity-header');
+        let visibleCount = 0;
+
+        activityItems.forEach(header => {
+            const item = header.parentElement;
+            item.style.display = 'block';
+            visibleCount++;
+        });
+
+        // Update or add load more indicator based on visible results
+        const existingIndicator = currentPane.querySelector('.load-more-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+
+        // Only show load more if we have more places to load
+        if (loadedPlaceCounts[currentType] < allSortedPlaces[currentType].length) {
+            addLoadMoreIndicator(currentType, currentPane);
+        }
+    }
     // Updated comprehensive search function with strict filtering
+       const INITIAL_LOAD_COUNT = 15;
+    const LOAD_MORE_COUNT = 10;
+    const allSortedPlaces = {}; // Store all sorted places for each type
+    const loadedPlaceCounts = {}; // Track how many places are loaded for each type
+    const isLoadingMore = {}; // Track loading state for each type
+
+    // Initialize per-type pagination state
+    locationsTypes.forEach(type => {
+        allSortedPlaces[type] = [];
+        loadedPlaceCounts[type] = 0;
+        isLoadingMore[type] = false;
+    });
+
+    // Enhanced loadLocationsByType function with pagination
     function loadLocationsByType(type, pane, loadingDiv, viewport) {
-        console.log(`Starting comprehensive search for ${type} locations with strict filtering`);
+        console.log(`Starting comprehensive search for ${type} locations with pagination`);
 
         // Get city name for targeted searches
         const cityName = "@ViewBag.CityName" || "this area";
@@ -1328,7 +1188,7 @@
         async function performComprehensiveSearch() {
             const service = new google.maps.places.PlacesService(document.createElement("div"));
             let allResults = [];
-
+            const targetCityName = "@ViewBag.CityName" || "";
             try {
                 // 1. Nearby search for baseline results
                 console.log(`Performing nearby search for ${type}`);
@@ -1340,13 +1200,18 @@
                         rankBy: google.maps.places.RankBy.PROMINENCE
                     };
 
-                    service.nearbySearch(nearbyRequest, (results, status) => {
-                        if (status === google.maps.places.PlacesServiceStatus.OK) {
-                            resolve(results || []);
-                        } else {
-                            resolve([]);
-                        }
-                    });
+                        service.nearbySearch(nearbyRequest, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            // Filter results to only include locations within city
+            const filteredResults = (results || []).filter(place => {
+                return isLocationInCityBounds(place, viewport) &&
+                       isPlaceInTargetCity(place, targetCityName);
+            });
+            resolve(filteredResults);
+        } else {
+            resolve([]);
+        }
+    });
                 });
 
                 allResults.push(...nearbyResults);
@@ -1355,29 +1220,43 @@
                 // 2. Text searches for highly-rated places
                 const searchTerms = searchCategories[type]?.searchTerms || [`${type} in ${cityName}`];
 
-                for (const searchTerm of searchTerms) {
-                    console.log(`Searching for: ${searchTerm}`);
+                    for (const searchTerm of searchTerms) {
+        console.log(`Searching for: ${searchTerm}`);
 
-                    const textResults = await new Promise((resolve) => {
-                        service.textSearch({
-                            query: searchTerm,
-                            bounds: viewport
-                        }, (results, status) => {
-                            if (status === google.maps.places.PlacesServiceStatus.OK) {
-                                resolve(results || []);
-                            } else {
-                                console.warn(`Search failed for "${searchTerm}":`, status);
-                                resolve([]);
-                            }
-                        });
+        const textResults = await new Promise((resolve) => {
+            service.textSearch({
+                query: searchTerm,
+                bounds: viewport,
+                location: viewport.getCenter(),
+                radius: 10000 // 10km radius
+            }, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    // Apply city filtering for text search results
+                    const filteredResults = (results || []).filter(place => {
+                        if (!isLocationInCityBounds(place, viewport)) {
+                            console.log(`Excluding ${place.name}: outside city bounds`);
+                            return false;
+                        }
+                        if (!isPlaceInTargetCity(place, targetCityName)) {
+                            console.log(`Excluding ${place.name}: not in target city (${place.vicinity})`);
+                            return false;
+                        }
+                        return true;
                     });
-
-                    allResults.push(...textResults);
-                    console.log(`Text search "${searchTerm}" found ${textResults.length} places`);
-
-                    // Add delay to avoid rate limiting
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    resolve(filteredResults);
+                } else {
+                    console.warn(`Search failed for "${searchTerm}":`, status);
+                    resolve([]);
                 }
+            });
+        });
+
+        allResults.push(...textResults);
+        console.log(`Text search "${searchTerm}" found ${textResults.length} places`);
+
+        // Add delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
 
                 // 3. Remove duplicates based on place_id
                 const uniqueResults = allResults.filter((place, index, self) =>
@@ -1389,16 +1268,12 @@
                 // 4. Apply STRICT category filtering
                 console.log(`Applying strict ${type} filtering...`);
                 let categoryFilteredResults = uniqueResults.filter(place => {
-                    // Apply strict type checking
                     if (!isStrictlyOfType(place, type)) {
                         return false;
                     }
-
-                    // Apply name-based filtering
                     if (!filterByNameKeywords(place, type)) {
                         return false;
                     }
-
                     return true;
                 });
 
@@ -1408,40 +1283,20 @@
                 let qualityResults = categoryFilteredResults.filter(result =>
                     result.rating &&
                     result.user_ratings_total &&
-                    result.user_ratings_total > 5 && // Minimum review threshold
-                    result.rating >= 3.0 // Minimum rating threshold
+                    result.user_ratings_total > 5 &&
+                    result.rating >= 3.0
                 );
 
                 console.log(`Quality filtered results: ${qualityResults.length}`);
 
-                // 6. Apply user filters
-                const filters = getFilterValues();
-                const { selectedBudget, minRating, minReviews } = filters;
-
-                const filteredResults = qualityResults
-                    .filter(r => r.rating >= minRating && r.user_ratings_total >= minReviews)
-                    .filter(r => {
-                        if (selectedBudget === "all") return true;
-                        const p = r.price_level;
-                        return (
-                            (selectedBudget === "free" && (p === 0 || p === undefined)) ||
-                            (selectedBudget === "low" && p === 1) ||
-                            (selectedBudget === "moderate" && p === 2) ||
-                            (selectedBudget === "high" && p >= 3)
-                        );
-                    });
-
-                // 7. Enhanced sorting - prioritize by review count first (popularity), then rating
-                const sortedResults = filteredResults.sort((a, b) => {
-                    // Primary sort: Review count (more reviews = more popular/established)
+                // 6. Enhanced sorting - prioritize by review count first, then rating
+                const sortedResults = qualityResults.sort((a, b) => {
                     const reviewDiff = b.user_ratings_total - a.user_ratings_total;
                     if (Math.abs(reviewDiff) > 100) return reviewDiff;
 
-                    // Secondary sort: Rating
                     const ratingDiff = b.rating - a.rating;
                     if (Math.abs(ratingDiff) >= 0.2) return ratingDiff;
 
-                    // Tertiary sort: Balanced score
                     const scoreA = a.rating * Math.log(a.user_ratings_total + 1);
                     const scoreB = b.rating * Math.log(b.user_ratings_total + 1);
                     return scoreB - scoreA;
@@ -1449,13 +1304,10 @@
 
                 console.log(`Final sorted results for ${type}: ${sortedResults.length}`);
 
-                if (sortedResults.length > 0) {
-                    console.log(`Top 5 ${type} places:`, sortedResults.slice(0, 5).map(p =>
-                        `${p.name}: ${p.rating}★ (${p.user_ratings_total.toLocaleString()} reviews) - Types: ${(p.types || []).join(', ')}`
-                    ));
-                }
+                // Store all sorted results for pagination
+                allSortedPlaces[type] = sortedResults;
 
-                return sortedResults.slice(0, 50); // Top 50 results
+                return sortedResults;
 
             } catch (error) {
                 console.error(`Error in comprehensive search for ${type}:`, error);
@@ -1479,22 +1331,24 @@
                 return;
             }
 
-            console.log(`Displaying ${finalResults.length} strictly categorized ${type} locations`);
+            console.log(`Displaying initial ${Math.min(INITIAL_LOAD_COUNT, finalResults.length)} strictly categorized ${type} locations`);
 
-            // Create places with enhanced styling
-            finalResults.forEach((place, index) => {
-                createEnhancedPlaceItem(place, index, type, pane, new google.maps.places.PlacesService(document.createElement("div")));
-            });
+            // Load initial batch
+            loadMorePlaces(type, pane, INITIAL_LOAD_COUNT);
+
+            // Add scroll detection for infinite loading
+            setupInfiniteScrolling(type, pane);
 
             // Mark this tab's content as loaded
             contentLoadedFlags[type] = true;
 
-            // Apply filters after all places are loaded for this type
+            // Apply filters after initial places are loaded
             setTimeout(() => {
                 if (pane.classList.contains('active')) {
                     applyFiltersToCurrentTab();
                 }
             }, 200);
+
         }).catch(error => {
             console.error(`Failed to load ${type} locations:`, error);
             loadingDiv.remove();
@@ -1506,7 +1360,169 @@
                 </div>
             `;
         });
-    }    
+    }
+
+        // Function to load more places for a specific type
+       function loadMorePlaces(type, pane, count) {
+        const sortedPlaces = allSortedPlaces[type] || [];
+        const currentCount = loadedPlaceCounts[type];
+        const endIndex = Math.min(currentCount + count, sortedPlaces.length);
+
+        console.log(`Loading ${type} places ${currentCount} to ${endIndex} of ${sortedPlaces.length}`);
+
+        // Load all places in the range (no filtering)
+        const placesToLoad = sortedPlaces.slice(currentCount, endIndex);
+
+        // Create place items
+        placesToLoad.forEach((place, index) => {
+            createEnhancedPlaceItem(place, currentCount + index, type, pane, new google.maps.places.PlacesService(document.createElement("div")));
+        });
+
+        // Update loaded count
+        loadedPlaceCounts[type] = endIndex;
+
+        // Remove loading indicator if it exists
+        const existingLoader = pane.querySelector('.load-more-indicator');
+        if (existingLoader) {
+            existingLoader.remove();
+        }
+
+        // Add "Load More" indicator if there are more places to load
+        if (endIndex < sortedPlaces.length) {
+            addLoadMoreIndicator(type, pane);
+        }
+    }
+
+    // Function to add a "Load More" indicator
+    function addLoadMoreIndicator(type, pane) {
+        const indicator = document.createElement("div");
+        indicator.className = "load-more-indicator";
+        indicator.style.cssText = `
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 2px dashed #007bff;
+        `;
+
+        const remainingCount = allSortedPlaces[type].length - loadedPlaceCounts[type];
+        indicator.innerHTML = `
+            <div style="color: #007bff; font-weight: 500; margin-bottom: 10px;">
+                📍 ${remainingCount} more ${locationsTypeNames[type].replace(/🔍|🍽️|🏨|🌳|🏛️|🛍️/, '').trim().toLowerCase()} available
+            </div>
+            <div style="color: #666; font-size: 14px;">
+                Scroll down to load more, or
+                <button class="load-more-btn" style="background: none; border: none; color: #007bff; text-decoration: underline; cursor: pointer; font-size: 14px;">
+                    click here to load ${Math.min(LOAD_MORE_COUNT, remainingCount)} more
+                </button>
+            </div>
+        `;
+
+        // Add click handler for manual loading
+        const loadMoreBtn = indicator.querySelector('.load-more-btn');
+        loadMoreBtn.addEventListener('click', () => {
+            if (!isLoadingMore[type]) {
+                loadMoreContent(type, pane);
+            }
+        });
+
+        pane.appendChild(indicator);
+    }
+
+    // Function to setup infinite scrolling for a tab pane
+    function setupInfiniteScrolling(type, pane) {
+        // Create a scroll container if it doesn't exist
+        if (!pane.dataset.hasScrollListener) {
+            pane.dataset.hasScrollListener = "true";
+
+            // Add scroll listener to the tab content container
+            const scrollContainer = document.getElementById("locationTabContent");
+
+            const scrollHandler = () => {
+                // Only handle scroll if this is the active tab
+                if (!pane.classList.contains('active')) return;
+
+                const scrollTop = scrollContainer.scrollTop;
+                const scrollHeight = scrollContainer.scrollHeight;
+                const clientHeight = scrollContainer.clientHeight;
+
+                // Trigger load more when user is near bottom (within 200px)
+                if (scrollTop + clientHeight >= scrollHeight - 200) {
+                    if (!isLoadingMore[type] && loadedPlaceCounts[type] < allSortedPlaces[type].length) {
+                        loadMoreContent(type, pane);
+                    }
+                }
+            };
+
+            scrollContainer.addEventListener('scroll', scrollHandler);
+
+            // Also listen for window scroll as backup
+            window.addEventListener('scroll', () => {
+                if (!pane.classList.contains('active')) return;
+
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (scrollTop + windowHeight >= documentHeight - 300) {
+                    if (!isLoadingMore[type] && loadedPlaceCounts[type] < allSortedPlaces[type].length) {
+                        loadMoreContent(type, pane);
+                    }
+                }
+            });
+        }
+    }
+
+    // Function to load more content when scrolling
+    function loadMoreContent(type, pane) {
+        if (isLoadingMore[type] || loadedPlaceCounts[type] >= allSortedPlaces[type].length) {
+            return;
+        }
+
+        isLoadingMore[type] = true;
+
+        // Add loading indicator
+        const loadingIndicator = document.createElement("div");
+        loadingIndicator.className = "loading-more-indicator";
+        loadingIndicator.style.cssText = `
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            background: white;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        `;
+        loadingIndicator.innerHTML = `
+            <div style="font-size: 20px; margin-bottom: 8px;">⏳</div>
+            <div>Loading more ${locationsTypeNames[type].replace(/🔍|🍽️|🏨|🌳|🏛️|🛍️/, '').trim().toLowerCase()}...</div>
+        `;
+
+        // Remove any existing load more indicator
+        const existingIndicator = pane.querySelector('.load-more-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+
+        pane.appendChild(loadingIndicator);
+
+        // Simulate loading delay for better UX
+        setTimeout(() => {
+            loadMorePlaces(type, pane, LOAD_MORE_COUNT);
+            loadingIndicator.remove();
+            isLoadingMore[type] = false;
+
+            // Re-apply filters to newly loaded content
+            setTimeout(() => {
+                if (pane.classList.contains('active')) {
+                    applyFiltersToCurrentTab();
+                }
+            }, 100);
+        }, 800);
+    }
+
     function createEnhancedPlaceItem(place, index, type, pane, svc) {
             // Enhanced item styling
             const item = document.createElement("div");
@@ -1817,7 +1833,7 @@
                 alert("Please enter a search term");
                 return;
             }
-
+            const targetCityName = "@ViewBag.CityName" || "";
             const searchBtn = targetPane.querySelector('.search-btn');
             searchBtn.disabled = true;
             searchBtn.textContent = "Searching...";
@@ -1851,12 +1867,15 @@
                 const viewport = city.geometry.viewport;
                 const svc = new google.maps.places.PlacesService(document.createElement("div"));
 
-                const request = {
-                    bounds: viewport,
-                    keyword: searchTerm
-                };
+                    const citySpecificQuery = `${searchTerm} in ${targetCityName}`;
+    const request = {
+        query: citySpecificQuery,
+        bounds: viewport,
+        location: viewport.getCenter(),
+        radius: 8000 // 8km radius to stay within city
+    };
 
-                svc.nearbySearch(request, (results, stat) => {
+               svc.textSearch(request, (results, stat) => {
                     searchBtn.disabled = false;
                     searchBtn.textContent = "Search";
                     loadingDiv.remove();
@@ -1875,51 +1894,51 @@
                         return;
                     }
 
-                    // Get current filter values
-                    const selectedBudget = document.getElementById("budgetFilter")?.value || "all";
-                    const minRating = parseFloat(document.getElementById("ratingFilter")?.value) || 1;
-                    const minReviews = parseInt(document.getElementById("reviewsFilter")?.value) || 0;
-
                     // Filter and sort results
-                    const filtered = results
-                        .filter(r => r.rating && r.user_ratings_total && r.rating >= minRating && r.user_ratings_total >= minReviews)
-                        .filter(r => {
-                            if (selectedBudget === "all") return true;
-                            const p = r.price_level;
-                            return (
-                                (selectedBudget === "free" && p === 0) ||
-                                (selectedBudget === "low" && p === 1) ||
-                                (selectedBudget === "moderate" && p === 2) ||
-                                (selectedBudget === "high" && p >= 3)
-                            );
-                        })
-                        .sort((a, b) => {
-                            const reviewDiff = b.user_ratings_total - a.user_ratings_total;
-                            if (Math.abs(reviewDiff) > 50) return reviewDiff;
-                            return b.rating - a.rating;
-                        })
-                        .slice(0, 30);
 
-                    if (filtered.length === 0) {
-                        const noResults = document.createElement("div");
-                        noResults.className = "search-result-item";
-                        noResults.innerHTML = `
-                            <div style="text-align: center; padding: 40px; color: #999;">
-                                <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
-                                <div style="font-size: 18px;">No results matching your criteria</div>
-                                <p style="margin-top: 10px; font-size: 14px;">Try adjusting your filters or search term</p>
-                            </div>
-                        `;
-                        targetPane.appendChild(noResults);
-                        return;
-                    }
+    const cityFiltered = results.filter(place => {
+        if (!isLocationInCityBounds(place, viewport)) {
+            console.log(`Search: Excluding ${place.name}: outside city bounds`);
+            return false;
+        }
+        if (!isPlaceInTargetCity(place, targetCityName)) {
+            console.log(`Search: Excluding ${place.name}: not in target city`);
+            return false;
+        }
+        return true;
+    });
 
-                    // Create search results with enhanced styling
-                    filtered.forEach((place, index) => {
-                        createSearchResultItem(place, index, targetPane, svc);
-                    });
+    console.log(`Custom search: ${results.length} total results, ${cityFiltered.length} in ${targetCityName}`);
 
-                    setTimeout(() => applyFiltersToCurrentTab(), 200);
+    // Filter and sort results
+    const filtered = cityFiltered
+        .filter(r => r.rating && r.user_ratings_total)
+                .sort((a, b) => {
+                    const reviewDiff = b.user_ratings_total - a.user_ratings_total;
+                    if (Math.abs(reviewDiff) > 50) return reviewDiff;
+                    return b.rating - a.rating;
+                })
+                .slice(0, 30);
+
+            if (filtered.length === 0) {
+                const noResults = document.createElement("div");
+                noResults.className = "search-result-item";
+                noResults.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
+                        <div style="font-size: 18px;">No quality results found</div>
+                        <p style="margin-top: 10px; font-size: 14px;">Try a different search term</p>
+                    </div>
+                `;
+                targetPane.appendChild(noResults);
+                return;
+            }
+
+            // Create search results with enhanced styling
+            filtered.forEach((place, index) => {
+                createSearchResultItem(place, index, targetPane, svc);
+            });
+
                 });
             });
         }

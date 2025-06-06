@@ -3,9 +3,8 @@
     var apiKey = ViewData["GoogleApiKey"];
     var currentUser = await UserManager.GetUserAsync(User);
     var Schedule = ViewBag.Schedule;
-    
 }
-
+<link rel="stylesheet" href="~/css/CalendarCity.css" />
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
@@ -14,7 +13,6 @@
 {
     @await Html.PartialAsync("_ProgressFlowChart")
     <br>
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
@@ -38,6 +36,7 @@ else
 
 <script>
     window.currentProgressStep = 'dates';
+
     // Initialize Flatpickr with range mode and allow single date
     flatpickr("#dateRange", {
         mode: "range",
@@ -57,6 +56,7 @@ else
             alert("Please select at least a start date.");
             return;
         }
+
         // flatpickr uses " to " separator when two dates chosen
         const parts = raw.split(" to ");
         const startDate = parts[0];
@@ -68,43 +68,15 @@ else
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ startDate, endDate })
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.scheduleId) {
-                    const scheduleId = data.scheduleId;
-                    window.location.href = `/Home/City?scheduleId=${scheduleId}`;
-                } else {
-                    alert("Failed to save dates.");
-                }
-            })
-            .catch(error => console.error('Error:', error));
+        .then(response => response.json())
+        .then(data => {
+            if (data.scheduleId) {
+                const scheduleId = data.scheduleId;
+                window.location.href = `/Home/City?scheduleId=${scheduleId}`;
+            } else {
+                alert("Failed to save dates.");
+            }
+        })
+        .catch(error => console.error('Error:', error));
     });
 </script>
-
-<style>
-    .input-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        margin-top: 20px;
-    }
-
-    .form-group {
-        margin: 10px 0;
-        width: 100%;
-        max-width: 400px;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 10px;
-        font-size: 16px;
-    }
-
-    .btn-primary {
-        width: 100%;
-        padding: 10px;
-        font-size: 16px;
-    }
-</style>
