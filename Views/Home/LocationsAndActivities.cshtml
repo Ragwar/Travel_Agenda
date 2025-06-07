@@ -87,8 +87,34 @@
     // Add near the top of the script where other global variables are defined
     let hasValidScheduleDates = false;
 
+    function updateProgressButtonsVisibility() {
+    if (currentProgressStep === 'activities' && !hasValidScheduleDates) {
+        const skipBtn = document.getElementById("skipBtn");
+        if (skipBtn) {
+            // Disable the button instead of hiding it
+            skipBtn.disabled = true;
+
+            // Add visual styling for disabled state
+            skipBtn.style.opacity = "0.5";
+            skipBtn.style.cursor = "not-allowed";
+            skipBtn.style.background = "#6c757d";
+            skipBtn.style.color = "#ffffff";
+            skipBtn.style.border = "1px solid #6c757d";
+
+            // Optional: Add a title attribute to explain why it's disabled
+            skipBtn.title = "Please select your travel period first";
+
+            // Prevent any click events while disabled
+            skipBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            };
+        }
+    }
+    }
     // Function to check if we have valid schedule dates
-    function checkScheduleDates() {
+        function checkScheduleDates() {
         if (isDefaultDate) {
             // Create overlay for calendar only
             const calendarOverlay = document.createElement("div");
@@ -100,17 +126,21 @@
                     <a href="/Home/Index?scheduleId=${schedule_Id}" class="btn btn-primary">Select Period</a>
                 </div>
             `;
-            
+
             // Append overlay to calendar container only
             const calendarContainer = document.getElementById("calendar");
             calendarContainer.style.position = "relative"; // Ensure proper positioning of the overlay
             calendarContainer.appendChild(calendarOverlay);
-            
+
             // Disable route button
             document.getElementById("routeBtn").disabled = true;
             document.getElementById("routeBtn").classList.add("disabled");
-            
+
             hasValidScheduleDates = false;
+
+            // Update progress buttons visibility
+            setTimeout(updateProgressButtonsVisibility, 100);
+
             return true;
         }
         hasValidScheduleDates = true;
@@ -2325,12 +2355,16 @@
     // Call the check function when page loads
     window.addEventListener("load", function() {
         const hasDefaultDates = checkScheduleDates();
-        
+
         if (!hasDefaultDates) {
             // Only update calendar if we have valid dates
             updateCalendarForCurrentDate();
         }
-         fetchTopLocations();
+
+        fetchTopLocations();
+
+        // Make sure to update progress buttons after flowchart is initialized
+        setTimeout(updateProgressButtonsVisibility, 100);
     });
 
     document.getElementById("routeBtn").addEventListener("click", () => {

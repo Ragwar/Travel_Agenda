@@ -225,7 +225,6 @@ else
         document.querySelectorAll('.delete-schedule-btn').forEach(btn => {
             btn.addEventListener('click', async e => {
                 e.stopPropagation();
-                if (!confirm('Are you sure you want to delete this schedule?')) return;
                 const item = btn.closest('.schedule-item');
                 const id = item.dataset.id;
                 try {
