@@ -1,49 +1,29 @@
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
-
-# Visual Studio files
-.vs/
-*.user
-*.userosscache
-*.suo
-*.userprefs
-*.dbmdl
-*.jfm
-
-# Local configuration
-appsettings.Development.json
-appsettings.local.json
-*.local.json
-launchSettings.json
-
-# Database
-*.mdf
-*.ldf
-*.ndf
-*.db
-*.db-shm
-*.db-wal
-
-# Dependencies
+bin/
+obj/
 node_modules/
-jspm_packages/
-bower_components/
 
-# Misc
-*.tmp
-*.temp
-*.cache
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code settings
+.vscode/
+
+# Rider settings
+.idea/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Others
+*.dbmdl
 *.log
+*.tlog
+*.cache
+*.pdb
+
+# Visual Studio
+.vs/
