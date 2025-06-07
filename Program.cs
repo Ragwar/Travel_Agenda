@@ -1,11 +1,12 @@
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using TravelAgenda.Data;
 using TravelAgenda.Repositories;
 using TravelAgenda.Repositories.Interfaces;
 using TravelAgenda.Services;
 using TravelAgenda.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication.Google;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
@@ -68,6 +69,9 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedEmail = true;
 });
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
+
 
 /*builder.Services.ConfigureApplicationCookie(options =>
 {
