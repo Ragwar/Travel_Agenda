@@ -671,7 +671,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ schedule_Id: scheduleId, hotel_Id: selectedHotel.place_id, hotel_Name: selectedHotel.name })
             }).then(r => r.ok
-                ? window.location.href = `/Home/LocationsAndActivities?id=${scheduleId}`
+                ? window.location.href = `/Home/LocationsAndActivities?scheduleId=${scheduleId}`
                 : alert('Save failed')
             );
         });
@@ -719,7 +719,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ schedule_Id: scheduleId, hotel_Id: pid, hotel_Name: fn })
             }).then(r => r.ok
-                ? window.location.href = `/Home/LocationsAndActivities?id=${scheduleId}`
+                ? window.location.href = `/Home/LocationsAndActivities?scheduleId=${scheduleId}`
                 : showAddressError('Save failed.')
             );
         });

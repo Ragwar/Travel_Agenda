@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "axZ8yLvvvto=",
+  "dgSpecHash": "a3e7m6HXALU=",
   "success": true,
   "projectFilePath": "W:\\TravelAgenda\\Travel_Agenda\\TravelAgenda.csproj",
   "expectedPackageFiles": [
@@ -146,10 +146,12 @@
     "C:\\Users\\Lisaru\\.nuget\\packages\\nuget.protocol\\6.11.0\\nuget.protocol.6.11.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\nuget.versioning\\6.11.0\\nuget.versioning.6.11.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\openai\\2.2.0-beta.4\\openai.2.2.0-beta.4.nupkg.sha512",
+    "C:\\Users\\Lisaru\\.nuget\\packages\\sendgrid\\9.29.3\\sendgrid.9.29.3.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.6\\sqlitepclraw.bundle_e_sqlite3.2.1.6.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\sqlitepclraw.core\\2.1.6\\sqlitepclraw.core.2.1.6.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.6\\sqlitepclraw.lib.e_sqlite3.2.1.6.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.6\\sqlitepclraw.provider.e_sqlite3.2.1.6.nupkg.sha512",
+    "C:\\Users\\Lisaru\\.nuget\\packages\\starkbank-ecdsa\\1.3.3\\starkbank-ecdsa.1.3.3.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.clientmodel\\1.4.0-beta.1\\system.clientmodel.1.4.0-beta.1.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.codedom\\5.0.0\\system.codedom.5.0.0.nupkg.sha512",
     "C:\\Users\\Lisaru\\.nuget\\packages\\system.collections.immutable\\7.0.0\\system.collections.immutable.7.0.0.nupkg.sha512",

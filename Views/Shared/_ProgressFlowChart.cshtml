@@ -1,7 +1,16 @@
 ﻿<!-- Progress Flow Chart Partial View (_ProgressFlowChart.cshtml) -->
 <div class="flowchart-container">
     <div class="progress-flowchart" id="progressFlowchart">
+        <!-- Go Back Button -->
+        <button id="goBackBtn" class="nav-button go-back-btn" onclick="goToPreviousStep()" style="display: none;">
+            GO BACK
+        </button>
+
         <!-- Steps will be dynamically generated -->
+        <!-- Skip Button -->
+        <button id="skipBtn" class="nav-button skip-btn" onclick="goToNextStep()">
+            SKIP
+        </button>
     </div>
 </div>
 
@@ -17,6 +26,53 @@
         gap: clamp(5px, 1vw, 10px);
         min-height: clamp(80px, 12vw, 120px);
     }
+
+    .nav-button {
+        padding: clamp(8px, 1.5vw, 12px) clamp(12px, 2vw, 16px);
+        border: none;
+        border-radius: 20px;
+        font-size: clamp(10px, 1.2vw, 12px);
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        min-width: clamp(60px, 8vw, 80px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        flex-shrink: 0;
+    }
+
+    .go-back-btn {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        order: -1;
+    }
+
+        .go-back-btn:hover {
+            background: linear-gradient(135deg, #5a6268 0%, #3d4043 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+    .skip-btn {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        order: 999;
+    }
+
+        .skip-btn:hover {
+            background: linear-gradient(135deg, #218838 0%, #1ea080 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .skip-btn.view-schedule {
+            background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+        }
+
+            .skip-btn.view-schedule:hover {
+                background: linear-gradient(135deg, #0056b3 0%, #520dc2 100%);
+                box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            }
 
     .step {
         display: flex;
@@ -96,13 +152,45 @@
         flex-shrink: 0;
     }
 
-    .arrow.completed {
-        border-left-color: #667eea;
-    }
+        .arrow.completed {
+            border-left-color: #667eea;
+        }
 
-    .arrow.upcoming {
-        border-left-color: #e0e0e0;
-    }
+        .arrow.upcoming {
+            position: relative;
+            width: 0;
+            height: 0;
+            border: none;
+            margin: 0 clamp(5px, 1vw, 10px);
+            align-self: flex-start;
+            margin-top: clamp(17px, 3vw, 20px);
+            flex-shrink: 0;
+        }
+
+        .arrow.upcoming::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: clamp(10px, 2vw, 15px) solid #667eea; /* Blue border color */
+            border-top: clamp(6px, 1.2vw, 10px) solid transparent;
+            border-bottom: clamp(6px, 1.2vw, 10px) solid transparent;
+            opacity: 0.6; /* Slightly transparent */
+        }
+
+        .arrow.upcoming::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 0;
+            height: 0;
+            border-left: calc(clamp(10px, 2vw, 15px) - 4px) solid white; /* Smaller white center */
+            border-top: calc(clamp(6px, 1.2vw, 10px) - 2px) solid transparent;
+            border-bottom: calc(clamp(6px, 1.2vw, 10px) - 2px) solid transparent;
+        }
 
     /* Icons */
     .step-icon {
@@ -110,15 +198,20 @@
     }
 
     @@keyframes pulse {
-        0% {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        50% {
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        100% {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+        0%
+
+    {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    50% {
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    100% {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
     }
 
     /* Header styling */
@@ -141,113 +234,165 @@
 
     /* Very small screens - hide descriptions and make more compact */
     @@media (max-width: 480px) {
-        .step-description {
-            display: none;
-        }
-        
-        .step-title {
-            font-size: 9px;
-            line-height: 1.1;
-        }
-        
-        .progress-flowchart {
-            padding: 8px;
-            gap: 3px;
-        }
-        
-        .step {
-            min-width: 60px;
-        }
-        
-        .step-circle {
-            width: 30px;
-            height: 30px;
-            font-size: 12px;
-            margin-bottom: 3px;
-        }
-        
-        .step-icon {
-            font-size: 12px;
-        }
-        
-        .arrow {
+        .step-description
+
+    {
+        display: none;
+    }
+
+    .step-title {
+        font-size: 9px;
+        line-height: 1.1;
+    }
+
+    .progress-flowchart {
+        padding: 8px;
+        gap: 3px;
+    }
+
+    .step {
+        min-width: 60px;
+    }
+
+    .step-circle {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+        margin-bottom: 3px;
+    }
+
+    .step-icon {
+        font-size: 12px;
+    }
+
+    .arrow {
+        border-left-width: 8px;
+        border-top-width: 5px;
+        border-bottom-width: 5px;
+        margin: 0 3px;
+        margin-top: 15px;
+    }
+
+    .nav-button {
+        padding: 6px 10px;
+        font-size: 9px;
+        min-width: 50px;
+    }
+
+        .arrow.upcoming::before {
             border-left-width: 8px;
             border-top-width: 5px;
             border-bottom-width: 5px;
-            margin: 0 3px;
-            margin-top: 15px;
+        }
+        
+        .arrow.upcoming::after {
+            top: 1px;
+            left: 1px;
+            border-left-width: 6px;
+            border-top-width: 4px;
+            border-bottom-width: 4px;
         }
     }
 
     /* Extra small screens */
     @@media (max-width: 360px) {
-        .step {
-            min-width: 50px;
-        }
-        
-        .step-circle {
-            width: 25px;
-            height: 25px;
-            font-size: 10px;
-        }
-        
-        .step-icon {
-            font-size: 10px;
-        }
-        
-        .step-title {
-            font-size: 8px;
-        }
-        
-        .arrow {
+        .step
+
+    {
+        min-width: 50px;
+    }
+
+    .step-circle {
+        width: 25px;
+        height: 25px;
+        font-size: 10px;
+    }
+
+    .step-icon {
+        font-size: 10px;
+    }
+
+    .step-title {
+        font-size: 8px;
+    }
+
+    .arrow {
+        border-left-width: 6px;
+        border-top-width: 4px;
+        border-bottom-width: 4px;
+        margin-top: 12px;
+    }
+
+    .nav-button {
+        padding: 5px 8px;
+        font-size: 8px;
+        min-width: 40px;
+    }
+
+        .arrow.upcoming::before {
             border-left-width: 6px;
             border-top-width: 4px;
             border-bottom-width: 4px;
-            margin-top: 12px;
+        }
+        
+        .arrow.upcoming::after {
+            top: 1px;
+            left: 1px;
+            border-left-width: 4px;
+            border-top-width: 3px;
+            border-bottom-width: 3px;
         }
     }
 </style>
 
 <script>
-    // Configuration for all steps
+      // Configuration for all steps
     const progressSteps = [
         {
             id: 'dates',
             number: '1',
             title: 'Select Dates',
             description: 'Choose your travel period',
-            icon: '📅'
+            icon: '📅',
+            view: 'Index'
         },
         {
             id: 'city',
             number: '2',
             title: 'Choose City',
             description: 'Pick your destination',
-            icon: '🏙️'
+            icon: '🏙️',
+            view: 'City'
         },
         {
             id: 'residence',
             number: '3',
             title: 'Select Residence',
             description: 'Find your accommodation',
-            icon: '🏨'
+            icon: '🏨',
+            view: 'Residence'
         },
         {
             id: 'activities',
             number: '4',
             title: 'Plan Activities',
             description: 'Choose locations & activities',
-            icon: '🎯'
+            icon: '🎯',
+            view: 'LocationsAndActivities'
         }
     ];
+
+    // Global variables to track current state
+    let currentProgressStep = 'dates';
+    let progressScheduleId = null;
 
     function getVisibleSteps(currentStep) {
         const currentIndex = progressSteps.findIndex(s => s.id === currentStep);
         const screenWidth = window.innerWidth;
-        
+
         // Determine how many steps to show based on screen size
         let visibleSteps = [];
-        
+
         if (screenWidth >= 1000) {
             // Desktop: show all steps
             visibleSteps = [...progressSteps];
@@ -265,7 +410,7 @@
             // Very small screens: show only current step
             visibleSteps = [progressSteps[currentIndex]];
         }
-        
+
         return visibleSteps;
     }
 
@@ -273,14 +418,23 @@
         const container = document.getElementById('progressFlowchart');
         if (!container) return;
 
-        container.innerHTML = '';
-        
+        // Get buttons before clearing container
+        const goBackBtn = document.getElementById('goBackBtn');
+        const skipBtn = document.getElementById('skipBtn');
+
+        // Clear only the steps, keep buttons
+        const steps = container.querySelectorAll('.step, .arrow');
+        steps.forEach(step => step.remove());
+
         const visibleSteps = getVisibleSteps(currentStep);
         const currentIndex = progressSteps.findIndex(s => s.id === currentStep);
 
+        // Insert steps between the buttons
+        const stepsContainer = document.createDocumentFragment();
+
         visibleSteps.forEach((step, visibleIndex) => {
             const originalIndex = progressSteps.findIndex(s => s.id === step.id);
-            
+
             // Create step element
             const stepEl = document.createElement('div');
             stepEl.className = 'step';
@@ -302,7 +456,7 @@
                 <div class="step-description">${step.description}</div>
             `;
 
-            container.appendChild(stepEl);
+            stepsContainer.appendChild(stepEl);
 
             // Add arrow if not the last visible step
             if (visibleIndex < visibleSteps.length - 1) {
@@ -315,23 +469,29 @@
                     arrow.classList.add('upcoming');
                 }
 
-                container.appendChild(arrow);
+                stepsContainer.appendChild(arrow);
             }
         });
-        
+
+        // Insert steps before the skip button
+        container.insertBefore(stepsContainer, skipBtn);
+
         // Add step counter for context when not all steps are visible
         if (visibleSteps.length < progressSteps.length) {
             addStepCounter(currentIndex + 1, progressSteps.length);
         }
+
+        // Update button visibility and text
+        updateNavigationButtons(currentStep);
     }
-    
+
     function addStepCounter(current, total) {
         const container = document.getElementById('progressFlowchart');
         const counter = document.createElement('div');
         counter.className = 'step-counter';
         counter.innerHTML = `Step ${current} of ${total}`;
         container.parentNode.insertBefore(counter, container.nextSibling);
-        
+
         // Remove any existing counter first
         const existingCounter = container.parentNode.querySelector('.step-counter:not(:last-child)');
         if (existingCounter) {
@@ -339,21 +499,141 @@
         }
     }
 
+    function updateNavigationButtons(currentStep) {
+        const goBackBtn = document.getElementById('goBackBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const currentIndex = progressSteps.findIndex(s => s.id === currentStep);
+
+        // Update Go Back button
+        if (currentIndex === 0) {
+            goBackBtn.style.display = 'none';
+        } else {
+            goBackBtn.style.display = 'flex';
+        }
+
+        // Update Skip/View Schedule button
+        if (currentStep === 'activities') {
+            skipBtn.textContent = 'VIEW SCHEDULE';
+            skipBtn.className = 'nav-button skip-btn view-schedule';
+            
+        } else if (currentStep === 'city') {
+            // For city step, only show skip if schedule already has a city
+            const schedule = window.currentSchedule || {};
+            
+            if (schedule && schedule.City_Name) {
+                skipBtn.textContent = 'SKIP';
+                skipBtn.className = 'nav-button skip-btn';
+                
+            } else {
+                // Hide skip button if no city is selected yet
+                skipBtn.style.display = 'none';
+            }
+        } else {
+            skipBtn.textContent = 'SKIP';
+            skipBtn.className = 'nav-button skip-btn';
+            
+        }
+    }
+
+    function goToPreviousStep() {
+        const currentIndex = progressSteps.findIndex(s => s.id === currentProgressStep);
+
+        if (currentIndex > 0) {
+            const previousStep = progressSteps[currentIndex - 1];
+            let url = '';
+
+            switch (previousStep.view) {
+                case 'Index':
+                    url = `/Home/Index${progressScheduleId ? '?scheduleId=' + progressScheduleId : ''}`;
+                    break;
+                case 'City':
+                    url = `/Home/City${progressScheduleId ? '?scheduleId=' + progressScheduleId : ''}`;
+                    break;
+                case 'Residence':
+                    url = `/Home/Residence${progressScheduleId ? '?scheduleId=' + progressScheduleId : ''}`;
+                    break;
+            }
+
+            if (url) {
+                window.location.href = url;
+            }
+        }
+    }
+
+    function goToNextStep() {
+        const currentIndex = progressSteps.findIndex(s => s.id === currentProgressStep);
+
+        // Get scheduleId from the current page context
+        const currentScheduleId = getScheduleId();
+
+        if (currentProgressStep === 'activities') {
+            // Go to ViewSchedule
+            window.location.href = `/Home/ViewSchedule/${currentScheduleId}`;
+        } else if (currentIndex < progressSteps.length - 1) {
+            const nextStep = progressSteps[currentIndex + 1];
+            let url = '';
+
+            switch (nextStep.view) {
+                case 'City':
+                    url = `/Home/City${currentScheduleId ? '?scheduleId=' + currentScheduleId : ''}`;
+                    break;
+                case 'Residence':
+                    url = `/Home/Residence${currentScheduleId ? '?scheduleId=' + currentScheduleId : ''}`;
+                    break;
+                case 'LocationsAndActivities':
+                    url = `/Home/LocationsAndActivities${currentScheduleId ? '?scheduleId=' + currentScheduleId : ''}`;
+                    break;
+            }
+
+            if (url) {
+                window.location.href = url;
+            }
+        }
+    }
+
+    // Helper function to get scheduleId from various sources
+    function getScheduleId() {
+        // Try to get from URL parameters first
+        const urlParams = new URLSearchParams(window.location.search);
+        let id = urlParams.get('scheduleId');
+
+        if (id) return id;
+
+        // Try to get from global window variables
+        if (window.scheduleId) return window.scheduleId;
+        if (window.progressScheduleId) return window.progressScheduleId;
+
+        // Try to get from stored value
+        return progressScheduleId;
+    }
+
     // Function to update the flowchart - call this from your views
-    function updateProgressFlowchart(currentStep) {
+    function updateProgressFlowchart(currentStep, currentScheduleId = null) {
+        currentProgressStep = currentStep;
+        progressScheduleId = currentScheduleId;
         createProgressFlowchart(currentStep);
     }
 
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function () {
-        // Get the current step from the page or set a default
-        const currentStep = window.currentProgressStep || 'dates';
-        createProgressFlowchart(currentStep);
+        // Get current step and scheduleId from global variables or URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlScheduleId = urlParams.get('scheduleId');
+
+        // Use the helper function to get scheduleId safely
+        progressScheduleId = urlScheduleId || window.scheduleId || progressScheduleId;
+        currentProgressStep = window.currentProgressStep || 'dates';
+
+        createProgressFlowchart(currentProgressStep);
     });
 
     // Re-render on window resize to adjust visible steps
     window.addEventListener('resize', function() {
-        const currentStep = window.currentProgressStep || 'dates';
-        createProgressFlowchart(currentStep);
+        createProgressFlowchart(currentProgressStep);
     });
+
+    // Expose functions globally for use in views
+    window.updateProgressFlowchart = updateProgressFlowchart;
+    window.goToPreviousStep = goToPreviousStep;
+    window.goToNextStep = goToNextStep;
 </script>

@@ -80,6 +80,43 @@
     // End date from your schedule (should be set in ViewBag.Schedule)
     const scheduleEndDate = new Date("@(ViewBag.Schedule?.End_Date?.ToString("yyyy-MM-dd"))");
 
+    // Add this right after defining the schedule dates
+    const isDefaultDate = scheduleDate.includes("0001-01-01") || 
+                         "@(ViewBag.Schedule?.End_Date?.ToString("yyyy-MM-dd"))".includes("0001-01-01");
+
+    // Add near the top of the script where other global variables are defined
+    let hasValidScheduleDates = false;
+
+    // Function to check if we have valid schedule dates
+    function checkScheduleDates() {
+        if (isDefaultDate) {
+            // Create overlay for calendar only
+            const calendarOverlay = document.createElement("div");
+            calendarOverlay.className = "calendar-overlay";
+            calendarOverlay.innerHTML = `
+                <div class="calendar-overlay-message">
+                    <div class="overlay-icon">⏱️</div>
+                    <p>Please select city break period to have access to the agenda</p>
+                    <a href="/Home/Index?scheduleId=${schedule_Id}" class="btn btn-primary">Select Period</a>
+                </div>
+            `;
+            
+            // Append overlay to calendar container only
+            const calendarContainer = document.getElementById("calendar");
+            calendarContainer.style.position = "relative"; // Ensure proper positioning of the overlay
+            calendarContainer.appendChild(calendarOverlay);
+            
+            // Disable route button
+            document.getElementById("routeBtn").disabled = true;
+            document.getElementById("routeBtn").classList.add("disabled");
+            
+            hasValidScheduleDates = false;
+            return true;
+        }
+        hasValidScheduleDates = true;
+        return false;
+    }
+
     // Render full day slots (from 1AM to 24PM)
     const step = 0.5;  // half-hour
     for (let t = fullStartHour; t < fullEndHour; t += step) {
@@ -1158,7 +1195,7 @@
         }
     }
     // Updated comprehensive search function with strict filtering
-    const INITIAL_LOAD_COUNT = 15;
+    const INITIAL_LOAD_COUNT = 5;
     const LOAD_MORE_COUNT = 10;
     const allSortedPlaces = {}; // Store all sorted places for each type
     const loadedPlaceCounts = {}; // Track how many places are loaded for each type
@@ -1895,6 +1932,11 @@
                 align-items: center;
                 justify-content: center;
             `;
+            
+            // Hide button if schedule dates are not valid
+            if (!hasValidScheduleDates) {
+                addBtn.style.display = "none";
+            }
 
             addBtn.addEventListener('mouseenter', () => {
                 addBtn.style.transform = 'scale(1.1)';
@@ -2043,7 +2085,7 @@
             });
         });
     }
-        // ===================================================
+    // ===================================================
     // CREATE ENHANCED SEARCH RESULT ITEM
     // ===================================================
     function createSearchResultItem(place, index, targetPane, svc) {
@@ -2176,6 +2218,11 @@
             align-items: center;
             justify-content: center;
         `;
+        
+        // Hide button if schedule dates are not valid
+        if (!hasValidScheduleDates) {
+            addBtn.style.display = "none";
+        }
 
         addBtn.addEventListener('mouseenter', () => {
             addBtn.style.transform = 'scale(1.1)';
@@ -2275,11 +2322,15 @@
         }
     });
 
-    window.addEventListener("load", function () {
-        updateCalendarForCurrentDate();
-
-        // Then fetch locations
-        fetchTopLocations();
+    // Call the check function when page loads
+    window.addEventListener("load", function() {
+        const hasDefaultDates = checkScheduleDates();
+        
+        if (!hasDefaultDates) {
+            // Only update calendar if we have valid dates
+            updateCalendarForCurrentDate();
+        }
+         fetchTopLocations();
     });
 
     document.getElementById("routeBtn").addEventListener("click", () => {

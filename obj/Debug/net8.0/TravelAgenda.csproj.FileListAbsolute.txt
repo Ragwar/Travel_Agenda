@@ -597,3 +597,7 @@ W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\TravelAgenda.staticwebassets.endp
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets.build.json.cache
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets.build.endpoints.json
 W:\TravelAgenda\Travel_Agenda\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\package-lock.json
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\package.json
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\SendGrid.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\StarkbankEcdsa.dll

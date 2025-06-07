@@ -809,6 +809,43 @@ h1, h2, h3, h4, h5, h6 {
     overflow-y: auto;
     background: #f8f9fa;
 }
+.calendar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(240, 240, 240, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    border-radius: 12px;
+}
+
+.calendar-overlay-message {
+    text-align: center;
+    padding: 2rem;
+    max-width: 90%;
+}
+
+.overlay-icon {
+    font-size: 48px;
+    margin-bottom: 1rem;
+}
+
+.calendar-overlay-message p {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    color: #495057;
+}
+
+.disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
 
 .message {
     margin-bottom: 12px;

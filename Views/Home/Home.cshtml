@@ -9,9 +9,8 @@
     <div class="text-center">
         <h1 class="display-4">Welcome to Travel Agenda</h1>
         <p>Lets help you schedule your next adventure!</p>
-        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index" asp-route-id="">Start Schedule</a>
+        <button id="startScheduleBtn" class="btn btn-primary">Start Schedule</button>
     </div>
-    
 }
 else
 {
@@ -20,3 +19,24 @@ else
         <p>Please login</p>
     </div>
 }
+
+<script>
+    document.getElementById("startScheduleBtn").addEventListener("click", function() {
+        fetch('/Home/CreateNewSchedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.scheduleId) {
+                window.location.href = `/Home/Index?scheduleId=${data.scheduleId}`;
+            } else {
+                alert("Failed to create schedule.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred while creating the schedule.");
+        });
+    });
+</script>

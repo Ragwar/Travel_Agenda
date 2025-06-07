@@ -34,6 +34,12 @@
     const googleApiKey = '@apiKey';
     let cityMap;
 
+    // Make the current schedule available to the progress flowchart
+    window.currentSchedule = {
+        Schedule_Id: @scheduleId,
+        City_Name: "@(ViewBag.Schedule.City_Name ?? "")"
+    };
+
     // Initialize the city map
     function initCityMap() {
         // Default center (can be any location, will be updated when city is selected)
@@ -537,7 +543,7 @@
         })
         .then(response => {
             if (response.ok) {
-                const redirectUrl = `/Home/Residence?id=${scheduleId}`;
+                 const redirectUrl = `/Home/Residence?scheduleId=${scheduleId}`;
                 window.location.href = redirectUrl;
             } else {
                 alert("Failed to save city.");

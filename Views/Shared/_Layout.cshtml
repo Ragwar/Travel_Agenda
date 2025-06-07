@@ -19,7 +19,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">TravelAgenda</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Home">TravelAgenda</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -32,10 +32,10 @@
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index" asp-route-id="">Schedule</a>
+                                <a href="#" id="navStartSchedule" class="nav-link text-dark">Start Schedule</a>
                             </li>
                             <li>
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="SchedulesList" asp-route-id="@currentUser.Id">Your Schedules</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="SchedulesList" asp-route-id="@currentUser.Id">Your Created Schedules</a>
                             </li>
                         }
                     </ul>
@@ -55,6 +55,33 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navStartSchedule = document.getElementById('navStartSchedule');
+            if (navStartSchedule) {
+                navStartSchedule.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    fetch('/Home/CreateNewSchedule', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.scheduleId) {
+                            window.location.href = `/Home/Index?scheduleId=${data.scheduleId}`;
+                        } else {
+                            alert("Failed to create schedule.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert("An error occurred while creating the schedule.");
+                    });
+                });
+            }
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

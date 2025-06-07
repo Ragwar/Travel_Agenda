@@ -37,13 +37,20 @@ else
 <script>
     window.currentProgressStep = 'dates';
 
+    // Get the schedule ID from ViewBag
+    const scheduleId = @(ViewBag.ScheduleId ?? 0);
+
+    if (scheduleId === 0) {
+        alert("No schedule found. Please start a new schedule.");
+        window.location.href = '/Home/Home';
+    }
+
     // Initialize Flatpickr with range mode and allow single date
     flatpickr("#dateRange", {
         mode: "range",
         dateFormat: "Y-m-d",
         minDate: "today",
         allowInput: false,
-        // when user clicks a single date and closes, it will remain as single
         onClose: function (selectedDates, dateStr, instance) {
             // if only one date selected, flatpickr will show just that date without the "to" text
             // no further action needed here
@@ -66,13 +73,16 @@ else
         fetch('/Home/SaveDates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ startDate, endDate })
+            body: JSON.stringify({
+                startDate,
+                endDate,
+                scheduleId: scheduleId
+            })
         })
         .then(response => response.json())
         .then(data => {
             if (data.scheduleId) {
-                const scheduleId = data.scheduleId;
-                window.location.href = `/Home/City?scheduleId=${scheduleId}`;
+                window.location.href = `/Home/City?scheduleId=${data.scheduleId}`;
             } else {
                 alert("Failed to save dates.");
             }

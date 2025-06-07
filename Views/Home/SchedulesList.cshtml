@@ -50,30 +50,51 @@
                         }
                         <img src="@mapUrl"
                              alt="@(string.IsNullOrWhiteSpace(schedule.Hotel_Name ?? schedule.City_Name)
-                                    ? "No location selected"
-                                    : schedule.Hotel_Name ?? schedule.City_Name)" />
-                    </div>
-                    <div class="schedule-details">
-                        <h3>
+                                                                 ? "No location selected"
+                                                                 : schedule.Hotel_Name ?? schedule.City_Name)" />
+                                                                                                    </div>
+                                                                                                    <div class="schedule-details">
+                                                                                                        <h3>
                             @(string.IsNullOrWhiteSpace(schedule.City_Name)
-                                ? "(No city selected)"
-                                : schedule.City_Name)
-                        </h3>
-                        <p>
-                            <strong>Dates:</strong>
-                            @schedule.Start_Date?.ToString(dateFormat)
-                            <span> to </span>
-                            @schedule.End_Date?.ToString(dateFormat)
-                        </p>
-                        <p><strong>Number of days:</strong> @schedule.Nr_Days</p>
+                                            ? "(No city selected)"
+                                            : schedule.City_Name)
+            </h3>
 
-                        @if (!string.IsNullOrWhiteSpace(schedule.Hotel_Name))
+                        @* Check if dates are missing or default *@
+            @if (schedule.Start_Date == default(DateTime) || schedule.End_Date == default(DateTime) || schedule.Nr_Days <= 0)
                         {
-                            <p><strong>Residence:</strong> @schedule.Hotel_Name</p>
+                            <p class="missing-info">
+                                <strong>City Break period missing</strong>
+                            </p>
+                            <a class="btn btn-warning"
+                               asp-controller="Home"
+                               asp-action="Index"
+                               asp-route-scheduleId="@schedule.Schedule_Id">
+                                Select Period
+                            </a>
+                        }
+                        else
+                        {
+                            <p>
+                                <strong>Dates:</strong>
+                                @schedule.Start_Date?.ToString(dateFormat)
+                                <span> to </span>
+                                @schedule.End_Date?.ToString(dateFormat)
+                            </p>
+                            <p><strong>Number of days:</strong> @schedule.Nr_Days</p>
+
+                            @if (!string.IsNullOrWhiteSpace(schedule.Hotel_Name))
+                            {
+                                <p><strong>Residence:</strong> @schedule.Hotel_Name</p>
+                            }
                         }
 
+                        @* Check if city is missing *@
                         @if (string.IsNullOrWhiteSpace(schedule.City_Name))
                         {
+                            <p class="missing-info">
+                                <strong>City missing</strong>
+                            </p>
                             <a class="btn btn-warning"
                                asp-controller="Home"
                                asp-action="City"
@@ -81,9 +102,13 @@
                                 Select City
                             </a>
                         }
-                        else
+
+                        @* Only show View Schedule if both dates and city are present *@
+                        @if (schedule.Start_Date != default(DateTime) && schedule.End_Date != default(DateTime) &&
+                                    schedule.Nr_Days > 0 && !string.IsNullOrWhiteSpace(schedule.City_Name))
                         {
                             <a class="btn btn-primary"
+                               asp-area=""
                                asp-controller="Home"
                                asp-action="ViewSchedule"
                                asp-route-id="@schedule.Schedule_Id">
@@ -163,6 +188,11 @@ else
             margin: 10px 0;
             font-size: 0.9em;
         }
+
+    .missing-info {
+        color: #dc3545;
+        font-style: italic;
+    }
 
     .btn-primary, .btn-warning {
         padding: 10px 15px;

@@ -42,23 +42,34 @@ namespace TravelAgenda.Controllers
             return View();
         }
 
-        public IActionResult Index(string id)
+		public IActionResult Index(int? scheduleId)
+		{
+			ViewData["GoogleApiKey"] = _googleApiKey;
+
+			if (scheduleId.HasValue)
+			{
+				var schedule = _scheduleService.GetScheduleById(scheduleId.Value);
+				if (schedule == null)
+				{
+					return NotFound("Schedule not found.");
+				}
+				ViewBag.Schedule = schedule;
+				ViewBag.ScheduleId = scheduleId.Value;
+			}
+
+			return View();
+		}
+
+		public IActionResult SchedulesList(string id)
         {
             ViewData["GoogleApiKey"] = _googleApiKey;
             ViewBag.Schedules = _scheduleService.GetSchedulesByUserId(id);
             return View();
         }
 
-        public IActionResult SchedulesList(string id)
+        public IActionResult LocationsAndActivities(int scheduleId)
         {
-            ViewData["GoogleApiKey"] = _googleApiKey;
-            ViewBag.Schedules = _scheduleService.GetSchedulesByUserId(id);
-            return View();
-        }
-
-        public IActionResult LocationsAndActivities(int id)
-        {
-            var schedule = _scheduleService.GetScheduleById(id);
+            var schedule = _scheduleService.GetScheduleById(scheduleId);
             if (schedule == null) return NotFound();
 
             ViewBag.Schedule = schedule;
@@ -70,13 +81,13 @@ namespace TravelAgenda.Controllers
             ViewData["WeatherForecast"] = weather;
 
             var activities = _schedule_activityProductService
-                                 .GetSchedule_ActivityByScheduleId(id);
+                                 .GetSchedule_ActivityByScheduleId(scheduleId);
             return View(activities);
         }
 
-        public IActionResult Residence(int id)
+        public IActionResult Residence(int scheduleId)
         {
-            var schedule = _scheduleService.GetScheduleById(id);
+            var schedule = _scheduleService.GetScheduleById(scheduleId);
             if (schedule == null) return NotFound();
 
             ViewBag.Schedule = schedule;
@@ -87,59 +98,101 @@ namespace TravelAgenda.Controllers
             return View();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SaveDates([FromBody] DateRangeViewModel dateRange)
-        {
-            if (dateRange == null || string.IsNullOrEmpty(dateRange.StartDate) || string.IsNullOrEmpty(dateRange.EndDate))
-            {
-                return BadRequest("Invalid date range.");
-            }
+		[HttpPost]
+		public async Task<IActionResult> CreateNewSchedule()
+		{
+			var user = _userService.GetUserByName(User.Identity.Name);
+			if (user == null)
+			{
+				return NotFound("User not found.");
+			}
+			var userId = user.Id;
 
-            // Parse the dates
-            if (!DateTime.TryParse(dateRange.StartDate, out var startDate) || !DateTime.TryParse(dateRange.EndDate, out var endDate))
-            {
-                return BadRequest("Invalid date format.");
-            }
+			if (string.IsNullOrEmpty(userId))
+			{
+				return Unauthorized("User not logged in.");
+			}
 
-            var user = _userService.GetUserByName(User.Identity.Name);
-            if (user == null)
-            {
-                return NotFound("User not found.");
-            }
-            var userId = user.Id;
+			// Create a new empty Schedule entry
+			var schedule = new Schedule
+			{
+				User_Id = userId,
+				// Leave dates as null/default for now - they'll be updated later
+				Start_Date = default(DateTime),
+				End_Date = default(DateTime),
+				Nr_Days = 0,
+				Start_Day = 0,
+				End_Day = 0,
+				Start_Month = 0,
+				End_Month = 0
+			};
 
-            if (userId == null)
-            {
-                return Unauthorized("User not logged in.");
-            }
+			// Save to database via the ScheduleService
+			_scheduleService.CreateSchedule(schedule);
 
-            // Calculate Nr_Days
-            var nrDays = (endDate - startDate).Days + 1;
+			return Ok(new { scheduleId = schedule.Schedule_Id });
+		}
+		public class UpdateDateRangeViewModel
+		{
+			public string StartDate { get; set; }
+			public string EndDate { get; set; }
+			public int ScheduleId { get; set; }
+		}
 
-            // Create a new Schedule entry
-            var schedule = new Schedule
-            {
-                User_Id = userId,
-                Start_Date = startDate,
-                End_Date = endDate,
-                Nr_Days = nrDays,
-                Start_Day = startDate.Day,
-                End_Day = endDate.Day,
-                Start_Month = startDate.Month,
-                End_Month = endDate.Month
-            };
+		[HttpPost]
+		public async Task<IActionResult> SaveDates([FromBody] UpdateDateRangeViewModel dateRange)
+		{
+			if (dateRange == null || string.IsNullOrEmpty(dateRange.StartDate) ||
+				string.IsNullOrEmpty(dateRange.EndDate) || dateRange.ScheduleId <= 0)
+			{
+				return BadRequest("Invalid date range or schedule ID.");
+			}
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest("Invalid model.");
-            }
-            // Save to database via the ScheduleService
-            _scheduleService.CreateSchedule(schedule);
+			// Parse the dates
+			if (!DateTime.TryParse(dateRange.StartDate, out var startDate) ||
+				!DateTime.TryParse(dateRange.EndDate, out var endDate))
+			{
+				return BadRequest("Invalid date format.");
+			}
 
-            return Ok(new { scheduleId = schedule.Schedule_Id });
-        }
+			var user = _userService.GetUserByName(User.Identity.Name);
+			if (user == null)
+			{
+				return NotFound("User not found.");
+			}
 
-        [HttpPost]
+			// Get the existing schedule
+			var schedule = _scheduleService.GetScheduleById(dateRange.ScheduleId);
+			if (schedule == null)
+			{
+				return NotFound("Schedule not found.");
+			}
+
+			// Verify the schedule belongs to the current user
+			if (schedule.User_Id != user.Id)
+			{
+				return Unauthorized("You don't have permission to modify this schedule.");
+			}
+
+			// Calculate Nr_Days
+			var nrDays = (endDate - startDate).Days + 1;
+
+			// Update the existing schedule with dates
+			schedule.Start_Date = startDate;
+			schedule.End_Date = endDate;
+			schedule.Nr_Days = nrDays;
+			schedule.Start_Day = startDate.Day;
+			schedule.End_Day = endDate.Day;
+			schedule.Start_Month = startDate.Month;
+			schedule.End_Month = endDate.Month;
+
+			// Update the schedule in database
+			_scheduleService.UpdateSchedule(schedule);
+
+			return Ok(new { scheduleId = schedule.Schedule_Id });
+		}
+
+		[HttpPost]
         public async Task<IActionResult> SaveCity([FromBody] CityViewModel city)
         {
             if (city == null || string.IsNullOrEmpty(city.Name) || string.IsNullOrEmpty(city.PlaceId))
