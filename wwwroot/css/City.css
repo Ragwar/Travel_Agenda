@@ -125,3 +125,31 @@
 		height: 300px;
 	}
 }
+
+.search-container {
+	display: flex;
+	gap: 10px;
+	align-items: stretch;
+	margin-bottom: 20px;
+}
+
+	.search-container #searchBox {
+		flex: 1;
+	}
+
+	.search-container #submitCityButton {
+		white-space: nowrap;
+		min-width: fit-content;
+	}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+	.search-container {
+		flex-direction: column;
+		gap: 10px;
+	}
+
+		.search-container #submitCityButton {
+			width: 100%;
+		}
+}
