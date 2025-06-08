@@ -1,0 +1,251 @@
+﻿
+/* Theme Variables */
+:root {
+	--primary-color: #007bff;
+	--primary-hover: #0056b3;
+	--secondary-color: #6c757d;
+	--secondary-hover: #495057;
+	--bg-light: #f8f9fa;
+	--text-color: #343a40;
+	--gradient-primary: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+	--gradient-secondary: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+	--box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	--box-shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
+	--radius: 8px;
+}
+
+/* Global styling */
+body {
+	font-family: 'Arial', sans-serif;
+	color: var(--text-color);
+	background: var(--bg-light);
+}
+
+/* Enhanced Buttons */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 500;
+	text-align: center;
+	border: none;
+	border-radius: var(--radius);
+	padding: 0.75rem 1.5rem;
+	font-size: 0.875rem;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	text-decoration: none;
+	position: relative;
+	overflow: hidden;
+	box-shadow: var(--box-shadow);
+	min-height: 44px;
+	gap: 8px;
+}
+
+	.btn:hover {
+		text-decoration: none;
+	}
+
+.btn-primary {
+	background: var(--gradient-primary);
+	color: #fff;
+	border: none;
+}
+
+	.btn-primary:hover {
+		background: var(--gradient-primary);
+		transform: translateY(-2px);
+		box-shadow: var(--box-shadow-hover);
+		color: #fff;
+		text-decoration: none;
+	}
+
+.btn-secondary {
+	background: var(--gradient-secondary);
+	color: #fff;
+	border: none;
+}
+
+	.btn-secondary:hover {
+		background: var(--gradient-secondary);
+		transform: translateY(-2px);
+		box-shadow: var(--box-shadow-hover);
+		color: #fff;
+		text-decoration: none;
+	}
+
+.btn:focus {
+	box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+	outline: none;
+}
+
+/* Add icons to buttons */
+.btn-primary::before {
+	content: '✏️';
+	font-size: 16px;
+}
+
+.btn-secondary::before {
+	content: '🗺️';
+	font-size: 16px;
+}
+
+/* Enhanced Calendar Container */
+.calendar-container {
+	border: none;
+	width: 300px;
+	margin-bottom: 20px;
+	border-radius: 12px;
+	overflow: hidden;
+	background: white;
+	box-shadow: var(--box-shadow);
+	transition: box-shadow 0.3s ease;
+}
+
+	.calendar-container:hover {
+		box-shadow: var(--box-shadow-hover);
+	}
+
+/* Enhanced Calendar Header */
+.calendar-header {
+	text-align: center;
+	background: var(--gradient-primary);
+	padding: 15px;
+	font-weight: 600;
+	color: white;
+	font-size: 14px;
+}
+
+/* Hour Slots Container */
+.hourSlotsScroll {
+	height: 480px;
+	overflow-y: auto;
+	background: white;
+	position: relative;
+}
+
+	/* Custom Scrollbar */
+	.hourSlotsScroll::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.hourSlotsScroll::-webkit-scrollbar-track {
+		background: #f1f1f1;
+		border-radius: 3px;
+	}
+
+	.hourSlotsScroll::-webkit-scrollbar-thumb {
+		background: var(--primary-color);
+		border-radius: 3px;
+	}
+
+		.hourSlotsScroll::-webkit-scrollbar-thumb:hover {
+			background: var(--primary-hover);
+		}
+
+.hourSlotsContainer {
+	position: relative;
+	height: 1440px; /* 24 hours * 60px */
+}
+
+/* Enhanced Hour Slots */
+.hour-slot {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 60px;
+	border-bottom: 1px solid #f0f0f0;
+	box-sizing: border-box;
+	padding-left: 3.5rem;
+	background: white;
+	transition: all 0.2s ease;
+}
+
+	.hour-slot:hover {
+		background-color: rgba(0, 123, 255, 0.05);
+	}
+
+/* Enhanced Hour Labels */
+.hour-label {
+	position: absolute;
+	left: 0.5rem;
+	top: 0.25rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--secondary-color);
+	background: transparent;
+	padding: 0;
+	border: none;
+}
+
+/* Enhanced Events */
+.event {
+	position: absolute;
+	left: 4.5rem;
+	right: 0.5rem;
+	background: var(--gradient-primary);
+	color: #fff;
+	border-radius: var(--radius);
+	overflow: hidden;
+	box-shadow: var(--box-shadow);
+	transition: all 0.3s ease;
+	border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+	.event:hover {
+		transform: translateX(-4px);
+		box-shadow: var(--box-shadow-hover);
+		z-index: 10;
+	}
+
+	.event .content {
+		padding: 0.5rem 0.75rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		overflow: hidden;
+		display: flex;
+		align-items: flex-start;
+		gap: 6px;
+		line-height: 1.3;
+		word-wrap: break-word;
+		hyphens: auto;
+		white-space: normal;
+		min-height: 100%;
+	}
+
+		.event .content::before {
+			content: '📍';
+			font-size: 12px;
+			opacity: 0.8;
+			flex-shrink: 0;
+		}
+
+/* Day column styling */
+.day-column {
+	background: white;
+	border-radius: 12px;
+	box-shadow: var(--box-shadow);
+	padding: 1.5rem;
+	margin-bottom: 1rem;
+	transition: box-shadow 0.3s ease;
+	min-width: 320px;
+	flex-shrink: 0;
+}
+
+	.day-column:hover {
+		box-shadow: var(--box-shadow-hover);
+	}
+
+/* Page title styling */
+h1 {
+	color: var(--primary-color);
+	font-weight: 600;
+	margin-bottom: 1rem;
+	text-align: center;
+}
+
+h4 {
+	color: var(--primary-color);
+	font-weight: 500;
+	margin-bottom: 1rem;
+}

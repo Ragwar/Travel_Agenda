@@ -4,6 +4,7 @@
 @{
     var currentUser = await UserManager.GetUserAsync(User);
 }
+<link rel="stylesheet" href="~/css/Home.css" />
 @if (SignInManager.IsSignedIn(User))
 {
     <div class="text-center">

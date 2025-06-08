@@ -6,7 +6,7 @@
     var isExistingSchedule = ViewBag.IsExistingSchedule ?? false;
     var scheduleId = ViewBag.ScheduleId ?? 0;
 }
-<link rel="stylesheet" href="~/css/CalendarCity.css" />
+<link rel="stylesheet" href="~/css/Index.css" />
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
@@ -79,7 +79,7 @@
             }
             else
             {
-                <h2>Select Your Travel Dates</h2>
+                <h2>Choose your travel period</h2>
             }
             <input type="text" id="dateRange" class="form-control" placeholder="Select your vacation dates" />
         </div>
