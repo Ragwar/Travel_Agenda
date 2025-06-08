@@ -1,89 +1,12 @@
-﻿/* Simple Landing Page CSS - Buttons & Basic Styling */
+﻿/* Home Page Specific Styles */
 
-/* Theme Variables */
-:root {
-	--primary-color: #007bff;
-	--primary-hover: #0056b3;
-	--secondary-color: #6c757d;
-	--bg-light: #f8f9fa;
-	--text-color: #343a40;
-	--gradient-primary: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-	--box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-	--box-shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
-	--radius: 8px;
-}
-
-/* Global styling */
-body {
-	font-family: 'Arial', sans-serif;
-	color: var(--text-color);
-	background: var(--bg-light);
-}
-
-/* Enhanced Buttons */
-.btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	font-weight: 500;
-	text-align: center;
-	border: none;
-	border-radius: var(--radius);
-	padding: 0.75rem 1.5rem;
-	font-size: 0.875rem;
-	cursor: pointer;
-	transition: all 0.3s ease;
-	text-decoration: none;
-	position: relative;
-	overflow: hidden;
-	box-shadow: var(--box-shadow);
-	min-height: 44px;
-	gap: 8px;
-}
-
-	.btn:hover {
-		text-decoration: none;
-	}
-
-.btn-primary {
-	background: var(--gradient-primary);
-	color: #fff;
-	border: none;
-}
-
-	.btn-primary:hover {
-		background: var(--gradient-primary);
-		transform: translateY(-2px);
-		box-shadow: var(--box-shadow-hover);
-		color: #fff;
-		text-decoration: none;
-	}
-
-.btn:focus {
-	box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-	outline: none;
-}
-
-/* Add icon to primary button */
+/* Home-specific button icons */
 .btn-primary::before {
 	content: '✈️';
 	font-size: 16px;
 }
 
-/* Text center utility */
-.text-center {
-	text-align: center;
-}
-
-/* Display utility */
-.display-4 {
-	font-size: 2.5rem;
-	font-weight: 600;
-	color: var(--text-color);
-	margin-bottom: 1rem;
-}
-
-/* Page spacing */
+/* Page spacing for home */
 .container {
 	max-width: 1200px;
 	margin: 0 auto;

@@ -12,12 +12,12 @@
                               .ToList();
 }
 <link rel="stylesheet" href="~/css/ViewSchedule.css" />
-<h1>Your Trip: @schedule.City_Name</h1>
-<p>
-    @startDate.ToString("MMMM dd, yyyy")
+<h1>
+    Your Trip: @schedule.City_Name - @startDate.ToString("MMMM dd, yyyy")
     &ndash;
     @dates.Last().ToString("MMMM dd, yyyy")
-</p>
+</h1>
+
 
 <div style="display:flex; gap:20px; overflow-x:auto;">
     @foreach (var date in dates)

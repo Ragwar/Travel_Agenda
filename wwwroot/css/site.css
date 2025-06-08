@@ -1,9 +1,17 @@
-/* Global Variables */
+﻿/* Global Variables */
 :root {
     --primary-color: #007bff;
     --primary-hover: #0056b3;
     --primary-dark: #004085;
     --secondary-color: #6c757d;
+    --secondary-hover: #495057;
+    --success-color: #28a745;
+    --success-hover: #218838;
+    --warning-color: #ffc107;
+    --warning-hover: #ec971f;
+    --danger-color: #dc3545;
+    --danger-hover: #c82333;
+    --gold-color: #ffd700;
     --bg-light: #f8f9fa;
     --bg-white: #ffffff;
     --border-color: #dee2e6;
@@ -12,17 +20,15 @@
     --text-muted: #6c757d;
     --text-light: #999;
     --accent-color: #17a2b8;
-    --danger-color: #dc3545;
-    --success-color: #28a745;
-    --warning-color: #ffc107;
-    --gold-color: #ffd700;
     --radius: 8px;
     --radius-lg: 12px;
     --box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     --box-shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
     --box-shadow-lg: 0 4px 10px rgba(0,0,0,0.1);
     --gradient-primary: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    --gradient-secondary: linear-gradient(135deg, #6c757d 0%, #495057 100%);
     --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    --gradient-warning: linear-gradient(135deg, #f0ad4e 0%, #ec971f 100%);
     --gradient-danger: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
     --transition: all 0.3s ease;
 }
@@ -45,7 +51,7 @@ html {
 }
 
 body {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Arial', sans-serif;
     line-height: 1.6;
     background-color: var(--bg-light);
     color: var(--text-color);
@@ -94,8 +100,8 @@ body {
     }
 }
 
-/* Button Styles */
-.btn {
+/* Common Button Styles */
+.btn, #submitButton, #selectHotelBtn, #geocodeBtn, #saveAddressBtn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -111,66 +117,92 @@ body {
     position: relative;
     overflow: hidden;
     box-shadow: var(--box-shadow);
+    min-height: 44px;
+    gap: 8px;
 }
 
-.btn-primary {
+    .btn:hover {
+        text-decoration: none;
+    }
+
+.btn-primary, #submitButton, #selectHotelBtn, #saveAddressBtn {
     background: var(--gradient-primary);
     color: var(--bg-white);
-    border-color: var(--primary-color);
+    border: none;
 }
 
-    .btn-primary:hover {
-        background-color: var(--primary-hover);
-        border-color: var(--primary-dark);
+    .btn-primary:hover, #submitButton:hover, #selectHotelBtn:hover, #saveAddressBtn:hover {
+        background: var(--gradient-primary);
         transform: translateY(-2px);
         box-shadow: var(--box-shadow-hover);
+        color: var(--bg-white);
+        text-decoration: none;
+    }
+
+.btn-secondary, #geocodeBtn {
+    background: var(--gradient-secondary);
+    color: var(--bg-white);
+}
+
+    .btn-secondary:hover, #geocodeBtn:hover {
+        background: var(--gradient-secondary);
+        transform: translateY(-2px);
+        box-shadow: var(--box-shadow-hover);
+        color: var(--bg-white);
+        text-decoration: none;
     }
 
 .btn-warning {
-    background-color: #f0ad4e;
+    background: var(--gradient-warning);
     color: var(--bg-white);
     border: none;
-    border-radius: var(--radius);
-    text-decoration: none;
-    cursor: pointer;
-    padding: 10px 15px;
 }
 
     .btn-warning:hover {
-        background-color: #ec971f;
-    }
-
-.btn-secondary {
-    background: var(--secondary-color);
-    color: var(--bg-white);
-}
-
-    .btn-secondary:hover {
-        background: #5a6268;
+        background: var(--gradient-warning);
         transform: translateY(-2px);
         box-shadow: var(--box-shadow-hover);
+        color: var(--bg-white);
+        text-decoration: none;
     }
 
+.btn:disabled, #selectHotelBtn:disabled, #saveAddressBtn:disabled {
+    background: #6c757d;
+    transform: none;
+    box-shadow: var(--box-shadow);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn:focus, #submitButton:focus, #selectHotelBtn:focus, #geocodeBtn:focus, #saveAddressBtn:focus {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* Common Button Icons */
+.btn-primary::before {
+    font-size: 16px;
+}
+
 /* Form Styles */
-.form-control {
+.form-control, #dateRange, #addressInput {
     border: 2px solid var(--border-light);
     border-radius: var(--radius);
-    padding: 10px 12px;
-    font-size: 16px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
     transition: var(--transition);
     width: 100%;
 }
 
-    .form-control:focus {
+    .form-control:focus, #dateRange:focus, #addressInput:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
         outline: none;
     }
 
 .form-group {
-    margin: 10px 0;
+    margin-bottom: 1.5rem;
     width: 100%;
-    max-width: 400px;
 }
 
 .form-select {
@@ -190,17 +222,16 @@ body {
 
 /* Input Container */
 .input-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+    padding: 2rem;
+    margin: 2rem auto;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin-top: 20px;
-    padding: 20px;
-    background-color: var(--bg-white);
-    border-radius: var(--radius);
-    box-shadow: var(--box-shadow-lg);
-    margin: 20px auto;
-    max-width: 600px;
     text-align: center;
 }
 
@@ -217,8 +248,20 @@ h1, h2 {
 
     h1.display-4 {
         font-size: 2.5rem;
-        margin-bottom: 20px;
+        margin-bottom: 1rem;
     }
+
+h2 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+h4 {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
 
 /* Links */
 a {
@@ -334,6 +377,10 @@ a {
 .missing-info {
     color: var(--danger-color);
     font-style: italic;
+    background: rgba(220, 53, 69, 0.1);
+    padding: 0.5rem;
+    border-radius: var(--radius);
+    margin: 0.5rem 0;
 }
 
 /* Common Info Panel */
@@ -351,6 +398,33 @@ a {
     margin-bottom: 1rem;
     background-color: transparent;
 }
+
+/* Common Delete Button */
+.delete-schedule-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--gradient-danger);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    box-shadow: var(--box-shadow);
+    font-weight: bold;
+}
+
+    .delete-schedule-btn:hover {
+        background: var(--gradient-danger);
+        transform: scale(1.1);
+        box-shadow: var(--box-shadow-hover);
+    }
 
 /* Responsive Design */
 @media (max-width: 768px) {

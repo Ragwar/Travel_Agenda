@@ -1,30 +1,4 @@
-﻿/* ScheduleList CSS - Unified with Home styling */
-
-/* Theme Variables */
-:root {
-	--primary-color: #007bff;
-	--primary-hover: #0056b3;
-	--warning-color: #f0ad4e;
-	--warning-hover: #ec971f;
-	--danger-color: #dc3545;
-	--danger-hover: #c82333;
-	--secondary-color: #6c757d;
-	--bg-light: #f8f9fa;
-	--text-color: #343a40;
-	--gradient-primary: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-	--gradient-warning: linear-gradient(135deg, #f0ad4e 0%, #ec971f 100%);
-	--gradient-danger: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-	--box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-	--box-shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
-	--radius: 8px;
-}
-
-/* Global styling - UNIFIED FONT */
-body {
-	font-family: 'Arial', sans-serif;
-	color: var(--text-color);
-	background: var(--bg-light);
-}
+﻿/* ScheduleList Page Specific Styles */
 
 /* Schedule container */
 .schedule-container {
@@ -71,92 +45,7 @@ body {
 		font-size: 0.9em;
 	}
 
-/* Enhanced Buttons - UNIFIED STYLING */
-.btn, .btn-primary, .btn-warning {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	font-weight: 500;
-	text-align: center;
-	border: none;
-	border-radius: var(--radius);
-	padding: 0.75rem 1.5rem;
-	font-size: 0.875rem;
-	cursor: pointer;
-	transition: all 0.3s ease;
-	text-decoration: none;
-	position: relative;
-	overflow: hidden;
-	box-shadow: var(--box-shadow);
-	min-height: 44px;
-	gap: 8px;
-}
-
-	.btn:hover {
-		text-decoration: none;
-	}
-
-.btn-primary {
-	background: var(--gradient-primary);
-	color: #fff;
-	border: none;
-}
-
-	.btn-primary:hover {
-		background: var(--gradient-primary);
-		transform: translateY(-2px);
-		box-shadow: var(--box-shadow-hover);
-		color: #fff;
-		text-decoration: none;
-	}
-
-.btn-warning {
-	background: var(--gradient-warning);
-	color: #fff;
-	border: none;
-}
-
-	.btn-warning:hover {
-		background: var(--gradient-warning);
-		transform: translateY(-2px);
-		box-shadow: var(--box-shadow-hover);
-		color: #fff;
-		text-decoration: none;
-	}
-
-.btn:focus {
-	box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-	outline: none;
-}
-
-/* Enhanced delete button */
-.delete-schedule-btn {
-	position: absolute;
-	top: 12px;
-	right: 12px;
-	background: var(--gradient-danger);
-	border: none;
-	border-radius: 50%;
-	width: 32px;
-	height: 32px;
-	font-size: 14px;
-	cursor: pointer;
-	color: white;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: all 0.3s ease;
-	box-shadow: var(--box-shadow);
-	font-weight: bold;
-}
-
-	.delete-schedule-btn:hover {
-		background: var(--gradient-danger);
-		transform: scale(1.1);
-		box-shadow: var(--box-shadow-hover);
-	}
-
-/* Add icons to buttons */
+/* ScheduleList-specific button icons */
 .btn-primary::before {
 	content: '✏️';
 	font-size: 16px;
@@ -165,41 +54,4 @@ body {
 .btn-warning::before {
 	content: '📋';
 	font-size: 16px;
-}
-
-/* Page title */
-h1 {
-	color: var(--primary-color);
-	font-weight: 600;
-	text-align: center;
-	margin-bottom: 2rem;
-}
-
-/* Missing info styling */
-.missing-info {
-	color: var(--danger-color);
-	font-style: italic;
-	background: rgba(220, 53, 69, 0.1);
-	padding: 0.5rem;
-	border-radius: var(--radius);
-	margin: 0.5rem 0;
-}
-
-/* Text utilities */
-.text-center {
-	text-align: center;
-}
-
-.display-4 {
-	font-size: 2.5rem;
-	font-weight: 600;
-	color: var(--text-color);
-	margin-bottom: 1rem;
-}
-
-/* Container */
-.container {
-	max-width: 1200px;
-	margin: 0 auto;
-	padding: 2rem;
 }

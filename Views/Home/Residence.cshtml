@@ -40,14 +40,12 @@
 
         <!-- Address Tab -->
         <div class="tab-pane fade" id="address">
-            <div class="d-flex align-items-center mb-3 gap-3">
-                <div class="input-group" style="width: 50%;">
-                    <input id="addressInput" class="form-control" placeholder="Enter full address and click Go" />
-                    <button id="geocodeBtn" class="btn btn-secondary">Go</button>
+            <div class="address-input-row">
+                <div class="search-section">
+                    <input id="addressInput" class="form-control search-input" placeholder="Enter full address and click Go" />
+                    <button id="geocodeBtn" class="btn btn-secondary go-btn">Go</button>
                 </div>
-                <div class="flex-fill d-flex">
-                    <button id="saveAddressBtn" class="btn btn-primary" disabled>Save Address</button>
-                </div>
+                <button id="saveAddressBtn" class="btn btn-primary save-btn" disabled>Save Address</button>
             </div>
             <div id="addressError">Address not found or invalid.</div>
             <div id="mapAddress"></div>

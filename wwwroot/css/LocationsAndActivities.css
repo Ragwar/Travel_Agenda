@@ -4,18 +4,23 @@ div[style*="display: flex; justify-content: space-between"] {
     justify-content: flex-start !important;
     gap: 20px !important;
     margin-top: 20px !important;
+    flex-wrap: wrap !important; /* Allow wrapping */
 }
 
-/* Locations & Tabs section - extend width */
+/* Locations & Tabs section - responsive width */
 div[style*="width: 60%; padding-right: 20px"] {
     width: calc(100% - 370px) !important;
     padding-right: 0 !important;
+    min-width: 300px !important; /* Minimum width before wrapping */
+    flex: 1 1 auto !important; /* Allow flexible growth and shrinking */
 }
 
-/* Calendar Container - align to right */
+/* Calendar Container - responsive positioning */
 div[style*="width: 35%"] {
     width: 350px !important;
     margin-left: auto !important;
+    flex: 0 0 350px !important; /* Fixed width, no grow/shrink */
+    min-width: 320px !important; /* Minimum width */
 }
 
 /* Calendar Navigation Buttons */
@@ -293,10 +298,13 @@ div[style*="width: 35%"] {
     padding: 11px;
     border-radius: var(--radius);
     box-shadow: var(--box-shadow);
+    flex-wrap: wrap !important; /* Allow tabs to wrap */
+    justify-content: flex-start;
 }
 
     .nav-tabs li {
         margin: 0;
+        flex: 0 0 auto; /* Don't grow or shrink */
     }
 
     .nav-tabs a {
@@ -312,8 +320,8 @@ div[style*="width: 35%"] {
         align-items: center;
         gap: 8px;
         white-space: nowrap;
+        min-width: max-content; /* Ensure text doesn't break */
     }
-
         .nav-tabs a:hover {
             background: rgba(0, 123, 255, 0.1);
             transform: translateY(-1px);
@@ -342,6 +350,7 @@ div[style*="width: 35%"] {
 #locationTabContent {
     overflow-y: auto;
     max-height: 540px;
+    width: 100%;
 }
 
     #locationTabContent > div {
@@ -351,6 +360,7 @@ div[style*="width: 35%"] {
         border-radius: var(--radius);
         box-shadow: var(--box-shadow);
         margin-top: 10px;
+        width: 100%;
     }
 
 /* Enhanced Activity Items */
@@ -600,14 +610,63 @@ div[style*="width: 35%"] {
     border: 2px dashed var(--primary-color);
     background: rgba(0, 123, 255, 0.1);
 }
-
-/* Responsive Design for Activities Page */
-@media (max-width: 768px) {
-    #calendar {
-        width: 100%;
-        max-width: none;
+@media (max-width: 1024px) {
+    /* At tablet size, reduce calendar width */
+    div[style*="width: calc(100% - 370px)"] {
+        width: calc(100% - 300px) !important;
     }
 
+    div[style*="width: 350px"] {
+        width: 280px !important;
+        flex: 0 0 280px !important;
+    }
+
+    #calendar {
+        width: 280px !important;
+        max-width: 280px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile layout - stack vertically */
+    div[style*="display: flex; justify-content: flex-start"] {
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    div[style*="width: calc(100% - 370px)"],
+    div[style*="width: calc(100% - 300px)"] {
+        width: 100% !important;
+        min-width: unset !important;
+    }
+
+    div[style*="width: 350px"],
+    div[style*="width: 280px"] {
+        width: 100% !important;
+        margin-left: 0 !important;
+        flex: none !important;
+        order: 2; /* Put calendar after tabs on mobile */
+    }
+
+    #calendar {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    /* Ensure tabs wrap nicely on small screens */
+    .nav-tabs {
+        flex-wrap: wrap !important;
+        gap: 8px;
+        justify-content: center; /* Center tabs on mobile */
+    }
+
+        .nav-tabs a {
+            padding: 10px 16px;
+            font-size: 14px;
+            flex: 0 0 auto;
+        }
+
+    /* Location items responsive */
     .location-item {
         flex-direction: column;
         align-items: center;
@@ -619,43 +678,41 @@ div[style*="width: 35%"] {
             height: 120px;
         }
 
-    .nav-tabs {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-        .nav-tabs a {
-            padding: 10px 16px;
-            font-size: 14px;
-        }
-
+    /* Navigation buttons */
     #prevDayBtn, #nextDayBtn {
-        width: 36px;
-        height: 36px;
+        width: 36px !important;
+        height: 36px !important;
         font-size: 14px;
     }
 
+    /* Event content */
     .event .content {
         font-size: 0.75rem;
         padding: 0.5rem;
     }
 
     .activity-header .add-btn {
-        width: 32px;
-        height: 32px;
+        width: 32px !important;
+        height: 32px !important;
         font-size: 14px;
     }
+}
 
-    div[style*="width: calc(100% - 370px)"] {
-        width: 100% !important;
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .nav-tabs {
+        padding: 8px;
+        gap: 6px;
     }
 
-    div[style*="width: 350px"] {
-        width: 100% !important;
-        margin-left: 0 !important;
-    }
+        .nav-tabs a {
+            padding: 8px 12px;
+            font-size: 13px;
+            gap: 6px;
+        }
 
-    div[style*="display: flex; justify-content: flex-start"] {
-        flex-direction: column !important;
-    }
+            /* Make tab icons optional on very small screens */
+            .nav-tabs a::before {
+                display: none;
+            }
 }
