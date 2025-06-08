@@ -55,6 +55,11 @@ namespace TravelAgenda.Controllers
 				}
 				ViewBag.Schedule = schedule;
 				ViewBag.ScheduleId = scheduleId.Value;
+				ViewBag.IsExistingSchedule = true;
+			}
+			else
+			{
+				ViewBag.IsExistingSchedule = false;
 			}
 
 			return View();
@@ -143,41 +148,63 @@ namespace TravelAgenda.Controllers
 		public async Task<IActionResult> SaveDates([FromBody] UpdateDateRangeViewModel dateRange)
 		{
 			if (dateRange == null || string.IsNullOrEmpty(dateRange.StartDate) ||
-				string.IsNullOrEmpty(dateRange.EndDate) || dateRange.ScheduleId <= 0)
+					string.IsNullOrEmpty(dateRange.EndDate))
 			{
-				return BadRequest("Invalid date range or schedule ID.");
+				return BadRequest(new { error = "Invalid date range." });
 			}
 
 			// Parse the dates
 			if (!DateTime.TryParse(dateRange.StartDate, out var startDate) ||
 				!DateTime.TryParse(dateRange.EndDate, out var endDate))
 			{
-				return BadRequest("Invalid date format.");
+				return BadRequest(new { error = "Invalid date format." });
 			}
 
 			var user = _userService.GetUserByName(User.Identity.Name);
 			if (user == null)
 			{
-				return NotFound("User not found.");
+				return NotFound(new { error = "User not found." });
 			}
 
-			// Get the existing schedule
-			var schedule = _scheduleService.GetScheduleById(dateRange.ScheduleId);
-			if (schedule == null)
-			{
-				return NotFound("Schedule not found.");
-			}
+			Schedule schedule;
 
-			// Verify the schedule belongs to the current user
-			if (schedule.User_Id != user.Id)
+			if (dateRange.ScheduleId > 0)
 			{
-				return Unauthorized("You don't have permission to modify this schedule.");
+				// Update existing schedule
+				schedule = _scheduleService.GetScheduleById(dateRange.ScheduleId);
+				if (schedule == null)
+				{
+					return NotFound("Schedule not found.");
+				}
+
+				// Verify the schedule belongs to the current user
+				if (schedule.User_Id != user.Id)
+				{
+					return Unauthorized("You don't have permission to modify this schedule.");
+				}
+			}
+			else
+			{
+				// Create new schedule with NULL dates initially
+				schedule = new Schedule
+				{
+					User_Id = user.Id,
+					Start_Date = null,    // Changed: Set to null instead of default(DateTime)
+					End_Date = null,      // Changed: Set to null instead of default(DateTime)
+					Nr_Days = null,       // Changed: Set to null instead of 0
+					Start_Day = null,     // Changed: Set to null instead of 0
+					End_Day = null,       // Changed: Set to null instead of 0
+					Start_Month = null,   // Changed: Set to null instead of 0
+					End_Month = null      // Changed: Set to null instead of 0
+				};
+
+				_scheduleService.CreateSchedule(schedule);
 			}
 
 			// Calculate Nr_Days
 			var nrDays = (endDate - startDate).Days + 1;
 
-			// Update the existing schedule with dates
+			// Update the schedule with dates
 			schedule.Start_Date = startDate;
 			schedule.End_Date = endDate;
 			schedule.Nr_Days = nrDays;

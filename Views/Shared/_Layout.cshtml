@@ -32,7 +32,7 @@
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item">
-                                <a href="#" id="navStartSchedule" class="nav-link text-dark">Start Schedule</a>
+                                <a href="/Home/Index" class="nav-link text-dark">Start Schedule</a>
                             </li>
                             <li>
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="SchedulesList" asp-route-id="@currentUser.Id">Your Schedules</a>
@@ -55,33 +55,6 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const navStartSchedule = document.getElementById('navStartSchedule');
-            if (navStartSchedule) {
-                navStartSchedule.addEventListener('click', function(e) {
-                    e.preventDefault();
-
-                    fetch('/Home/CreateNewSchedule', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.scheduleId) {
-                            window.location.href = `/Home/Index?scheduleId=${data.scheduleId}`;
-                        } else {
-                            alert("Failed to create schedule.");
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert("An error occurred while creating the schedule.");
-                    });
-                });
-            }
-        });
-    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

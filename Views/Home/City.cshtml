@@ -1,7 +1,8 @@
 ﻿@{
     ViewData["Title"] = "City";
     var apiKey = ViewData["GoogleApiKey"];
-    var scheduleId = ViewBag.Schedule.Schedule_Id;
+    var schedule = ViewBag.Schedule;
+    var scheduleId = schedule?.Schedule_Id ?? ViewBag.ScheduleId ?? 0;
 }
 @await Html.PartialAsync("_ProgressFlowChart")
 <link rel="stylesheet" href="~/css/CalendarCity.css" />
@@ -37,7 +38,7 @@
     // Make the current schedule available to the progress flowchart
     window.currentSchedule = {
         Schedule_Id: @scheduleId,
-        City_Name: "@(ViewBag.Schedule.City_Name ?? "")"
+        City_Name: "@(schedule?.City_Name ?? "")"
     };
 
     // Initialize the city map
