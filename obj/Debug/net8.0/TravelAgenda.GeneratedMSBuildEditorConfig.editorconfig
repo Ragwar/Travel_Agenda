@@ -232,10 +232,6 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxDaXR5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[W:/TravelAgenda/Travel_Agenda/Views/Home/Home.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxIb21lLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
 [W:/TravelAgenda/Travel_Agenda/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -254,6 +250,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [W:/TravelAgenda/Travel_Agenda/Views/Home/SchedulesList.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxTY2hlZHVsZXNMaXN0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[W:/TravelAgenda/Travel_Agenda/Views/Home/TimePeriod.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxUaW1lUGVyaW9kLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [W:/TravelAgenda/Travel_Agenda/Views/Home/ViewDay.cshtml]

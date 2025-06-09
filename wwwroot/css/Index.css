@@ -1,0 +1,14 @@
+﻿/* Home Page Specific Styles */
+
+/* Home-specific button icons */
+.btn-primary::before {
+	content: '✈️';
+	font-size: 16px;
+}
+
+/* Page spacing for home */
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 2rem;
+}

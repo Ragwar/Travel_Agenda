@@ -354,7 +354,7 @@
             title: 'Select Dates',
             description: 'Choose your travel period',
             icon: '📅',
-            view: 'Index'
+            view: 'TimePeriod'
         },
         {
             id: 'city',
@@ -542,8 +542,8 @@
             let url = '';
 
             switch (previousStep.view) {
-                case 'Index':
-                    url = `/Home/Index${progressScheduleId ? '?scheduleId=' + progressScheduleId : ''}`;
+                case 'TimePeriod':
+                    url = `/Home/TimePeriod${progressScheduleId ? '?scheduleId=' + progressScheduleId : ''}`;
                     break;
                 case 'City':
                     url = `/Home/City${progressScheduleId ? '?scheduleId=' + progressScheduleId : ''}`;

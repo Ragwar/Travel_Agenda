@@ -37,12 +37,12 @@ namespace TravelAgenda.Controllers
             _weatherService = weatherService;
         }
 
-        public IActionResult Home()
+        public IActionResult Index()
         {
             return View();
         }
 
-		public IActionResult Index(int? scheduleId)
+		public IActionResult TimePeriod(int? scheduleId)
 		{
 			ViewData["GoogleApiKey"] = _googleApiKey;
 
