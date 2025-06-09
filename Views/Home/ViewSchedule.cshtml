@@ -12,12 +12,19 @@
                               .ToList();
 }
 <link rel="stylesheet" href="~/css/ViewSchedule.css" />
-<h1>
-    Your Trip: @schedule.City_Name - @startDate.ToString("MMMM dd, yyyy")
-    &ndash;
-    @dates.Last().ToString("MMMM dd, yyyy")
-</h1>
-
+<div class="header-section">
+    <h1>
+        Your Trip: @schedule.City_Name - @startDate.ToString("MMMM dd, yyyy")
+        &ndash;
+        @dates.Last().ToString("MMMM dd, yyyy")
+    </h1>
+    <a class="edit-schedule-btn"
+       asp-controller="Home"
+       asp-action="LocationsAndActivities"
+       asp-route-scheduleId="@schedule.Schedule_Id">
+        Edit Schedule
+    </a>
+</div>
 
 <div style="display:flex; gap:20px; overflow-x:auto;">
     @foreach (var date in dates)
@@ -60,41 +67,48 @@
                         {
                             var top = ev.Start * 60;
                             var height = ev.Duration * 60 - 2;  // subtract 2px for borders
-                            
+
+                            <div class="event" style="top: @(top)px; height: @(height)px;">
+                                <div class="content">@ev.Name</div>
+                            </div>
                         }
                     </div>
                 </div>
             </div>
 
-            @* Show route button for this day *@
-            @{
-                var hotelName = schedule.Hotel_Name ?? string.Empty;
-                var encodedHotel = Uri.EscapeDataString(hotelName);
-                var stops = dayActs
-                .Where(e => e.Name != hotelName)
-                .Select(e => Uri.EscapeDataString(e.Name));
-                var waypointsParam = string.Join("|", stops);
-                var routeUrl = $"https://www.google.com/maps/dir/?api=1&origin={encodedHotel}&destination={encodedHotel}&travelmode=driving";
-                if (!string.IsNullOrEmpty(waypointsParam))
-                {
-                    routeUrl += $"&waypoints={waypointsParam}";
+            @* Show buttons for this day *@
+            <div class="day-buttons">
+                @{
+                    var hotelName = schedule.Hotel_Name ?? string.Empty;
+                    var encodedHotel = Uri.EscapeDataString(hotelName);
+                    var stops = dayActs
+                    .Where(e => e.Name != hotelName)
+                    .Select(e => Uri.EscapeDataString(e.Name));
+                    var waypointsParam = string.Join("|", stops);
+                    var routeUrl = $"https://www.google.com/maps/dir/?api=1&origin={encodedHotel}&destination={encodedHotel}&travelmode=driving";
+                    if (!string.IsNullOrEmpty(waypointsParam))
+                    {
+                        routeUrl += $"&waypoints={waypointsParam}";
+                    }
                 }
-            }
-            <a href="@routeUrl" target="_blank" class="btn btn-secondary">
-                Show Route in Google Maps
-            </a>
+
+                <a class="view-day-btn"
+                   asp-controller="Home"
+                   asp-action="ViewDay"
+                   asp-route-scheduleId="@schedule.Schedule_Id"
+                   asp-route-date="@date.ToString("yyyy-MM-dd")">
+                    View Day Details
+                </a>
+
+                <a href="@routeUrl" target="_blank" class="route-btn">
+                    Show Route in Google Maps
+                </a>
+            </div>
         </div>
     }
 </div>
 
-<div>
-    <a class="btn btn-primary"
-       asp-controller="Home"
-       asp-action="LocationsAndActivities"
-       asp-route-scheduleId="@schedule.Schedule_Id">
-        Edit Schedule
-    </a>
-</div>
+
 <script>
     // Once everything's rendered, scroll each day's calendar so that 8 AM is at the top
     window.addEventListener('load', function () {

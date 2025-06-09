@@ -65,6 +65,26 @@ namespace TravelAgenda.Controllers
 			return View();
 		}
 
+		public IActionResult City(int? scheduleId)
+		{
+			ViewData["GoogleApiKey"] = _googleApiKey;
+			if (scheduleId.HasValue)
+			{
+				// Optionally store the scheduleId in ViewData, ViewBag, or Session
+				ViewBag.ScheduleId = scheduleId.Value;
+
+				// Alternatively, handle any logic here based on the scheduleId
+				var schedule = _scheduleService.GetScheduleById(scheduleId.Value);
+				if (schedule == null)
+				{
+					return NotFound("Schedule not found.");
+				}
+
+				ViewBag.Schedule = schedule; // Pass the schedule to the view
+			}
+			return View();
+		}
+
 		public IActionResult SchedulesList(string id)
         {
             ViewData["GoogleApiKey"] = _googleApiKey;
@@ -102,6 +122,45 @@ namespace TravelAgenda.Controllers
 
             return View();
         }
+
+		public IActionResult ViewSchedule(int id)
+		{
+			var schedule = _scheduleService.GetScheduleById(id);
+			var activities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(schedule.Schedule_Id);
+			ViewBag.Schedule = schedule;
+			ViewBag.Activities = activities;
+
+			ViewData["GoogleApiKey"] = _googleApiKey;
+			return View();
+		}
+
+		public IActionResult ViewDay(int scheduleId, string date)
+		{
+			var schedule = _scheduleService.GetScheduleById(scheduleId);
+			if (schedule == null) return NotFound();
+
+			// Parse the date parameter
+			if (!DateTime.TryParse(date, out var selectedDate))
+			{
+				return BadRequest("Invalid date format");
+			}
+
+			// Get all activities for this schedule
+			var allActivities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(scheduleId);
+
+			// Filter activities for the selected date
+			var dayActivities = allActivities
+				.Where(a => a.Start_Date.HasValue && a.Start_Date.Value.Date == selectedDate.Date)
+				.OrderBy(a => a.Start_Hour + ((a.Start_Minute ?? 0) / 60.0))
+				.ToList();
+
+			ViewBag.Schedule = schedule;
+			ViewBag.DayActivities = dayActivities;
+			ViewBag.SelectedDate = selectedDate;
+			ViewData["GoogleApiKey"] = _googleApiKey;
+
+			return View();
+		}
 
 		[HttpPost]
 		public async Task<IActionResult> CreateNewSchedule()
@@ -294,31 +353,6 @@ namespace TravelAgenda.Controllers
             public int ScheduleId { get; set; }
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        public IActionResult City(int? scheduleId)
-        {
-            ViewData["GoogleApiKey"] = _googleApiKey;
-            if (scheduleId.HasValue)
-            {
-                // Optionally store the scheduleId in ViewData, ViewBag, or Session
-                ViewBag.ScheduleId = scheduleId.Value;
-
-                // Alternatively, handle any logic here based on the scheduleId
-                var schedule = _scheduleService.GetScheduleById(scheduleId.Value);
-                if (schedule == null)
-                {
-                    return NotFound("Schedule not found.");
-                }
-
-                ViewBag.Schedule = schedule; // Pass the schedule to the view
-            }
-            return View();
-        }
-
         public class DateRangeViewModel
         {
             public string StartDate { get; set; }
@@ -406,15 +440,6 @@ namespace TravelAgenda.Controllers
             return Ok(new { success = true });
         }
 
-        public IActionResult ViewSchedule(int id)
-        {
-            var schedule = _scheduleService.GetScheduleById(id);
-            var activities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(schedule.Schedule_Id);
-            ViewBag.Schedule = schedule;
-            ViewBag.Activities = activities;
-
-            ViewData["GoogleApiKey"] = _googleApiKey;
-            return View();
-        }
+       
     }
 }

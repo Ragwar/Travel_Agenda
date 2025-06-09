@@ -1,1 +1,570 @@
-﻿
+﻿@{
+    ViewData["Title"] = "View Day";
+    var schedule = ViewBag.Schedule as TravelAgenda.Models.Schedule;
+    var dayActivities = (ViewBag.DayActivities as IEnumerable<TravelAgenda.Models.Schedule_Activity>)?.ToList()
+                       ?? new List<TravelAgenda.Models.Schedule_Activity>();
+    var selectedDate = ViewBag.SelectedDate as DateTime?;
+    var apiKey = ViewData["GoogleApiKey"];
+}
+
+<link rel="stylesheet" href="~/css/ViewDay.css" />
+
+<h1>
+    @schedule.City_Name - @selectedDate?.ToString("dddd, MMMM dd, yyyy")
+</h1>
+
+<!-- Main container: Left for activities, right for calendar -->
+<div class="day-view-container">
+    <!-- Activities List -->
+    <div class="activities-panel">
+        <h3>Activities for this day (@dayActivities.Count activities)</h3>
+
+        <div class="activities-content">
+            @if (dayActivities.Count == 0)
+            {
+                <div class="no-activities">
+                    <div class="no-activities-icon">📅</div>
+                    <p>No activities scheduled for this day</p>
+                    <a class="btn btn-primary"
+                       asp-controller="Home"
+                       asp-action="LocationsAndActivities"
+                       asp-route-scheduleId="@schedule.Schedule_Id">
+                        Add Activities
+                    </a>
+                </div>
+            }
+            else
+            {
+                @foreach (var activity in dayActivities)
+                {
+                    <div class="activity-item">
+                        <div class="activity-header" onclick="toggleActivityDetails(this)">
+                            <div class="activity-image-container">
+                                <div class="activity-image-placeholder">📍</div>
+                            </div>
+                            <div class="activity-info">
+                                <strong>@activity.Name</strong>
+                                <div class="activity-time">
+                                    ⏰ @activity.Start_Hour:@((activity.Start_Minute ?? 0).ToString("00")) - @activity.End_Hour:@((activity.End_Minute ?? 0).ToString("00"))
+                                </div>
+                                <div class="activity-type">
+                                    @if (!string.IsNullOrEmpty(activity.Type))
+                                    {
+                                        @switch (activity.Type.ToLower())
+                                        {
+                                            case "restaurant":
+                                                <span class="type-badge restaurant">🍽️ Restaurant</span>
+                                                break;
+                                            case "hotel":
+                                                <span class="type-badge hotel">🏨 Hotel</span>
+                                                break;
+                                            case "park":
+                                                <span class="type-badge park">🌳 Park</span>
+                                                break;
+                                            case "museum":
+                                                <span class="type-badge museum">🏛️ Museum</span>
+                                                break;
+                                            case "shopping_mall":
+                                                <span class="type-badge shopping">🛍️ Shopping</span>
+                                                break;
+                                            default:
+                                                <span class="type-badge default">📍 @activity.Type</span>
+                                                break;
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="activity-details">
+                            <div class="loading-details">
+                                <div class="loading-icon">⏳</div>
+                                <em>Loading detailed information...</em>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+    <!-- Calendar Container -->
+    <div class="calendar-panel">
+        <div class="day-calendar">
+            <div class="calendar-header">
+                <h4>@selectedDate?.ToString("dddd, MMM dd")</h4>
+            </div>
+            <div class="hourSlotsScroll">
+                <div class="hourSlotsContainer">
+                    @for (int h = 1; h <= 24; h++)
+                    {
+                        <div class="hour-slot" style="top:@((h - 1) * 60)px;">
+                            <div class="hour-label">
+                                @(h % 12 == 0 ? 12 : h % 12)@(h < 12 ? "AM" : "PM")
+                            </div>
+                        </div>
+                    }
+
+                    @* render this day's events *@
+                    @foreach (var activity in dayActivities)
+                    {
+                        var startTime = activity.Start_Hour + ((activity.Start_Minute ?? 0) / 60.0);
+                        var endTime = activity.End_Hour + ((activity.End_Minute ?? 0) / 60.0);
+                        var top = startTime * 60;
+                        var height = (endTime - startTime) * 60 - 2;
+
+                        <div class="event" style="top: @(top)px; height: @(height)px;">
+                            <div class="content">@activity.Name</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <!-- Top row: Google Maps and Edit Activities side by side -->
+            <div class="action-buttons-row">
+                @{
+                    var hotelName = schedule.Hotel_Name ?? string.Empty;
+                    var encodedHotel = Uri.EscapeDataString(hotelName);
+                    var stops = dayActivities
+                    .Where(a => a.Name != hotelName)
+                    .Select(a => Uri.EscapeDataString(a.Name));
+                    var waypointsParam = string.Join("|", stops);
+                    var routeUrl = $"https://www.google.com/maps/dir/?api=1&origin={encodedHotel}&destination={encodedHotel}&travelmode=driving";
+                    if (!string.IsNullOrEmpty(waypointsParam))
+                    {
+                        routeUrl += $"&waypoints={waypointsParam}";
+                    }
+                }
+
+                <a href="@routeUrl" target="_blank" class="route-btn">
+                    Show Route in Google Maps
+                </a>
+
+                <a class="edit-activities-btn"
+                   asp-controller="Home"
+                   asp-action="LocationsAndActivities"
+                   asp-route-scheduleId="@schedule.Schedule_Id">
+                    Edit Activities
+                </a>
+            </div>
+
+            <!-- Bottom row: Back to Full Schedule -->
+            <a class="back-to-schedule-btn"
+               asp-controller="Home"
+               asp-action="ViewSchedule"
+               asp-route-id="@schedule.Schedule_Id">
+                Back to Full Schedule
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places"></script>
+<script>
+    const googleApiKey = "@apiKey";
+    const loadedActivities = new Set();
+
+    // Fast image loader (same as other views)
+    class FastImageLoader {
+        constructor() {
+            this.queue = [];
+            this.isProcessing = false;
+            this.maxConcurrent = 3;
+            this.activeLoads = 0;
+            this.loadDelay = 300;
+        }
+
+        addToQueue(photoUrl, placeName, placeLocation, container) {
+            this.queue.push({ photoUrl, placeName, placeLocation, container });
+            this.processQueue();
+        }
+
+        async processQueue() {
+            if (this.isProcessing || this.queue.length === 0) {
+                return;
+            }
+
+            this.isProcessing = true;
+
+            while (this.queue.length > 0 && this.activeLoads < this.maxConcurrent) {
+                const item = this.queue.shift();
+                this.loadImageFast(item);
+                await this.delay(this.loadDelay);
+            }
+
+            this.isProcessing = false;
+        }
+
+        loadImageFast({ photoUrl, placeName, placeLocation, container }) {
+            this.activeLoads++;
+
+            const cleanup = () => {
+                this.activeLoads--;
+                this.processQueue();
+            };
+
+            if (photoUrl) {
+                const img = new Image();
+                let timeoutId;
+
+                const onSuccess = () => {
+                    clearTimeout(timeoutId);
+                    img.style.width = "80px";
+                    img.style.height = "80px";
+                    img.style.borderRadius = "8px";
+                    img.style.objectFit = "cover";
+                    img.alt = placeName;
+
+                    container.innerHTML = '';
+                    container.appendChild(img);
+                    cleanup();
+                };
+
+                const onError = () => {
+                    clearTimeout(timeoutId);
+                    this.createMapView(placeName, placeLocation, container);
+                    cleanup();
+                };
+
+                timeoutId = setTimeout(onError, 2000);
+
+                img.onload = onSuccess;
+                img.onerror = onError;
+                img.src = photoUrl;
+            } else {
+                this.createMapView(placeName, placeLocation, container);
+                cleanup();
+            }
+        }
+
+        createMapView(placeName, placeLocation, container) {
+            if (!placeLocation) {
+                this.createFallbackImage(placeName, container);
+                return;
+            }
+
+            const lat = placeLocation.lat();
+            const lng = placeLocation.lng();
+
+            const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
+                `center=${lat},${lng}&` +
+                `zoom=17&` +
+                `size=80x80&` +
+                `maptype=roadmap&` +
+                `markers=color:red%7Clabel:•%7C${lat},${lng}&` +
+                `style=feature:poi|visibility:on&` +
+                `style=feature:transit|visibility:simplified&` +
+                `key=${googleApiKey}`;
+
+            const img = document.createElement("img");
+            img.src = mapUrl;
+            img.style.width = "80px";
+            img.style.height = "80px";
+            img.style.borderRadius = "8px";
+            img.style.border = "2px solid #007bff";
+            img.alt = `Map view of ${placeName}`;
+
+            img.onload = () => {
+                container.innerHTML = '';
+                container.appendChild(img);
+            };
+
+            img.onerror = () => {
+                this.createFallbackImage(placeName, container);
+            };
+        }
+
+        createFallbackImage(placeName, container) {
+            const typeIcons = {
+                restaurant: '🍽️',
+                hotel: '🏨',
+                park: '🌳',
+                museum: '🏛️',
+                shopping_mall: '🛍️',
+                default: '📍'
+            };
+
+            const icon = typeIcons.default;
+            container.innerHTML = `
+                <div style="
+                    width: 80px;
+                    height: 80px;
+                    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 20px;
+                    border: 2px solid #0056b3;
+                ">
+                    ${icon}
+                </div>
+            `;
+        }
+
+        delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    }
+
+    const imageLoader = new FastImageLoader();
+
+    // Toggle activity details
+    function toggleActivityDetails(header) {
+        // Find the details element - it should be the next element sibling, not just nextSibling
+        const details = header.nextElementSibling;
+
+        if (!details || !details.classList.contains('activity-details')) {
+            console.error('Could not find activity-details element');
+            return;
+        }
+
+        // Hide all other details
+        document.querySelectorAll(".activity-details").forEach(d => {
+            if (d !== details) {
+                d.style.display = "none";
+            }
+        });
+
+        if (details.style.display === "none" || details.style.display === "") {
+            details.style.display = "block";
+        } else {
+            details.style.display = "none";
+        }
+    }
+
+    // Load activity details using Google Places API
+    function loadActivityDetails(activityName, placeId, detailsContainer, headerElement) {
+        console.log(`Loading details for: ${activityName}, placeId: ${placeId}`);
+
+        if (!placeId) {
+            detailsContainer.innerHTML = `
+                <div style="text-align: center; color: #999; padding: 20px;">
+                    <div style="font-size: 20px; margin-bottom: 10px;">ℹ️</div>
+                    <p><em>No additional details available for this activity.</em></p>
+                </div>
+            `;
+            return;
+        }
+
+        const service = new google.maps.places.PlacesService(document.createElement("div"));
+
+        service.getDetails({
+            placeId: placeId,
+            fields: [
+                "formatted_address",
+                "formatted_phone_number",
+                "website",
+                "opening_hours",
+                "reviews",
+                "editorial_summary",
+                "types",
+                "photos",
+                "geometry",
+                "name",
+                "rating",
+                "user_ratings_total"
+            ]
+        }, (place, status) => {
+            console.log(`Places API response for ${activityName}:`, status, place);
+
+            if (status !== google.maps.places.PlacesServiceStatus.OK) {
+                console.error(`Places API failed for ${activityName}:`, status);
+
+                // Try alternative approach - search by name if place_id fails
+                service.textSearch({
+                    query: activityName,
+                    fields: [
+                        "formatted_address",
+                        "formatted_phone_number",
+                        "website",
+                        "opening_hours",
+                        "reviews",
+                        "editorial_summary",
+                        "types",
+                        "photos",
+                        "geometry",
+                        "name",
+                        "rating",
+                        "user_ratings_total"
+                    ]
+                }, (searchResults, searchStatus) => {
+                    console.log(`Text search response for ${activityName}:`, searchStatus, searchResults);
+
+                    if (searchStatus === google.maps.places.PlacesServiceStatus.OK && searchResults && searchResults.length > 0) {
+                        // Use the first result
+                        const foundPlace = searchResults[0];
+                        console.log(`Found place via text search:`, foundPlace);
+                        renderPlaceDetails(foundPlace, detailsContainer, headerElement, activityName);
+                    } else {
+                        detailsContainer.innerHTML = `
+                            <div style="text-align: center; color: #999; padding: 20px;">
+                                <div style="font-size: 20px; margin-bottom: 10px;">❌</div>
+                                <p><em>Unable to load detailed information for this location.</em></p>
+                                <p style="font-size: 0.8em; color: #666;">API Status: ${status}</p>
+                            </div>
+                        `;
+                    }
+                });
+                return;
+            }
+
+            renderPlaceDetails(place, detailsContainer, headerElement, activityName);
+        });
+    }
+
+    // Separate function to render place details
+    function renderPlaceDetails(place, detailsContainer, headerElement, activityName) {
+        console.log(`Rendering details for:`, place);
+
+        // Load image for the header
+        const imageContainer = headerElement.querySelector('.activity-image-container');
+        if (place.photos && place.photos.length > 0) {
+            const photoUrl = place.photos[0].getUrl({ maxWidth: 80, maxHeight: 80 });
+            imageLoader.addToQueue(photoUrl, activityName, place.geometry?.location, imageContainer);
+        } else {
+            imageLoader.createFallbackImage(activityName, imageContainer);
+        }
+
+        // Generate detailed content
+        const amenityTypes = ["no_smoking", "free_wifi", "parking", "wheelchair_accessible", "air_conditioning", "pet_friendly"];
+        const tags = (place.types || [])
+            .filter(t => amenityTypes.includes(t))
+            .map(t => `
+                <span class="amenity-tag">${t.replace(/_/g, " ")}</span>
+            `).join(" ") || `<span class="no-amenities">No special amenities listed</span>`;
+
+        const hours = place.opening_hours?.weekday_text
+            ? `
+                <div class="info-section">
+                    <h5>🕒 Opening Hours</h5>
+                    <div class="hours-list">
+                        ${place.opening_hours.weekday_text.map(d => `<div class="hour-item">${d}</div>`).join("")}
+                    </div>
+                </div>
+            ` : "";
+
+        const reviews = (place.reviews || []).slice(0, 2)
+            .map(r => `
+                <div class="review-item">
+                    <div class="review-header">
+                        <strong>${r.author_name}</strong>
+                        <span class="review-rating">⭐ ${r.rating}</span>
+                    </div>
+                    <p class="review-text">${r.text}</p>
+                </div>
+            `).join("") || `<div class="no-reviews">No reviews available</div>`;
+
+        detailsContainer.innerHTML = `
+            <div class="details-content">
+                <div class="details-grid">
+                    <div class="details-left">
+                        <div class="info-section">
+                            <h5>📍 Contact Information</h5>
+                            <div class="contact-info">
+                                <p><strong>Address:</strong><br><span class="address">${place.formatted_address || 'Address not available'}</span></p>
+                                <p><strong>Phone:</strong><br><span class="phone">${place.formatted_phone_number || 'N/A'}</span></p>
+                                <p><strong>Website:</strong><br>
+                                    ${place.website
+                                        ? `<a href="${place.website}" target="_blank" class="website-link">${place.website}</a>`
+                                        : '<span class="na">N/A</span>'
+                                    }
+                                </p>
+                                ${place.rating ? `<p><strong>Rating:</strong><br><span class="rating">⭐ ${place.rating} (${place.user_ratings_total || 0} reviews)</span></p>` : ''}
+                            </div>
+                        </div>
+                        ${hours}
+                    </div>
+                    <div class="details-right">
+                        <div class="info-section">
+                            <h5>⭐ Reviews</h5>
+                            <div class="reviews-section">
+                                <h6>Recent Reviews</h6>
+                                <div class="reviews-list">${reviews}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="external-link">
+                    <a href="https://www.google.com/maps/place/?q=place_id:${place.place_id || ''}"
+                       target="_blank"
+                       class="maps-link">
+                        🗺️ View on Google Maps
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    // Initialize - scroll calendar to 8 AM and preload all activity details
+      window.addEventListener('load', function () {
+        const scrollTo = (8 - 1) * 60; // 7 hours × 60px
+        const calendarScroll = document.querySelector('.hourSlotsScroll');
+        if (calendarScroll) {
+            calendarScroll.scrollTop = scrollTo;
+        }
+
+        // Get all activity items in order
+        const activityItems = document.querySelectorAll('.activity-item');
+        let activityIndex = 0;
+
+        // Add place IDs to activity headers from the server data and preload details
+        @foreach (var activity in dayActivities)
+        {
+                if (!string.IsNullOrEmpty(activity.Place_Id))
+                {
+                        <text>
+                        // Use the activity index to get the correct activity item
+                        const activityItem@(activity.Schedule_Activity_Id) = activityItems[activityIndex];
+                        if (activityItem@(activity.Schedule_Activity_Id)) {
+                            const header@(activity.Schedule_Activity_Id) = activityItem@(activity.Schedule_Activity_Id).querySelector('.activity-header');
+                            const details@(activity.Schedule_Activity_Id) = activityItem@(activity.Schedule_Activity_Id).querySelector('.activity-details');
+
+                            if (header@(activity.Schedule_Activity_Id)) {
+                                header@(activity.Schedule_Activity_Id).dataset.placeId = '@activity.Place_Id';
+                                header@(activity.Schedule_Activity_Id).dataset.activityId = '@activity.Schedule_Activity_Id';
+
+                                if (details@(activity.Schedule_Activity_Id)) {
+                                    // Hide the details initially but start loading
+                                    details@(activity.Schedule_Activity_Id).style.display = 'none';
+                                    setTimeout(() => {
+                                        loadActivityDetails('@Html.Raw(Html.Encode(activity.Name))', '@activity.Place_Id', details@(activity.Schedule_Activity_Id), header@(activity.Schedule_Activity_Id));
+                                    }, activityIndex * 500); // Stagger the API calls based on position
+                                }
+                            }
+                        }
+                        activityIndex++;
+                        </text>
+                }
+                else
+                {
+                        <text>
+                        // Handle activities without place_id
+                        const activityItem@(activity.Schedule_Activity_Id) = activityItems[activityIndex];
+                        if (activityItem@(activity.Schedule_Activity_Id)) {
+                            const header@(activity.Schedule_Activity_Id) = activityItem@(activity.Schedule_Activity_Id).querySelector('.activity-header');
+                            const details@(activity.Schedule_Activity_Id) = activityItem@(activity.Schedule_Activity_Id).querySelector('.activity-details');
+
+                            if (header@(activity.Schedule_Activity_Id)) {
+                                header@(activity.Schedule_Activity_Id).dataset.activityId = '@activity.Schedule_Activity_Id';
+                            }
+
+                            if (details@(activity.Schedule_Activity_Id)) {
+                                details@(activity.Schedule_Activity_Id).style.display = 'none';
+                                details@(activity.Schedule_Activity_Id).innerHTML = `
+                                    <div style="text-align: center; color: #999; padding: 20px;">
+                                        <div style="font-size: 20px; margin-bottom: 10px;">ℹ️</div>
+                                        <p><em>No additional details available for this activity.</em></p>
+                                    </div>
+                                `;
+                            }
+                        }
+                        activityIndex++;
+                        </text>
+                }
+        }
+    });
+</script>

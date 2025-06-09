@@ -37,8 +37,8 @@
             </div>
         </div>
 
-        <button id="routeBtn" style="margin-top: 10px; margin-left: 10px;">
-            Go to Google Maps
+        <button id="routeBtn" style="margin-top: 20px;">
+            View route in Google Maps
         </button>
     </div>
 </div>
@@ -1910,23 +1910,13 @@
                         </div>
                         <div>
                             <h5 style="margin: 0 0 10px 0; color: #495057; display: flex; align-items: center; gap: 8px;">
-                                ⭐ Reviews & Amenities
+                                ⭐ Reviews
                             </h5>
-                            <div style="margin-bottom: 15px;">
-                                <h6 style="margin: 0 0 8px 0; color: #666;">Amenities</h6>
-                                <div>${tags}</div>
-                            </div>
                             <div>
                                 <h6 style="margin: 0 0 8px 0; color: #666;">Recent Reviews</h6>
-                                <div style="max-height: 200px; overflow-y: auto;">${revs}</div>
+                                <div style="max-height: 100%; overflow-y: auto;">${revs}</div>
                             </div>
                         </div>
-                    </div>
-                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #28a745;">
-                        <h5 style="margin: 0 0 8px 0; color: #495057; display: flex; align-items: center; gap: 8px;">
-                            ℹ️ About This Place
-                        </h5>
-                        <p style="margin: 0; color: #666; line-height: 1.5;">${full.editorial_summary?.overview || "No description available."}</p>
                     </div>
                     <div style="text-align: center; margin-top: 15px;">
                         <a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}"
