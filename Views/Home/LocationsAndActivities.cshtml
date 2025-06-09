@@ -197,7 +197,6 @@
                     ev.start = newStart;
                     updateScheduleActivity(ev);
                 } else {
-                    alert("Target time is not free.");
                     ev.start = ev._oldStart;
                 }
 
@@ -226,9 +225,9 @@
     const defaultDurations = {
         restaurant: 2,
         hotel: 1,
-        park: 3,
+        park: 2,
         shopping_mall: 2,
-        museum: 3
+        museum: 2
     };
 
     // Utility: Check if a time range is free (no overlapping event)
@@ -306,9 +305,14 @@
             evEl.addEventListener("dragstart", function (e) {
                 calendarEvent._oldStart = calendarEvent.start;
 
+                 // Hide the real element IMMEDIATELY - before anything else
+                evEl.style.visibility = "hidden";
+                evEl.style.opacity = "0";
+
                 // Build a drag image off-screen
                 const dragIcon = evEl.cloneNode(true);
                 const rect = evEl.getBoundingClientRect();
+
                 Object.assign(dragIcon.style, {
                     position: "absolute",
                     top: "-1000px",    // off-screen
@@ -323,9 +327,9 @@
                     visibility: "visible",
                     webkitUserDrag: "none"  // don’t let the clone itself be draggable
                 });
+
                 document.body.appendChild(dragIcon);
                 e.dataTransfer.setDragImage(dragIcon, 20, 10);
-
                 e.dataTransfer.effectAllowed = "move";
 
 
@@ -335,21 +339,29 @@
                 e.dataTransfer.setData("text/plain", calendarEvent.name);
 
                 setTimeout(() => {
-                    if (dragIcon.parentNode === document.body) {
-                        document.body.removeChild(dragIcon);
-                    }
-                }, 0);
+                   if (dragIcon && dragIcon.parentNode === document.body) {
+                       document.body.removeChild(dragIcon);
+                   }
+                }, 1);
 
-                // Hide the real element while dragging
-                evEl.style.visibility = "hidden";
                 window.draggedEvent = evEl;
                 window.draggedEventObj = calendarEvent;
             });
 
             evEl.addEventListener("dragend", function () {
-                evEl.style.visibility = "";
+                 evEl.style.visibility = "visible";
+                 evEl.style.opacity = "1";
+
                 window.draggedEvent = null;
                 window.draggedEventObj = null;
+
+                // Clean up any remaining drag images
+                const remainingDragImages = document.querySelectorAll('div[style*="position: absolute"][style*="top: -1000px"]');
+                remainingDragImages.forEach(img => {
+                    if (img.parentNode === document.body) {
+                     document.body.removeChild(img);
+                    }
+                });
             });
 
             calendarEl.appendChild(evEl);
@@ -2353,12 +2365,19 @@
     });
 
     // Call the check function when page loads
-    window.addEventListener("load", function() {
+        window.addEventListener("load", function() {
         const hasDefaultDates = checkScheduleDates();
 
         if (!hasDefaultDates) {
             // Only update calendar if we have valid dates
             updateCalendarForCurrentDate();
+
+            // ADD THIS: Scroll to 8AM after calendar is loaded
+            setTimeout(() => {
+                const scrollTo = (defaultScrollStart - fullStartHour) * slotHeight; // (8-1)*60 = 420px
+                hourSlotsScroll.scrollTop = scrollTo;
+                console.log(`Scrolled calendar to ${scrollTo}px to show 8AM at top`);
+            }, 200);
         }
 
         fetchTopLocations();

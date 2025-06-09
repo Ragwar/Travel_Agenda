@@ -7,9 +7,10 @@
 }
 
 <link rel="stylesheet" href="~/css/Residence.css" />
+@await Html.PartialAsync("_ProgressFlowChart")
 <div class="container mt-4">
 
-    @await Html.PartialAsync("_ProgressFlowChart")
+    
     <input type="hidden" id="scheduleId" value="@scheduleId" />
 
     <ul class="nav nav-tabs">

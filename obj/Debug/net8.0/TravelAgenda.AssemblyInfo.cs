@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TravelAgenda")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3af6f18b5bef88175c2cb249b4a7404a81d56b3c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0cf30b7e773f2f8a1a524aad0aec12b972b85e1d")]
 [assembly: System.Reflection.AssemblyProductAttribute("TravelAgenda")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TravelAgenda")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
