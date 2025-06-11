@@ -6,27 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TravelAgenda.Migrations
 {
     /// <inheritdoc />
-    public partial class emi : Migration
+    public partial class TravelAgenda : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Activities",
-                columns: table => new
-                {
-                    Activity_Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Place_Id = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Available = table.Column<bool>(type: "bit", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Activities", x => x.Activity_Id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -173,30 +157,6 @@ namespace TravelAgenda.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reviews",
-                columns: table => new
-                {
-                    Favorites_Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    User_Id = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    Activity_Id = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Reviews", x => x.Favorites_Id);
-                    table.ForeignKey(
-                        name: "FK_Reviews_Activities_Activity_Id",
-                        column: x => x.Activity_Id,
-                        principalTable: "Activities",
-                        principalColumn: "Activity_Id");
-                    table.ForeignKey(
-                        name: "FK_Reviews_AspNetUsers_User_Id",
-                        column: x => x.User_Id,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Schedules",
                 columns: table => new
                 {
@@ -264,17 +224,11 @@ namespace TravelAgenda.Migrations
                     Place_Id = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Available = table.Column<bool>(type: "bit", nullable: true),
-                    Schedule_Id = table.Column<int>(type: "int", nullable: false),
-                    Activity_Id = table.Column<int>(type: "int", nullable: true)
+                    Schedule_Id = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Day_Activities", x => x.Schedule_Activity_Id);
-                    table.ForeignKey(
-                        name: "FK_Day_Activities_Activities_Activity_Id",
-                        column: x => x.Activity_Id,
-                        principalTable: "Activities",
-                        principalColumn: "Activity_Id");
                     table.ForeignKey(
                         name: "FK_Day_Activities_Schedules_Schedule_Id",
                         column: x => x.Schedule_Id,
@@ -323,24 +277,9 @@ namespace TravelAgenda.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Day_Activities_Activity_Id",
-                table: "Day_Activities",
-                column: "Activity_Id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Day_Activities_Schedule_Id",
                 table: "Day_Activities",
                 column: "Schedule_Id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reviews_Activity_Id",
-                table: "Reviews",
-                column: "Activity_Id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reviews_User_Id",
-                table: "Reviews",
-                column: "User_Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Schedules_User_Id",
@@ -375,9 +314,6 @@ namespace TravelAgenda.Migrations
                 name: "Day_Activities");
 
             migrationBuilder.DropTable(
-                name: "Reviews");
-
-            migrationBuilder.DropTable(
                 name: "UserInfo");
 
             migrationBuilder.DropTable(
@@ -385,9 +321,6 @@ namespace TravelAgenda.Migrations
 
             migrationBuilder.DropTable(
                 name: "Schedules");
-
-            migrationBuilder.DropTable(
-                name: "Activities");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

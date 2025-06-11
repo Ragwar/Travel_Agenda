@@ -188,46 +188,6 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[W:/TravelAgenda/Travel_Agenda/Views/Activities/Create.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWN0aXZpdGllc1xDcmVhdGUuY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
-
-[W:/TravelAgenda/Travel_Agenda/Views/Activities/Delete.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWN0aXZpdGllc1xEZWxldGUuY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
-
-[W:/TravelAgenda/Travel_Agenda/Views/Activities/Details.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWN0aXZpdGllc1xEZXRhaWxzLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[W:/TravelAgenda/Travel_Agenda/Views/Activities/Edit.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWN0aXZpdGllc1xFZGl0LmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[W:/TravelAgenda/Travel_Agenda/Views/Activities/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWN0aXZpdGllc1xJbmRleC5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[W:/TravelAgenda/Travel_Agenda/Views/Favorites/Create.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmF2b3JpdGVzXENyZWF0ZS5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[W:/TravelAgenda/Travel_Agenda/Views/Favorites/Delete.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmF2b3JpdGVzXERlbGV0ZS5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[W:/TravelAgenda/Travel_Agenda/Views/Favorites/Details.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmF2b3JpdGVzXERldGFpbHMuY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
-
-[W:/TravelAgenda/Travel_Agenda/Views/Favorites/Edit.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmF2b3JpdGVzXEVkaXQuY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
-
-[W:/TravelAgenda/Travel_Agenda/Views/Favorites/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmF2b3JpdGVzXEluZGV4LmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
 [W:/TravelAgenda/Travel_Agenda/Views/Home/City.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxDaXR5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

@@ -26,16 +26,13 @@ builder.Services.AddAuthentication()
        options.ClientId = builder.Configuration.GetSection("GoogleKeys:ClientId").Value;
        options.ClientSecret = builder.Configuration.GetSection("GoogleKeys:ClientSecret").Value;
    });
-builder.Services
-       .AddHttpClient<IWeatherService, WeatherService>();
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 
-builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
-builder.Services.AddScoped<IActivityService, ActivityService>();
 
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
@@ -45,9 +42,9 @@ builder.Services.AddScoped<IUserInfoRepository, UserInfoRepository>();
 
 builder.Services.AddScoped<ISchedule_ActivityService, Schedule_ActivityService>();
 builder.Services.AddScoped<ISchedule_ActivityRepository, Schedule_ActivityRepository>();
+builder.Services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
 
-builder.Services.AddScoped<IFavoritesService, FavoritesService>();
-builder.Services.AddScoped<IFavoritesRepository, FavoritesRepository>();
+
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -71,7 +68,7 @@ builder.Services.Configure<IdentityOptions>(options =>
 });
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
-
+builder.Services.AddHttpContextAccessor();
 
 /*builder.Services.ConfigureApplicationCookie(options =>
 {

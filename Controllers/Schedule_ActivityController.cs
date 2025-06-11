@@ -48,7 +48,6 @@ namespace TravelAgenda.Controllers
         // GET: Schedule_Activity/Create
         public IActionResult Create()
         {
-            ViewData["Activity_Id"] = new SelectList(_context.Activities, "Activity_Id", "Activity_Id");
             ViewData["Schedule_Id"] = new SelectList(_context.Schedules, "Schedule_Id", "Schedule_Id");
             return View();
         }

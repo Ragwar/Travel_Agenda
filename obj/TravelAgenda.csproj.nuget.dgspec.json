@@ -58,6 +58,14 @@
               "target": "Package",
               "version": "[5.0.303, )"
             },
+            "Google.Apis.Auth": {
+              "target": "Package",
+              "version": "[1.70.0, )"
+            },
+            "Google.Apis.Calendar.v3": {
+              "target": "Package",
+              "version": "[1.69.0.3746, )"
+            },
             "GoogleApi": {
               "target": "Package",
               "version": "[5.6.0, )"

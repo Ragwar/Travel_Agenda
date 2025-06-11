@@ -3,36 +3,23 @@
   "WorkspaceRootPath": "W:\\TravelAgenda\\Travel_Agenda\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__mssqllocaldb/TravelAgenda/True/SqlTable/dbo.AspNetUsers.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\views\\home\\city.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:views\\home\\city.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\services\\googlecalendarservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:services\\googlecalendarservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\views\\shared\\_progressflowchart.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:views\\shared\\_progressflowchart.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\views\\home\\timeperiod.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:views\\home\\timeperiod.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\areas\\identity\\pages\\account\\logout.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:areas\\identity\\pages\\account\\logout.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -55,79 +42,24 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "_Layout.cshtml",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Shared\\_Layout.cshtml",
-              "RelativeDocumentMoniker": "Views\\Shared\\_Layout.cshtml",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Shared\\_Layout.cshtml",
-              "RelativeToolTip": "Views\\Shared\\_Layout.cshtml",
-              "ViewState": "AgIAABIAAAAAAAAAAAAUwBsAAAA3AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-06-09T12:44:48.275Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\Index.cshtml",
-              "RelativeDocumentMoniker": "Views\\Home\\Index.cshtml",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\Index.cshtml",
-              "RelativeToolTip": "Views\\Home\\Index.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAApwAwAAAASAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-06-09T12:42:13.391Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "City.cshtml",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\City.cshtml",
-              "RelativeDocumentMoniker": "Views\\Home\\City.cshtml",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\City.cshtml",
-              "RelativeToolTip": "Views\\Home\\City.cshtml",
-              "ViewState": "AgIAAA8CAAAAAAAAAAArwBsCAAAQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-06-09T12:42:09.208Z",
+              "Title": "dbo.AspNetUsers [Data]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__mssqllocaldb/TravelAgenda/True/SqlTable/dbo.AspNetUsers.sql",
+              "ToolTip": "dbo.AspNetUsers [Data]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-06-11T18:23:27.63Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "Program.cs",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAFsAAAAAAAAAAAArwGcAAAAaAAAAAAAAAA==",
+              "Title": "ApplicationDbContext.cs",
+              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Data\\ApplicationDbContext.cs",
+              "RelativeDocumentMoniker": "Data\\ApplicationDbContext.cs",
+              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Data\\ApplicationDbContext.cs",
+              "RelativeToolTip": "Data\\ApplicationDbContext.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAIwBsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-09T12:41:59.372Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "Logout.cshtml.cs",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Areas\\Identity\\Pages\\Account\\Logout.cshtml.cs",
-              "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\Logout.cshtml.cs",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Areas\\Identity\\Pages\\Account\\Logout.cshtml.cs",
-              "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\Logout.cshtml.cs",
-              "ViewState": "AgIAAB4AAAAAAAAAAIA6wCoAAAAuAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-09T12:41:47.498Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "_ProgressFlowChart.cshtml",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Shared\\_ProgressFlowChart.cshtml",
-              "RelativeDocumentMoniker": "Views\\Shared\\_ProgressFlowChart.cshtml",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Shared\\_ProgressFlowChart.cshtml",
-              "RelativeToolTip": "Views\\Shared\\_ProgressFlowChart.cshtml",
-              "ViewState": "AgIAAC0CAAAAAAAAAAArwDkCAAAlAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-06-09T12:39:50.723Z",
+              "WhenOpened": "2025-06-11T18:15:30.992Z",
               "EditorCaption": ""
             },
             {
@@ -138,22 +70,35 @@
               "RelativeDocumentMoniker": "Controllers\\HomeController.cs",
               "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Controllers\\HomeController.cs",
               "RelativeToolTip": "Controllers\\HomeController.cs",
-              "ViewState": "AgIAAA8AAAAAAAAAAAAjwBoAAAAPAAAAAAAAAA==",
+              "ViewState": "AgIAAOMBAAAAAAAAAAAkwAACAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-09T12:39:27.753Z",
+              "WhenOpened": "2025-06-11T17:09:03.819Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "TimePeriod.cshtml",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\TimePeriod.cshtml",
-              "RelativeDocumentMoniker": "Views\\Home\\TimePeriod.cshtml",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Views\\Home\\TimePeriod.cshtml",
-              "RelativeToolTip": "Views\\Home\\TimePeriod.cshtml",
-              "ViewState": "AgIAAKIAAAAAAAAAAAArwK4AAAAhAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-06-09T12:38:43.886Z",
+              "DocumentIndex": 1,
+              "Title": "GoogleCalendarService.cs",
+              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Services\\GoogleCalendarService.cs",
+              "RelativeDocumentMoniker": "Services\\GoogleCalendarService.cs",
+              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Services\\GoogleCalendarService.cs",
+              "RelativeToolTip": "Services\\GoogleCalendarService.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAIA2wBwAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-11T17:06:54.602Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Program.cs",
+              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAADAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-11T17:01:38.792Z",
               "EditorCaption": ""
             }
           ]

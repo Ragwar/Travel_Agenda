@@ -16,34 +16,6 @@ namespace TravelAgenda.Repositories
             _applicationDbContext.SaveChanges();
         }
 
-        //Activity
-        private IActivityRepository _ActivityRepository;
-        public IActivityRepository ActivityRepository
-        {
-            get
-            {
-                if (_ActivityRepository == null)
-                {
-                    _ActivityRepository = new ActivityRepository(_applicationDbContext);
-                }
-                return _ActivityRepository;
-            }
-        }
-
-        //Favorites
-        private IFavoritesRepository _FavoritesRepository;
-        public IFavoritesRepository FavoritesRepository
-        {
-            get
-            {
-                if (_FavoritesRepository == null)
-                {
-                    _FavoritesRepository = new FavoritesRepository(_applicationDbContext);
-                }
-                return _FavoritesRepository;
-            }
-        }
-
         //Schedule
         private IScheduleRepository _ScheduleRepository;
         public IScheduleRepository ScheduleRepository

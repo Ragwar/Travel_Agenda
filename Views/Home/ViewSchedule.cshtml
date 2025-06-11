@@ -18,13 +18,37 @@
         &ndash;
         @dates.Last().ToString("MMMM dd, yyyy")
     </h1>
-    <a class="edit-schedule-btn"
-       asp-controller="Home"
-       asp-action="LocationsAndActivities"
-       asp-route-scheduleId="@schedule.Schedule_Id">
-        Edit Schedule
-    </a>
+    <div class="header-buttons">
+        <a class="edit-schedule-btn"
+           asp-controller="Home"
+           asp-action="LocationsAndActivities"
+           asp-route-scheduleId="@schedule.Schedule_Id">
+            Edit Schedule
+        </a>
+        <form asp-action="ExportToGoogleCalendar" asp-controller="Home" method="post" style="display: inline;">
+            <input type="hidden" name="scheduleId" value="@schedule.Schedule_Id" />
+            <button type="submit" class="export-calendar-btn">
+                Export to Google Calendar
+            </button>
+        </form>
+    </div>
 </div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <div style="display:flex; gap:20px; overflow-x:auto;">
     @foreach (var date in dates)
