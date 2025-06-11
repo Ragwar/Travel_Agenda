@@ -35,7 +35,7 @@ namespace TravelAgenda.Areas.Identity.Pages.Account
         {
             if (userId == null || email == null || code == null)
             {
-                return RedirectToPage("/TimePeriod");
+                return RedirectToPage("/Index");
             }
 
             var user = await _userManager.FindByIdAsync(userId);
