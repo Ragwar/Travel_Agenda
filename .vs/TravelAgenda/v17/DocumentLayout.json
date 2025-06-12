@@ -3,27 +3,16 @@
   "WorkspaceRootPath": "W:\\TravelAgenda\\Travel_Agenda\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\areas\\identity\\pages\\account\\registerconfirmation.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:areas\\identity\\pages\\account\\registerconfirmation.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\services\\googlecalendarservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:services\\googlecalendarservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__mssqllocaldb/TravelAgenda/True/SqlTable/dbo.AspNetUsers.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|w:\\travelagenda\\travel_agenda\\services\\googlecalendarservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{27F44D27-9C1E-4873-9903-CB626A991BA4}|TravelAgenda.csproj|solutionrelative:services\\googlecalendarservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -33,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 1219,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -45,78 +34,40 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "RegisterConfirmation.cshtml.cs",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Areas\\Identity\\Pages\\Account\\RegisterConfirmation.cshtml.cs",
-              "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\RegisterConfirmation.cshtml.cs",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Areas\\Identity\\Pages\\Account\\RegisterConfirmation.cshtml.cs",
-              "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\RegisterConfirmation.cshtml.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-11T18:25:05.188Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "dbo.AspNetUsers [Data]",
-              "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__mssqllocaldb/TravelAgenda/True/SqlTable/dbo.AspNetUsers.sql",
-              "ToolTip": "dbo.AspNetUsers [Data]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-06-11T18:23:27.63Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "ApplicationDbContext.cs",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Data\\ApplicationDbContext.cs",
-              "RelativeDocumentMoniker": "Data\\ApplicationDbContext.cs",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Data\\ApplicationDbContext.cs",
-              "RelativeToolTip": "Data\\ApplicationDbContext.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAIwBsAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-11T18:15:30.992Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "HomeController.cs",
-              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Controllers\\HomeController.cs",
-              "RelativeDocumentMoniker": "Controllers\\HomeController.cs",
-              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Controllers\\HomeController.cs",
-              "RelativeToolTip": "Controllers\\HomeController.cs",
-              "ViewState": "AgIAABQAAAAAAAAAAAAUwPYBAAAEAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-11T17:09:03.819Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
               "Title": "GoogleCalendarService.cs",
               "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Services\\GoogleCalendarService.cs",
               "RelativeDocumentMoniker": "Services\\GoogleCalendarService.cs",
               "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Services\\GoogleCalendarService.cs",
               "RelativeToolTip": "Services\\GoogleCalendarService.cs",
-              "ViewState": "AgIAABAAAAAAAAAAAIA2wBsAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAwwDcAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-11T17:06:54.602Z",
+              "WhenOpened": "2025-06-12T15:16:15.452Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "HomeController.cs",
+              "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Controllers\\HomeController.cs",
+              "RelativeDocumentMoniker": "Controllers\\HomeController.cs",
+              "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Controllers\\HomeController.cs",
+              "RelativeToolTip": "Controllers\\HomeController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAMMBAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-11T17:09:03.819Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 1,
               "Title": "Program.cs",
               "DocumentMoniker": "W:\\TravelAgenda\\Travel_Agenda\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "W:\\TravelAgenda\\Travel_Agenda\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAADAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAEgAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-11T17:01:38.792Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-11T17:01:38.792Z"
             }
           ]
         }

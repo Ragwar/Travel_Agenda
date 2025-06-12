@@ -17,6 +17,7 @@ namespace TravelAgenda.Services
 	public interface IGoogleCalendarService
 	{
 		Task<bool> CreateScheduleEvents(string userId, Schedule schedule, List<Schedule_Activity> activities);
+		Task<bool> HasValidGoogleTokenAsync(string userId);
 	}
 
 	public class GoogleCalendarService : IGoogleCalendarService
@@ -25,25 +26,32 @@ namespace TravelAgenda.Services
 		private readonly UserManager<IdentityUser> _userManager;
 		private readonly ILogger<GoogleCalendarService> _logger;
 		private readonly IConfiguration _configuration;
+		private readonly IGoogleTokenService _tokenService;
 
 		public GoogleCalendarService(
 			IHttpContextAccessor httpContextAccessor,
 			UserManager<IdentityUser> userManager,
 			ILogger<GoogleCalendarService> logger,
-			IConfiguration configuration)
+			IConfiguration configuration,
+			IGoogleTokenService tokenService)
 		{
 			_httpContextAccessor = httpContextAccessor;
 			_userManager = userManager;
 			_logger = logger;
 			_configuration = configuration;
+			_tokenService = tokenService;
+		}
+
+		public async Task<bool> HasValidGoogleTokenAsync(string userId)
+		{
+			var token = await _tokenService.GetValidAccessTokenAsync(userId);
+			return !string.IsNullOrEmpty(token);
 		}
 
 		public async Task<bool> CreateScheduleEvents(string userId, Schedule schedule, List<Schedule_Activity> activities)
 		{
 			try
 			{
-				var context = _httpContextAccessor.HttpContext;
-
 				// Get the current user
 				var user = await _userManager.FindByIdAsync(userId);
 				if (user == null)
@@ -52,12 +60,12 @@ namespace TravelAgenda.Services
 					return false;
 				}
 
-				// Try multiple methods to get the access token
-				var accessToken = await GetAccessTokenAsync(context);
+				// Get access token from database
+				var accessToken = await _tokenService.GetValidAccessTokenAsync(userId);
 
 				if (string.IsNullOrEmpty(accessToken))
 				{
-					_logger.LogError("No access token found for user");
+					_logger.LogError("No valid access token found for user");
 					return false;
 				}
 
@@ -131,55 +139,6 @@ namespace TravelAgenda.Services
 			}
 		}
 
-		private async Task<string> GetAccessTokenAsync(HttpContext context)
-		{
-			try
-			{
-				// Method 1: Try to get from the Google scheme specifically
-				var googleToken = await context.GetTokenAsync("Google", "access_token");
-				if (!string.IsNullOrEmpty(googleToken))
-				{
-					_logger.LogInformation("Access token retrieved from Google scheme");
-					return googleToken;
-				}
-
-				// Method 2: Try to get from HttpContext.GetTokenAsync (default scheme)
-				var token = await context.GetTokenAsync("access_token");
-				if (!string.IsNullOrEmpty(token))
-				{
-					_logger.LogInformation("Access token retrieved from default scheme");
-					return token;
-				}
-
-				// Method 3: Try to get from the authentication properties
-				var authenticateResult = await context.AuthenticateAsync("Google");
-				if (authenticateResult.Succeeded)
-				{
-					var accessToken = authenticateResult.Properties.GetTokenValue("access_token");
-					if (!string.IsNullOrEmpty(accessToken))
-					{
-						_logger.LogInformation("Access token retrieved from Google authentication properties");
-						return accessToken;
-					}
-				}
-
-				// Method 4: Check if we need to refresh the token
-				var refreshToken = await context.GetTokenAsync("Google", "refresh_token");
-				if (!string.IsNullOrEmpty(refreshToken))
-				{
-					_logger.LogInformation("Refresh token available - implementing refresh logic would be beneficial");
-					// TODO: Implement token refresh logic here if needed
-				}
-
-				_logger.LogError("Failed to retrieve access token using any method");
-				return null;
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Exception occurred while retrieving access token");
-				return null;
-			}
-		}
 		private Event CreateCalendarEvent(Schedule_Activity activity, Schedule schedule)
 		{
 			if (!activity.Start_Date.HasValue)
