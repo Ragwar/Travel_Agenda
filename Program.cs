@@ -130,9 +130,14 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedEmail = true;
 });
+builder.Services.Configure<AuthMessageSenderOptions>(options =>
+{
+	options.SendGridKey = builder.Configuration["SendGridAPI:ApiKey"];
+});
+
 builder.Services.AddTransient<IEmailSender, EmailSender>();
-builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
+
 
 /*builder.Services.ConfigureApplicationCookie(options =>
 {

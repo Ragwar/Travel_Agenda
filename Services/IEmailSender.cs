@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using TravelAgenda.Services;
@@ -8,7 +9,6 @@ namespace TravelAgenda.Services;
 
 public class EmailSender : IEmailSender
 {
-	private string Key = "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";
 	private readonly ILogger _logger;
 
 	public EmailSender(IOptions<AuthMessageSenderOptions> optionsAccessor,
@@ -18,15 +18,15 @@ public class EmailSender : IEmailSender
 		_logger = logger;
 	}
 
-	public AuthMessageSenderOptions Options { get; } //Set with Secret Manager.
+	public AuthMessageSenderOptions Options { get; }
 
 	public async Task SendEmailAsync(string toEmail, string subject, string message)
 	{
-		if (string.IsNullOrEmpty(Key))
+		if (string.IsNullOrEmpty(Options.SendGridKey))
 		{
 			throw new Exception("Null SendGridKey");
 		}
-		await Execute(Key, subject, message, toEmail);
+		await Execute(Options.SendGridKey, subject, message, toEmail);
 	}
 
 	public async Task Execute(string apiKey, string subject, string message, string toEmail)
@@ -34,7 +34,7 @@ public class EmailSender : IEmailSender
 		var client = new SendGridClient(apiKey);
 		var msg = new SendGridMessage()
 		{
-			From = new EmailAddress("travelagendawebapp@gmail.com", "Password Recovery"),
+			From = new EmailAddress("travelagendawebapp@gmail.com", "Travel Agenda"),
 			Subject = subject,
 			PlainTextContent = message,
 			HtmlContent = message
