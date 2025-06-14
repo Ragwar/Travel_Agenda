@@ -12,8 +12,8 @@ using TravelAgenda.Data;
 namespace TravelAgenda.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250519193125_emi")]
-    partial class emi
+    [Migration("20250611180303_TravelAgenda")]
+    partial class TravelAgenda
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -227,54 +227,6 @@ namespace TravelAgenda.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("TravelAgenda.Models.Activity", b =>
-                {
-                    b.Property<int>("Activity_Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Activity_Id"));
-
-                    b.Property<bool?>("Available")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Place_Id")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Activity_Id");
-
-                    b.ToTable("Activities");
-                });
-
-            modelBuilder.Entity("TravelAgenda.Models.Favorites", b =>
-                {
-                    b.Property<int>("Favorites_Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Favorites_Id"));
-
-                    b.Property<int?>("Activity_Id")
-                        .HasColumnType("int");
-
-                    b.Property<string>("User_Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Favorites_Id");
-
-                    b.HasIndex("Activity_Id");
-
-                    b.HasIndex("User_Id");
-
-                    b.ToTable("Reviews");
-                });
-
             modelBuilder.Entity("TravelAgenda.Models.Schedule", b =>
                 {
                     b.Property<int>("Schedule_Id")
@@ -343,9 +295,6 @@ namespace TravelAgenda.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Schedule_Activity_Id"));
 
-                    b.Property<int?>("Activity_Id")
-                        .HasColumnType("int");
-
                     b.Property<string>("Add_Info")
                         .HasColumnType("nvarchar(max)");
 
@@ -383,8 +332,6 @@ namespace TravelAgenda.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Schedule_Activity_Id");
-
-                    b.HasIndex("Activity_Id");
 
                     b.HasIndex("Schedule_Id");
 
@@ -463,21 +410,6 @@ namespace TravelAgenda.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TravelAgenda.Models.Favorites", b =>
-                {
-                    b.HasOne("TravelAgenda.Models.Activity", "Activity")
-                        .WithMany("Favorites")
-                        .HasForeignKey("Activity_Id");
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithMany()
-                        .HasForeignKey("User_Id");
-
-                    b.Navigation("Activity");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("TravelAgenda.Models.Schedule", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -489,10 +421,6 @@ namespace TravelAgenda.Migrations
 
             modelBuilder.Entity("TravelAgenda.Models.Schedule_Activity", b =>
                 {
-                    b.HasOne("TravelAgenda.Models.Activity", null)
-                        .WithMany("Schedule_Activity")
-                        .HasForeignKey("Activity_Id");
-
                     b.HasOne("TravelAgenda.Models.Schedule", "Schedule")
                         .WithMany()
                         .HasForeignKey("Schedule_Id")
@@ -509,13 +437,6 @@ namespace TravelAgenda.Migrations
                         .HasForeignKey("User_Id");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("TravelAgenda.Models.Activity", b =>
-                {
-                    b.Navigation("Favorites");
-
-                    b.Navigation("Schedule_Activity");
                 });
 #pragma warning restore 612, 618
         }

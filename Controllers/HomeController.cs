@@ -1,4 +1,5 @@
 ﻿using GoogleApi.Entities.Search.Video.Common;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,28 +15,33 @@ namespace TravelAgenda.Controllers
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IActivityService _activityService;
         private readonly IScheduleService _scheduleService;
         private readonly ISchedule_ActivityService _schedule_activityProductService;
-        private readonly IFavoritesService _favoritesService;
         private readonly IUserInfoService _userInfoService;
         private readonly IUserService _userService;
         private readonly string _googleApiKey;
-        private readonly IWeatherService _weatherService;
         private readonly ChatClient _chatClient;
+		private readonly IGoogleCalendarService _googleCalendarService;
 
-        public HomeController(ApplicationDbContext context, IActivityService activityService, IScheduleService scheduleService, ISchedule_ActivityService schedule_activityProductService, IUserInfoService userInfoService, IUserService userService, IFavoritesService favoritesService, IConfiguration configuration, IWeatherService weatherService)
+
+		public HomeController(ApplicationDbContext context, 
+            IScheduleService scheduleService, 
+            ISchedule_ActivityService schedule_activityProductService, 
+            IUserInfoService userInfoService, 
+            IUserService userService, 
+            IConfiguration configuration, 
+			IGoogleCalendarService googleCalendarService
+            )
+
         {
-            _activityService = activityService;
             _scheduleService = scheduleService;
             _schedule_activityProductService = schedule_activityProductService;
-            _favoritesService = favoritesService;
             _userInfoService = userInfoService;
             _userService = userService;
             _googleApiKey = configuration["GoogleAPI:ApiKey"];
             _context = context;
-            _weatherService = weatherService;
-        }
+			_googleCalendarService = googleCalendarService;
+		}
 
         public IActionResult Index()
         {
@@ -101,9 +107,6 @@ namespace TravelAgenda.Controllers
             ViewData["CityName"] = schedule.City_Name;
             ViewData["PlaceId"] = schedule.Place_Id;
             ViewData["GoogleApiKey"] = _googleApiKey;
-
-            var weather = _weatherService.GetForecastAsync(schedule.City_Name, (int)schedule.Nr_Days);
-            ViewData["WeatherForecast"] = weather;
 
             var activities = _schedule_activityProductService
                                  .GetSchedule_ActivityByScheduleId(scheduleId);
@@ -440,6 +443,135 @@ namespace TravelAgenda.Controllers
             return Ok(new { success = true });
         }
 
-       
-    }
+		[HttpPost]
+		public async Task<IActionResult> ExportToGoogleCalendar(int scheduleId)
+		{
+			try
+			{
+				// Get the current user
+				var user = _userService.GetUserByName(User.Identity.Name);
+				if (user == null)
+				{
+					return NotFound("User not found.");
+				}
+
+				// Get the schedule
+				var schedule = _scheduleService.GetScheduleById(scheduleId);
+				if (schedule == null)
+				{
+					return NotFound("Schedule not found.");
+				}
+
+				// Verify the schedule belongs to the current user
+				if (schedule.User_Id != user.Id)
+				{
+					return Unauthorized("You don't have permission to export this schedule.");
+				}
+
+				// Check if user has valid Google token
+				var hasValidToken = await _googleCalendarService.HasValidGoogleTokenAsync(user.Id);
+
+				if (!hasValidToken)
+				{
+					// Store the scheduleId in TempData to use after authentication
+					TempData["ExportScheduleId"] = scheduleId;
+
+					// User needs to link their Google account
+					var properties = new AuthenticationProperties
+					{
+						RedirectUri = Url.Action("GoogleCalendarAuthCallback", "Home"),
+						Items = { { "scheduleId", scheduleId.ToString() } }
+					};
+
+					return Challenge(properties, "Google");
+				}
+
+				// Get all activities for this schedule
+				var activities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(scheduleId);
+
+				if (activities == null || activities.Count == 0)
+				{
+					TempData["ErrorMessage"] = "No activities found in this schedule.";
+					return RedirectToAction("ViewSchedule", new { id = scheduleId });
+				}
+
+				// Export to Google Calendar
+				var success = await _googleCalendarService.CreateScheduleEvents(user.Id, schedule, activities);
+
+				if (success)
+				{
+					TempData["SuccessMessage"] = "Schedule successfully exported to Google Calendar!";
+				}
+				else
+				{
+					TempData["ErrorMessage"] = "Failed to export schedule to Google Calendar. Please try again.";
+				}
+
+				return RedirectToAction("ViewSchedule", new { id = scheduleId });
+			}
+			catch (Exception ex)
+			{
+				
+				TempData["ErrorMessage"] = $"An error occurred while exporting to Google Calendar: {ex.Message}";
+				return RedirectToAction("ViewSchedule", new { id = scheduleId });
+			}
+		}
+
+		// Add this new action to handle the Google authentication callback
+		[HttpGet]
+		[Authorize]
+		public async Task<IActionResult> GoogleCalendarAuthCallback()
+		{
+			try
+			{
+				// Get the scheduleId from TempData
+				var scheduleId = TempData["ExportScheduleId"] as int?;
+
+				if (!scheduleId.HasValue)
+				{
+					TempData["ErrorMessage"] = "Schedule information was lost during authentication.";
+					return RedirectToAction("SchedulesList", new { id = User.Identity.Name });
+				}
+
+				// Now that the user has authenticated with Google, try to export again
+				var user = _userService.GetUserByName(User.Identity.Name);
+				if (user == null)
+				{
+					return NotFound("User not found.");
+				}
+
+				var schedule = _scheduleService.GetScheduleById(scheduleId.Value);
+				if (schedule == null)
+				{
+					return NotFound("Schedule not found.");
+				}
+
+				var activities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(scheduleId.Value);
+
+				// Small delay to ensure tokens are properly saved
+				await Task.Delay(1000);
+
+				var success = await _googleCalendarService.CreateScheduleEvents(user.Id, schedule, activities);
+
+				if (success)
+				{
+					TempData["SuccessMessage"] = "Schedule successfully exported to Google Calendar!";
+				}
+				else
+				{
+					TempData["ErrorMessage"] = "Failed to export schedule to Google Calendar. Please try again.";
+				}
+
+				return RedirectToAction("ViewSchedule", new { id = scheduleId.Value });
+			}
+			catch (Exception ex)
+			{
+			
+				TempData["ErrorMessage"] = "An error occurred after Google authentication.";
+				return RedirectToAction("Index");
+			}
+		}
+	}
+
+
 }

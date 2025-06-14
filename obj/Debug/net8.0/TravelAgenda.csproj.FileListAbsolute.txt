@@ -601,3 +601,9 @@ W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\package-lock.json
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\package.json
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\SendGrid.dll
 W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\StarkbankEcdsa.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\Google.Apis.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\Google.Apis.Auth.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\Google.Apis.Calendar.v3.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\Google.Apis.Core.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\System.Management.dll
+W:\TravelAgenda\Travel_Agenda\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Management.dll

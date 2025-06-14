@@ -279,6 +279,14 @@
 		white-space: nowrap;
 	}
 
+/* Header buttons container */
+.header-buttons {
+	display: flex;
+	gap: 15px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
 /* Style the edit schedule button to match other buttons */
 .edit-schedule-btn {
 	background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
@@ -312,6 +320,74 @@
 		font-size: 16px;
 	}
 
+/* Export to Google Calendar button */
+.export-calendar-btn {
+	background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+	color: white !important;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	font-weight: 500;
+	padding: 12px 20px;
+	border-radius: 8px;
+	border: none;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	text-decoration: none !important;
+	font-size: 0.875rem;
+	min-height: 44px;
+}
+
+	.export-calendar-btn:hover {
+		background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+		color: white !important;
+		text-decoration: none !important;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	}
+
+	.export-calendar-btn::before {
+		content: '📅';
+		font-size: 16px;
+	}
+
+/* Alert styles */
+.alert {
+	margin: 20px 0;
+	padding: 15px 20px;
+	border-radius: 8px;
+	position: relative;
+}
+
+.alert-success {
+	background-color: #d4edda;
+	border-color: #c3e6cb;
+	color: #155724;
+}
+
+.alert-danger {
+	background-color: #f8d7da;
+	border-color: #f5c6cb;
+	color: #721c24;
+}
+
+.btn-close {
+	position: absolute;
+	right: 15px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: none;
+	border: none;
+	font-size: 20px;
+	cursor: pointer;
+	opacity: 0.5;
+}
+
+	.btn-close:hover {
+		opacity: 1;
+	}
 /* Responsive behavior */
 @media (max-width: 768px) {
 	.header-section {
