@@ -3,18 +3,72 @@
 	display: flex;
 	gap: 20px;
 	margin-top: 20px;
+	height: calc(100vh - 200px); /* Fixed height based on viewport */
 }
 
 .city-search-panel {
 	width: 40%;
 	display: flex;
 	flex-direction: column;
+	max-height: 100%;
 }
 
 .city-map-panel {
 	width: 60%;
 	display: flex;
 	flex-direction: column;
+}
+
+/* Make locations container scrollable */
+#locations {
+	flex: 1;
+	overflow-y: auto;
+	max-height: calc(100vh - 400px); /* Adjust based on other elements */
+	padding-right: 10px; /* Space for scrollbar */
+	margin-top: 1rem;
+}
+
+	/* Custom scrollbar styling */
+	#locations::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	#locations::-webkit-scrollbar-track {
+		background: #f1f1f1;
+		border-radius: 4px;
+	}
+
+	#locations::-webkit-scrollbar-thumb {
+		background: #c1c1c1;
+		border-radius: 4px;
+	}
+
+		#locations::-webkit-scrollbar-thumb:hover {
+			background: #a8a8a8;
+		}
+
+/* Ensure search container doesn't shrink */
+.search-container {
+	flex-shrink: 0;
+	display: flex;
+	gap: 10px;
+	align-items: stretch;
+	margin-bottom: 20px;
+}
+
+	.search-container #searchBox {
+		flex: 1;
+	}
+
+	.search-container #submitCityButton {
+		white-space: nowrap;
+		min-width: fit-content;
+	}
+
+/* Fixed height for city title */
+.city-search-panel h2 {
+	flex-shrink: 0;
+	margin-bottom: 10px;
 }
 
 #cityMap {
@@ -50,6 +104,7 @@
 	border-radius: 8px;
 	background-color: #f8f9fa;
 	margin-bottom: 10px;
+	flex-shrink: 0; /* Prevent items from shrinking */
 }
 
 .location-container {
@@ -66,6 +121,7 @@
 	position: relative;
 	background-color: #f8f9fa;
 	border-radius: 8px;
+	flex-shrink: 0;
 }
 
 .location-image {
@@ -110,10 +166,52 @@
 	font-size: 0.875rem;
 }
 
+/* Category sections within the scrollable area */
+.locations-section {
+	margin-bottom: 20px;
+}
+
+	.locations-section h3 {
+		position: sticky;
+		top: 0;
+		background-color: white;
+		padding: 10px 0 5px 0;
+		margin-bottom: 10px;
+		border-bottom: 2px solid #007bff;
+		z-index: 1;
+	}
+
+/* Loading and error messages */
+.loading-message, .error-message, .no-results-message {
+	padding: 15px;
+	text-align: center;
+	border-radius: 6px;
+	margin: 10px 0;
+}
+
+.loading-message {
+	background-color: #e3f2fd;
+	color: #1976d2;
+	border: 1px solid #bbdefb;
+}
+
+.error-message {
+	background-color: #ffebee;
+	color: #c62828;
+	border: 1px solid #ffcdd2;
+}
+
+.no-results-message {
+	background-color: #f3e5f5;
+	color: #7b1fa2;
+	border: 1px solid #e1bee7;
+}
+
 /* Responsive Design for City Layout */
 @media (max-width: 768px) {
 	.city-layout {
 		flex-direction: column;
+		height: auto;
 	}
 
 	.city-search-panel,
@@ -124,26 +222,11 @@
 	#cityMap {
 		height: 300px;
 	}
-}
 
-.search-container {
-	display: flex;
-	gap: 10px;
-	align-items: stretch;
-	margin-bottom: 20px;
-}
-
-	.search-container #searchBox {
-		flex: 1;
+	#locations {
+		max-height: 400px; /* Fixed height for mobile */
 	}
 
-	.search-container #submitCityButton {
-		white-space: nowrap;
-		min-width: fit-content;
-	}
-
-/* Responsive behavior */
-@media (max-width: 768px) {
 	.search-container {
 		flex-direction: column;
 		gap: 10px;

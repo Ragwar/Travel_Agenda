@@ -10,7 +10,7 @@
 
 @if (SignInManager.IsSignedIn(User))
 {
-    if (ViewBag.Schedules != null)
+    if (ViewBag.Schedules != null && ((IEnumerable<Schedule>)ViewBag.Schedules).Any())
     {
         <div class="schedule-container">
             @foreach (Schedule schedule in ViewBag.Schedules)
@@ -50,11 +50,11 @@
                         }
                         <img src="@mapUrl"
                              alt="@(string.IsNullOrWhiteSpace(schedule.Hotel_Name ?? schedule.City_Name)
-                                                                 ? "No location selected"
-                                                                 : schedule.Hotel_Name ?? schedule.City_Name)" />
-                                                                                                    </div>
-                                                                                                    <div class="schedule-details">
-                                                                                                        <h3>
+                                                                                              ? "No location selected"
+                                                                                              : schedule.Hotel_Name ?? schedule.City_Name)" />
+                                                                                                                                 </div>
+                                                                                                                                 <div class="schedule-details">
+                                                                                                                                     <h3>
                             @(string.IsNullOrWhiteSpace(schedule.City_Name)
                                             ? ""
                                             : schedule.City_Name)
@@ -63,9 +63,6 @@
                         @* Check if dates are missing or default *@
             @if (schedule.Start_Date == default(DateTime) || schedule.End_Date == default(DateTime) || schedule.Nr_Days <= 0)
                         {
-                            <p class="missing-info">
-                                <strong>City Break period missing</strong>
-                            </p>
                             <a class="btn btn-warning"
                                asp-controller="Home"
                                asp-action="TimePeriod"
@@ -92,9 +89,6 @@
                         @* Check if city is missing *@
                         @if (string.IsNullOrWhiteSpace(schedule.City_Name))
                         {
-                            <p class="missing-info">
-                                <strong>City missing</strong>
-                            </p>
                             <a class="btn btn-warning"
                                asp-controller="Home"
                                asp-action="City"
@@ -103,9 +97,8 @@
                             </a>
                         }
 
-                        @* Only show View Schedule if both dates and city are present *@
-                        @if (schedule.Start_Date != default(DateTime) && schedule.End_Date != default(DateTime) &&
-                                    schedule.Nr_Days > 0 && !string.IsNullOrWhiteSpace(schedule.City_Name))
+                        @* Only show View Schedule if city is present *@
+                        @if (!string.IsNullOrWhiteSpace(schedule.City_Name))
                         {
                             <a class="btn btn-primary"
                                asp-area=""
@@ -118,6 +111,17 @@
                     </div>
                 </div>
             }
+        </div>
+    }
+    else
+    {
+        <div class="text-center no-schedules-container">
+            <h2 class="no-schedules-title">Currently you have no adventures planned, let's change that!</h2>
+            <a class="btn btn-success btn-lg create-schedule-btn"
+               asp-controller="Home"
+               asp-action="TimePeriod">
+                Create New Adventure
+            </a>
         </div>
     }
 }
@@ -142,6 +146,22 @@ else
                     const res = await fetch(`/Home/DeleteSchedule?id=${id}`, { method: 'DELETE' });
                     if (!res.ok) throw new Error('Delete failed');
                     item.remove();
+
+                    // Check if this was the last schedule and show the no-schedules message
+                    const remainingSchedules = document.querySelectorAll('.schedule-item');
+                    if (remainingSchedules.length === 0) {
+                        const container = document.querySelector('.schedule-container');
+                        if (container) {
+                            container.innerHTML = `
+                                <div class="text-center no-schedules-container">
+                                    <h2 class="no-schedules-title">Currently you have no adventures planned, let's change that!</h2>
+                                    <a class="btn btn-success btn-lg create-schedule-btn" href="/Home/TimePeriod">
+                                        Create New Adventure
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    }
                 } catch (err) {
                     console.error(err);
                     alert('Failed to delete schedule. Please try again.');
