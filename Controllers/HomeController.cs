@@ -282,49 +282,76 @@ namespace TravelAgenda.Controllers
 		}
 
 		[HttpPost]
-        public async Task<IActionResult> SaveCity([FromBody] CityViewModel city)
-        {
-            if (city == null || string.IsNullOrEmpty(city.Name) || string.IsNullOrEmpty(city.PlaceId))
-            {
-                return BadRequest("Invalid city data.");
-            }
+		public async Task<IActionResult> SaveCity([FromBody] CityViewModel city)
+		{
+			if (city == null || string.IsNullOrEmpty(city.Name) || string.IsNullOrEmpty(city.PlaceId))
+			{
+				return BadRequest("Invalid city data.");
+			}
 
-            var user = _userService.GetUserByName(User.Identity.Name);
-            if (user == null)
-            {
-                return NotFound("User not found.");
-            }
-            var userId = user.Id;
+			var user = _userService.GetUserByName(User.Identity.Name);
+			if (user == null)
+			{
+				return NotFound("User not found.");
+			}
+			var userId = user.Id;
 
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized("User not logged in.");
-            }
+			if (string.IsNullOrEmpty(userId))
+			{
+				return Unauthorized("User not logged in.");
+			}
 
-            try
-            {
-                // Get the latest schedule for the user
-                var schedule = _scheduleService.GetScheduleById(city.ScheduleId);
-                if (schedule == null)
-                {
-                    return NotFound("Schedule not found.");
-                }
+			try
+			{
+				// Get the latest schedule for the user
+				var schedule = _scheduleService.GetScheduleById(city.ScheduleId);
+				if (schedule == null)
+				{
+					return NotFound("Schedule not found.");
+				}
 
-                // Update the schedule with city data
-                schedule.CityName = city.Name;
-                schedule.	PlaceId = city.PlaceId;
+				// Check if the city is being changed (not just being set for the first time)
+				bool cityChanged = !string.IsNullOrEmpty(schedule.CityName) &&
+								  !string.Equals(schedule.CityName, city.Name, StringComparison.OrdinalIgnoreCase);
 
-                _scheduleService.UpdateSchedule(schedule);
+				// If city is being changed, clean up residence and activities
+				if (cityChanged)
+				{
+					// Clear residence information since it's no longer valid for the new city
+					schedule.HotelId = null;
+					schedule.HotelName = null;
 
-                return Ok("City saved successfully.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
+					// Get all activities for this schedule and delete them
+					// since they're no longer relevant to the new city
+					var existingActivities = _ScheduleActivityProductService.GetScheduleActivityByScheduleId(city.ScheduleId);
 
-        public class ResidenceViewModel
+					if (existingActivities != null && existingActivities.Count > 0)
+					{
+						foreach (var activity in existingActivities)
+						{
+							_ScheduleActivityProductService.DeleteScheduleActivity(activity);
+						}
+					}
+				}
+
+				// Update the schedule with new city data
+				schedule.CityName = city.Name;
+				schedule.PlaceId = city.PlaceId;
+
+				_scheduleService.UpdateSchedule(schedule);
+
+				var message = cityChanged
+					? "City updated successfully. Previous residence and activities have been cleared."
+					: "City saved successfully.";
+
+				return Ok(new { message = message, cityChanged = cityChanged });
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Internal server error: {ex.Message}");
+			}
+		}
+		public class ResidenceViewModel
         {
             public int ScheduleId { get; set; }
             public string? HotelId { get; set; }

@@ -3,6 +3,8 @@
     var apiKey = ViewData["GoogleApiKey"];
     var schedule = ViewBag.Schedule;
     var scheduleId = schedule?.ScheduleId ?? ViewBag.ScheduleId ?? 0;
+    var existingCityName = schedule?.CityName ?? "";
+    var existingCityLocation = schedule?.PlaceId ?? ""; // This should be the Google Place ID
 }
 @await Html.PartialAsync("_ProgressFlowChart")
 <link rel="stylesheet" href="~/css/City.css" />
@@ -13,17 +15,12 @@
             <button id="submitCityButton" class="btn btn-primary">Save City</button>
         </div>
 
-        <h2>Top Locations in <span id="selectedCityName">...</span></h2>
+        <h2>Top Locations in <span id="selectedCityName">@(!string.IsNullOrEmpty(existingCityName) ? existingCityName : "...")</span></h2>
         <div id="locations" class="mt-4"></div>
     </div>
 
     <div class="city-map-panel">
         <div id="cityMap"></div>
-        <div id="cityInfo" class="city-info-panel" style="display: none;">
-            <h4 id="cityInfoName">City Information</h4>
-            <p id="cityInfoAddress"></p>
-            <p id="cityInfoCoordinates"></p>
-        </div>
     </div>
 </div>
 
@@ -34,6 +31,10 @@
     let selectedPlace = null;
     const googleApiKey = '@apiKey';
     let cityMap;
+
+    // Existing city data from database
+    const existingCityName = '@Html.Raw(existingCityName)';
+    const existingCityLocation = '@Html.Raw(existingCityLocation)';
 
     // Make the current schedule available to the progress flowchart
     window.currentSchedule = {
@@ -52,6 +53,94 @@
             mapTypeControl: true,
             streetViewControl: true,
             fullscreenControl: true
+        });
+
+        // Load existing city if available
+        if (existingCityName && existingCityLocation) {
+            loadExistingCity();
+        }
+    }
+
+    // Load existing city from database
+    function loadExistingCity() {
+        console.log(`Loading existing city: ${existingCityName} with location: ${existingCityLocation}`);
+
+        const service = new google.maps.places.PlacesService(cityMap);
+
+        // Get place details using the stored place ID
+        service.getDetails({
+            placeId: existingCityLocation,
+            fields: ['name', 'place_id', 'geometry', 'formatted_address']
+        }, (place, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+                console.log('Successfully loaded existing city details:', place);
+
+                // Set the selected place
+                selectedPlace = {
+                    name: place.name,
+                    placeId: place.place_id,
+                    location: place.geometry.location
+                };
+
+                // Update the search box with the city name
+                document.getElementById("searchBox").value = place.name;
+
+                // Update the city name display
+                document.getElementById("selectedCityName").textContent = place.name;
+
+                // Update the map to show the existing city
+                updateCityMap(place);
+
+                // Fetch top locations for the existing city
+                fetchTopLocations(place.geometry.location, place.geometry.viewport);
+
+                console.log(`Existing city ${place.name} loaded successfully`);
+            } else {
+                console.error('Failed to load existing city details:', status);
+                // Fallback: try to geocode by city name
+                if (existingCityName) {
+                    geocodeCityByName(existingCityName);
+                }
+            }
+        });
+    }
+
+    // Fallback method to geocode by city name if place ID fails
+    function geocodeCityByName(cityName) {
+        console.log(`Fallback: Geocoding city by name: ${cityName}`);
+
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({
+            address: cityName,
+            componentRestrictions: { country: 'US' } // Adjust country as needed
+        }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+                const place = results[0];
+
+                selectedPlace = {
+                    name: cityName,
+                    placeId: place.place_id,
+                    location: place.geometry.location
+                };
+
+                document.getElementById("searchBox").value = cityName;
+                document.getElementById("selectedCityName").textContent = cityName;
+
+                // Create a mock place object for updateCityMap
+                const mockPlace = {
+                    geometry: {
+                        location: place.geometry.location,
+                        viewport: place.geometry.viewport
+                    }
+                };
+
+                updateCityMap(mockPlace);
+                fetchTopLocations(place.geometry.location, place.geometry.viewport);
+
+                console.log(`Fallback geocoding successful for ${cityName}`);
+            } else {
+                console.error('Geocoding failed:', status);
+            }
         });
     }
 
@@ -239,7 +328,7 @@
         const resultsContainer = document.getElementById("locations");
         resultsContainer.innerHTML = "";
 
-        const cityName = selectedPlace.name;
+        const cityName = selectedPlace ? selectedPlace.name : existingCityName;
         console.log(`Searching for top locations in ${cityName}`);
 
         // Calculate city bounds and radius more accurately
@@ -490,6 +579,7 @@
             }, categoryIndex * 1200); // Increased delay between categories
         }
     }
+
     function initAutocomplete() {
         const input = document.getElementById("searchBox");
 

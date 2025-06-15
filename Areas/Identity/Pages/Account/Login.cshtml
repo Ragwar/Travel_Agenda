@@ -65,6 +65,7 @@
                             <p>
                                 @foreach (var provider in Model.ExternalLogins!)
                                 {
+                                <p>To be able to upload your schedule into google calendar please log in using google.</p>
                                     <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
                                 }
                             </p>

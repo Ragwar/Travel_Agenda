@@ -8,15 +8,19 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <div class="text-center">
-        <h1 class="display-4">Welcome to Travel Agenda</h1>
-        <p>Lets help you schedule your next adventure!</p>
+        <h1 class="display-4">Welcome to Travel Agenda!</h1>
+        <p>Were here to help you organize and plan your escapades. Gathering travel info, selecting locations and drag and dropping them into a virtual agenda has never been easier! Start by selecting the time period, browse and select one of the cities, choose a place to call home and rest, then let the fun begin and fill up your agenda with activities from your bucket list! You can always come back and check your schedule. Lets plan your next adventure!</p>
         <a href="/Home/TimePeriod" class="btn btn-primary">Start Schedule</a>
     </div>
 }
 else
 {
     <div class="text-center">
-        <h1 class="display-4">Welcome to Travel Agenda</h1>
-        <p>Please login</p>
+        <h1 class="display-4">Welcome to Travel Agenda!</h1>
+        <p>Were here to help you organize and plan your escapades. Gathering travel info, selecting locations and drag and dropping them into a virtual agenda has never been easier! To gain acces to our helpful app please log in.</p>
+
+        <a class="btn btn-primary" id="login" asp-area="Identity" asp-page="/Account/Login">Login</a>
+
+
     </div>
 }

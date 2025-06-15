@@ -58,7 +58,8 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places"></script>
 <script>
     window.currentProgressStep = 'residence';
-
+        const existingHotelName = '@Html.Raw(ViewBag.Schedule?.HotelName ?? "")';
+    const existingHotelId = '@Html.Raw(ViewBag.Schedule?.HotelId ?? "")';
     let map, service, addrMap, geocoder, addressMarker, geocodedResult;
     let selectedHotel = null;
     const scheduleId = document.getElementById('scheduleId').value;
@@ -239,23 +240,28 @@
     }
 
     function initMap() {
-        geocoder = new google.maps.Geocoder();
-        service = new google.maps.places.PlacesService(document.createElement('div'));
+    geocoder = new google.maps.Geocoder();
+    service = new google.maps.places.PlacesService(document.createElement('div'));
 
-        service.getDetails({ placeId: CITY_PLACE_ID, fields: ['geometry'] }, (city, st) => {
-            if (st !== google.maps.places.PlacesServiceStatus.OK) return;
-            cityViewport = city.geometry.viewport;  // save viewport
-            const center = city.geometry.location;
+    service.getDetails({ placeId: CITY_PLACE_ID, fields: ['geometry'] }, (city, st) => {
+        if (st !== google.maps.places.PlacesServiceStatus.OK) return;
+        cityViewport = city.geometry.viewport;  // save viewport
+        const center = city.geometry.location;
 
-            map = new google.maps.Map(document.getElementById('map'), { center, zoom: 13 });
-            service = new google.maps.places.PlacesService(map);
+        map = new google.maps.Map(document.getElementById('map'), { center, zoom: 13 });
+        service = new google.maps.places.PlacesService(map);
 
-            addrMap = new google.maps.Map(document.getElementById('mapAddress'), { center, zoom: 13 });
-            enableMapClickForAddress();
+        addrMap = new google.maps.Map(document.getElementById('mapAddress'), { center, zoom: 13 });
+        enableMapClickForAddress();
 
-            // Load initial batch of hotels
+        // Load existing residence if available
+        if (existingHotelName && existingHotelId) {
+            loadExistingResidence();
+        } else {
+            // Load initial batch of hotels only if no existing residence
             loadInitialHotels();
-        });
+        }
+    });
 
         document.getElementById('hotelListPanel').addEventListener('scroll', () => {
             const panel = document.getElementById('hotelListPanel');
@@ -265,6 +271,42 @@
         });
     }
 
+        function loadExistingResidence() {
+        console.log(`Loading existing residence: ${existingHotelName} with ID: ${existingHotelId}`);
+
+        service.getDetails({
+            placeId: existingHotelId,
+            fields: ['name', 'place_id', 'geometry', 'formatted_address', 'rating', 'user_ratings_total', 'photos', 'price_level']
+        }, (place, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+                console.log('Successfully loaded existing residence details:', place);
+
+                // Set the selected hotel
+                selectedHotel = place;
+
+                // Center map on the existing residence - ONLY ZOOM, NO LIST ADDITION
+                map.setCenter(place.geometry.location);
+                map.setZoom(16);
+
+                // Enable the select button since we have a selection
+                document.getElementById('selectHotelBtn').disabled = false;
+                document.getElementById('selectHotelBtn').textContent = 'Update Hotel';
+
+                // Clear the loading indicator from the hotel list panel
+                const panel = document.getElementById('hotelListPanel');
+                panel.innerHTML = '';
+
+                // Load hotels normally (without adding the existing one to the list)
+                loadInitialHotels();
+
+                console.log(`Existing residence ${place.name} loaded successfully - map centered only`);
+            } else {
+                console.error('Failed to load existing residence details:', status);
+                // Fallback: load hotels normally
+                loadInitialHotels();
+            }
+        });
+    }
     // Load multiple pages initially to get a good sorted list
     function loadInitialHotels() {
         const loadPromises = [];
@@ -496,7 +538,7 @@
         fetch('/Home/SaveResidence', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scheduleId: scheduleId, hotelId: selectedHotel.placeid, hotelName: selectedHotel.name })
+            body: JSON.stringify({ scheduleId: scheduleId, hotelId: selectedHotel.place_id, hotelName: selectedHotel.name })
         }).then(r => r.ok
             ? window.location.href = `/Home/LocationsAndActivities?scheduleId=${scheduleId}`
             : alert('Save failed')

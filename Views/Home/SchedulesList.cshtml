@@ -30,7 +30,7 @@
                                 $"&zoom=15" +
                                 $"&size=300x200" +
                                 $"&maptype=roadmap" +
-                                $"&markers=label:H%7C{encodedName}" +
+                                $"&markers=label:Home%7C{encodedName}" +
                                 $"&key={apiKey}";
                             }
                             else
@@ -116,7 +116,7 @@
     else
     {
         <div class="text-center no-schedules-container">
-            <h2 class="no-schedules-title">Currently you have no adventures planned, let's change that!</h2>
+            <h2 class="no-schedules-title">...currently you have no adventures planned, let's change that!</h2>
             <a class="btn btn-success btn-lg create-schedule-btn"
                asp-controller="Home"
                asp-action="TimePeriod">
@@ -154,7 +154,7 @@ else
                         if (container) {
                             container.innerHTML = `
                                 <div class="text-center no-schedules-container">
-                                    <h2 class="no-schedules-title">Currently you have no adventures planned, let's change that!</h2>
+                                    <h2 class="no-schedules-title">...currently you have no adventures planned, let's change that!</h2>
                                     <a class="btn btn-success btn-lg create-schedule-btn" href="/Home/TimePeriod">
                                         Create New Adventure
                                     </a>

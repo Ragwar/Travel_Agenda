@@ -207,6 +207,22 @@
 	border: 1px solid #e1bee7;
 }
 
+.selected-residence {
+	border: 2px solid #28a745 !important;
+	background-color: #f8fff9 !important;
+}
+
+	.selected-residence::before {
+		content: "✓ Current Selection";
+		display: block;
+		background-color: #28a745;
+		color: white;
+		padding: 4px 8px;
+		font-size: 12px;
+		font-weight: bold;
+		margin: -1px -1px 8px -1px;
+	}
+
 /* Responsive Design for City Layout */
 @media (max-width: 768px) {
 	.city-layout {
