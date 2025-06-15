@@ -49,23 +49,131 @@ html {
 * {
     box-sizing: border-box;
 }
+/* Updated body section for site.css - replace the existing body CSS */
 
+/* Default: No background for body */
 body {
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
-    background-color: var(--bg-light);
+    background: white;
     color: var(--text-color);
     margin: 0;
     padding: 0;
+    min-height: 100vh;
 }
 
-/* Focus Styles */
-.btn:focus,
-.btn:active:focus,
-.btn-link.nav-link:focus,
-.form-control:focus,
-.form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    /* Index page only - keep the original full background */
+    body.index-page {
+        background: linear-gradient(rgba(248, 249, 250, 0.4), rgba(248, 249, 250, 0.4)), url('/img/background.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+    }
+
+    /* All other pages - three-zone layout */
+    body.other-page {
+        background: white;
+        position: relative;
+    }
+
+        /* Left gradient background - blue to white */
+        body.other-page::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: -2;
+            /* Blue to white gradient from left to right */
+            background: linear-gradient(to right, #cce7ff 0%, #ffffff 100%);
+            /* Width from left edge to left edge of container */
+            width: calc((100vw - 1200px) / 2);
+            min-width: 0;
+        }
+
+        /* Right gradient background - white to blue */
+        body.other-page .right-background {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -2;
+            /* White to blue gradient from left to right */
+            background: linear-gradient(to right, #ffffff 0%, #cce7ff 100%); /* Width from right edge of container to right edge */
+            width: calc((100vw - 1200px) / 2);
+            min-width: 0;
+        }
+
+        /* Container area - white background, no side images interference */
+        body.other-page .container {
+            position: relative;
+            z-index: 1;
+            background: white;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+            min-height: calc(100vh - 120px); /* Account for navbar */
+        }
+
+        /* Ensure main content is properly positioned */
+        body.other-page main {
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        /* Progress flowchart container alignment */
+        body.other-page .flowchart-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            padding: 0 15px;
+        }
+
+/* Responsive behavior */
+@media (max-width: 1240px) {
+    /* When container approaches full width, hide side images */
+    body.other-page::before,
+    body.other-page .right-background {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    body.other-page .container {
+        padding: 0 10px;
+    }
+
+    body.other-page .flowchart-container {
+        padding: 0 10px;
+    }
+}
+
+/* Additional styling for non-index pages */
+body.other-page .input-container,
+body.other-page .schedule-container,
+body.other-page .city-layout,
+body.other-page .hotel-container,
+body.other-page .day-view-container,
+body.other-page .activities-panel,
+body.other-page .calendar-panel {
+    background: white;
+}
+
+/* Ensure content cards and panels have proper backgrounds */
+body.other-page .schedule-item,
+body.other-page .hotel-item,
+body.other-page .activity-item,
+body.other-page .location-item {
+    background: white;
+}
+
+/* Override any background settings from page-specific CSS files */
+body.other-page {
+    background-image: none !important;
+    background-color: white !important;
 }
 
 /* Navbar Styles */
