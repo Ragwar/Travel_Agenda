@@ -270,8 +270,158 @@
             }
         });
     }
+    function loadInitialHotels() {
+        const panel = document.getElementById('hotelListPanel');
+        panel.innerHTML = '<div class="loading-indicator">Loading top-rated hotels...</div>';
 
-        function loadExistingResidence() {
+        allHotels = [];
+        renderedHotelIds.clear();
+        nextPageToken = null;
+        loading = false;
+
+        // Use the exact same pattern as city view
+        fetchTopHotels();
+    }
+
+    async function fetchTopHotels() {
+        console.log('Searching for top hotels in the city');
+
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+        let allResults = [];
+
+        try {
+            // Method 1: Nearby search for lodging (primary method)
+            const nearbyResults = await new Promise((resolve) => {
+                service.nearbySearch({
+                    bounds: cityViewport,
+                    type: 'lodging',
+                    strictBounds: true
+                }, (results, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        resolve(results || []);
+                    } else {
+                        console.log('Nearby search failed:', status);
+                        resolve([]);
+                    }
+                });
+            });
+
+            allResults.push(...nearbyResults);
+
+            // Small delay between requests
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Method 2: Text search for hotels (to catch any missed ones)
+            const textResults = await new Promise((resolve) => {
+                service.textSearch({
+                    query: `hotels in ${CITY_NAME}`,
+                    bounds: cityViewport
+                }, (results, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        resolve(results || []);
+                    } else {
+                        resolve([]);
+                    }
+                });
+            });
+
+            allResults.push(...textResults);
+
+            // Remove duplicates (same as city view)
+            const uniqueResults = allResults.filter((place, index, self) =>
+                index === self.findIndex(p => p.place_id === place.place_id)
+            );
+
+            // Filter and sort (exactly like city view)
+            let filteredResults = uniqueResults
+                .filter(result => {
+                    // Must have rating and reasonable review count
+                    if (!result.rating || !result.user_ratings_total || result.user_ratings_total < 5) {
+                        return false;
+                    }
+                    return true;
+                })
+                .sort((a, b) => {
+                    // Prioritize places with more reviews, then by rating (same as city view)
+                    const reviewDiff = b.user_ratings_total - a.user_ratings_total;
+                    if (Math.abs(reviewDiff) > 100) return reviewDiff;
+                    return b.rating - a.rating;
+                });
+
+            console.log(`Found ${filteredResults.length} hotels, displaying top results`);
+
+            // Store results
+            allHotels = filteredResults;
+
+            // Clear loading message and render results
+            const panel = document.getElementById('hotelListPanel');
+            panel.innerHTML = '';
+
+            if (filteredResults.length === 0) {
+                panel.innerHTML = '<p class="no-results-message">No hotels found in this city.</p>';
+                return;
+            }
+
+            // Render hotels (take top 20 initially, same pattern as city view)
+            const topResults = filteredResults.slice(0, 20);
+
+            topResults.forEach((hotel, index) => {
+                const item = createHotelItem(hotel);
+                panel.appendChild(item);
+                renderedHotelIds.add(hotel.place_id);
+            });
+
+            // Set up simple infinite scroll for remaining hotels if there are more
+            if (filteredResults.length > 20) {
+                setupSimpleInfiniteScroll();
+            }
+
+        } catch (error) {
+            console.error('Error fetching hotels:', error);
+            const panel = document.getElementById('hotelListPanel');
+            panel.innerHTML = '<p class="error-message">Error loading hotels. Please try again.</p>';
+        }
+    }
+
+    function setupSimpleInfiniteScroll() {
+        let currentIndex = 20; // We've already shown first 20
+
+        const handleScroll = () => {
+            if (loading) return;
+
+            const panel = document.getElementById('hotelListPanel');
+            if (panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 100) {
+                loadMoreHotelsSimple();
+            }
+        };
+
+        const loadMoreHotelsSimple = () => {
+            if (loading || currentIndex >= allHotels.length) return;
+
+            loading = true;
+
+            // Load next batch (10 at a time)
+            const nextBatch = allHotels.slice(currentIndex, currentIndex + 10);
+            const panel = document.getElementById('hotelListPanel');
+
+            nextBatch.forEach(hotel => {
+                if (!renderedHotelIds.has(hotel.place_id)) {
+                    const item = createHotelItem(hotel);
+                    panel.appendChild(item);
+                    renderedHotelIds.add(hotel.place_id);
+                }
+            });
+
+            currentIndex += 10;
+            loading = false;
+
+            console.log(`Loaded ${nextBatch.length} more hotels`);
+        };
+
+        document.getElementById('hotelListPanel').addEventListener('scroll', handleScroll);
+    }
+
+    function loadExistingResidence() {
         console.log(`Loading existing residence: ${existingHotelName} with ID: ${existingHotelId}`);
 
         service.getDetails({
@@ -307,131 +457,8 @@
             }
         });
     }
-    // Load multiple pages initially to get a good sorted list
-    function loadInitialHotels() {
-        const loadPromises = [];
-        let totalPagesToLoad = 3; // Load first 3 pages to get better sorting
-        let pagesLoaded = 0;
-        let tempToken = null;
 
-        function loadNextBatch() {
-            return new Promise((resolve) => {
-                const params = {
-                    bounds: cityViewport,
-                    type: 'lodging',
-                    strictBounds: true
-                };
-                if (tempToken) params.pageToken = tempToken;
-
-                service.nearbySearch(params, (results, status, pagination) => {
-                    if (status !== google.maps.places.PlacesServiceStatus.OK) {
-                        resolve();
-                        return;
-                    }
-
-                    // Filter out duplicates and add to allHotels
-                    const newUnique = results.filter(r =>
-                        !allHotels.some(existing => existing.place_id === r.place_id)
-                    );
-
-                    allHotels = allHotels.concat(newUnique);
-                    pagesLoaded++;
-
-                    if (pagination && pagination.hasNextPage && pagesLoaded < totalPagesToLoad) {
-                        tempToken = pagination.nextPage();
-                        // Small delay before next request
-                        setTimeout(() => {
-                            loadNextBatch().then(resolve);
-                        }, 1000);
-                    } else {
-                        nextPageToken = (pagination && pagination.hasNextPage) ? pagination.nextPage() : null;
-                        resolve();
-                    }
-                });
-            });
-        }
-
-        loadNextBatch().then(() => {
-            // Sort once after loading initial batches
-            allHotels.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0));
-            isInitialLoad = false;
-            renderAllHotels();
-        });
-    }
-
-    function loadHotelsPage(pageToken) {
-        loading = true;
-        const params = {
-            bounds: cityViewport,
-            type: 'lodging',
-            strictBounds: true
-        };
-        if (pageToken) params.pageToken = pageToken;
-
-        service.nearbySearch(params, (results, status, pagination) => {
-            loading = false;
-            if (status !== google.maps.places.PlacesServiceStatus.OK) return;
-
-            // filter out any result we've already added
-            const newUnique = results.filter(r =>
-                !allHotels.some(existing => existing.place_id === r.place_id)
-            );
-
-            if (newUnique.length > 0) {
-                // Instead of re-sorting everything, insert new hotels in their proper positions
-                newUnique.forEach(hotel => {
-                    const insertIndex = findInsertPosition(hotel);
-                    allHotels.splice(insertIndex, 0, hotel);
-                });
-
-                renderNewHotels(newUnique);
-            }
-
-            if (pagination && pagination.hasNextPage) {
-                nextPageToken = pagination.nextPage();
-            } else {
-                nextPageToken = null;
-            }
-        });
-    }
-
-    // Find the correct position to insert a new hotel to maintain sort order
-    function findInsertPosition(newHotel) {
-        const newReviews = newHotel.user_ratings_total || 0;
-
-        for (let i = 0; i < allHotels.length; i++) {
-            const existingReviews = allHotels[i].user_ratings_total || 0;
-            if (newReviews > existingReviews) {
-                return i;
-            }
-        }
-        return allHotels.length;
-    }
-
-    // Render only new hotels without disturbing existing ones
-    function renderNewHotels(newHotels) {
-        const panel = document.getElementById('hotelListPanel');
-
-        newHotels.forEach(place => {
-            if (renderedHotelIds.has(place.place_id)) return;
-
-            const insertIndex = allHotels.findIndex(h => h.place_id === place.place_id);
-            const item = createHotelItem(place);
-
-            // Insert at correct position
-            if (insertIndex === 0) {
-                panel.insertBefore(item, panel.firstChild);
-            } else if (insertIndex >= panel.children.length) {
-                panel.appendChild(item);
-            } else {
-                panel.insertBefore(item, panel.children[insertIndex]);
-            }
-
-            renderedHotelIds.add(place.place_id);
-        });
-    }
-
-    function renderAllHotels() {
+       function renderAllHotels() {
         const panel = document.getElementById('hotelListPanel');
         panel.innerHTML = '';
         renderedHotelIds.clear();
