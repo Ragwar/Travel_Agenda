@@ -10,23 +10,22 @@ using TravelAgenda.Models;
 
 namespace TravelAgenda.Controllers
 {
-    public class ScheduleController : Controller
+    public class UserGoogleTokensController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public ScheduleController(ApplicationDbContext context)
+        public UserGoogleTokensController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // GET: Schedules
+        // GET: UserGoogleTokens
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Schedules.Include(s => s.User);
-            return View(await applicationDbContext.ToListAsync());
+            return View(await _context.UserGoogleTokens.ToListAsync());
         }
 
-        // GET: Schedules/Details/5
+        // GET: UserGoogleTokens/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -34,42 +33,39 @@ namespace TravelAgenda.Controllers
                 return NotFound();
             }
 
-            var schedule = await _context.Schedules
-                .Include(s => s.User)
-                .FirstOrDefaultAsync(m => m.Schedule_Id == id);
-            if (schedule == null)
+            var userGoogleToken = await _context.UserGoogleTokens
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (userGoogleToken == null)
             {
                 return NotFound();
             }
 
-            return View(schedule);
+            return View(userGoogleToken);
         }
 
-        // GET: Schedules/Create
+        // GET: UserGoogleTokens/Create
         public IActionResult Create()
         {
-            ViewData["User_Id"] = new SelectList(_context.Users, "Id", "Id");
             return View();
         }
 
-        // POST: Schedules/Create
+        // POST: UserGoogleTokens/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Schedule_Id,Nr_Days,Start_Day,End_Day,Start_Month,End_Month,Start_Date,End_Date,User_Id")] Schedule schedule)
+        public async Task<IActionResult> Create([Bind("Id,UserId,AccessToken,RefreshToken,ExpiresAt,CreatedAt,UpdatedAt")] UserGoogleToken userGoogleToken)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(schedule);
+                _context.Add(userGoogleToken);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["User_Id"] = new SelectList(_context.Users, "Id", "Id", schedule.User_Id);
-            return View(schedule);
+            return View(userGoogleToken);
         }
 
-        // GET: Schedules/Edit/5
+        // GET: UserGoogleTokens/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -77,23 +73,22 @@ namespace TravelAgenda.Controllers
                 return NotFound();
             }
 
-            var schedule = await _context.Schedules.FindAsync(id);
-            if (schedule == null)
+            var userGoogleToken = await _context.UserGoogleTokens.FindAsync(id);
+            if (userGoogleToken == null)
             {
                 return NotFound();
             }
-            ViewData["User_Id"] = new SelectList(_context.Users, "Id", "Id", schedule.User_Id);
-            return View(schedule);
+            return View(userGoogleToken);
         }
 
-        // POST: Schedules/Edit/5
+        // POST: UserGoogleTokens/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Schedule_Id,Nr_Days,Start_Day,End_Day,Start_Month,End_Month,Start_Date,End_Date,User_Id")] Schedule schedule)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,AccessToken,RefreshToken,ExpiresAt,CreatedAt,UpdatedAt")] UserGoogleToken userGoogleToken)
         {
-            if (id != schedule.Schedule_Id)
+            if (id != userGoogleToken.Id)
             {
                 return NotFound();
             }
@@ -102,12 +97,12 @@ namespace TravelAgenda.Controllers
             {
                 try
                 {
-                    _context.Update(schedule);
+                    _context.Update(userGoogleToken);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ScheduleExists(schedule.Schedule_Id))
+                    if (!UserGoogleTokenExists(userGoogleToken.Id))
                     {
                         return NotFound();
                     }
@@ -118,11 +113,10 @@ namespace TravelAgenda.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["User_Id"] = new SelectList(_context.Users, "Id", "Id", schedule.User_Id);
-            return View(schedule);
+            return View(userGoogleToken);
         }
 
-        // GET: Schedules/Delete/5
+        // GET: UserGoogleTokens/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -130,35 +124,34 @@ namespace TravelAgenda.Controllers
                 return NotFound();
             }
 
-            var schedule = await _context.Schedules
-                .Include(s => s.User)
-                .FirstOrDefaultAsync(m => m.Schedule_Id == id);
-            if (schedule == null)
+            var userGoogleToken = await _context.UserGoogleTokens
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (userGoogleToken == null)
             {
                 return NotFound();
             }
 
-            return View(schedule);
+            return View(userGoogleToken);
         }
 
-        // POST: Schedules/Delete/5
+        // POST: UserGoogleTokens/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var schedule = await _context.Schedules.FindAsync(id);
-            if (schedule != null)
+            var userGoogleToken = await _context.UserGoogleTokens.FindAsync(id);
+            if (userGoogleToken != null)
             {
-                _context.Schedules.Remove(schedule);
+                _context.UserGoogleTokens.Remove(userGoogleToken);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ScheduleExists(int id)
+        private bool UserGoogleTokenExists(int id)
         {
-            return _context.Schedules.Any(e => e.Schedule_Id == id);
+            return _context.UserGoogleTokens.Any(e => e.Id == id);
         }
     }
 }

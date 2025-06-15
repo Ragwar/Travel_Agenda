@@ -71,13 +71,12 @@ body {
         background-repeat: no-repeat;
     }
 
-    /* All other pages - three-zone layout */
     body.other-page {
         background: white;
         position: relative;
     }
 
-        /* Left gradient background - blue to white */
+
         body.other-page::before {
             content: '';
             position: fixed;
@@ -85,45 +84,45 @@ body {
             left: 0;
             bottom: 0;
             z-index: -2;
-            /* Blue to white gradient from left to right */
+           
             background: linear-gradient(to right, #cce7ff 0%, #ffffff 100%);
-            /* Width from left edge to left edge of container */
+
             width: calc((100vw - 1200px) / 2);
             min-width: 0;
+            margin-right: 10px;
         }
 
-        /* Right gradient background - white to blue */
         body.other-page .right-background {
             position: fixed;
             top: 0;
             right: 0;
             bottom: 0;
             z-index: -2;
-            /* White to blue gradient from left to right */
-            background: linear-gradient(to right, #ffffff 0%, #cce7ff 100%); /* Width from right edge of container to right edge */
+           
+            background: linear-gradient(to right, #ffffff 0%, #cce7ff 100%); 
             width: calc((100vw - 1200px) / 2);
             min-width: 0;
+            margin-left:10px;
         }
 
-        /* Container area - white background, no side images interference */
+        
         body.other-page .container {
             position: relative;
             z-index: 1;
-            background: white;
+            background: transparent;
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 15px;
-            min-height: calc(100vh - 120px); /* Account for navbar */
+            min-height: calc(100vh - 120px);
         }
 
-        /* Ensure main content is properly positioned */
         body.other-page main {
             position: relative;
             z-index: 1;
             background: white;
         }
 
-        /* Progress flowchart container alignment */
+      
         body.other-page .flowchart-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -135,8 +134,7 @@ body {
 /* Responsive behavior */
 @media (max-width: 1240px) {
     /* When container approaches full width, hide side images */
-    body.other-page::before,
-    body.other-page .right-background {
+    body .other-page::before, body.other-page .right-background {
         display: none;
     }
 }

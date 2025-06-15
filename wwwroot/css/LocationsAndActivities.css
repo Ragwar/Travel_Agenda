@@ -11,8 +11,10 @@ div[style*="display: flex; justify-content: space-between"] {
 div[style*="width: 60%; padding-right: 20px"] {
     width: calc(100% - 370px) !important;
     padding-right: 0 !important;
+    padding-left: 10px !important; /* Add left padding for shadow space */
     min-width: 300px !important; /* Minimum width before wrapping */
     flex: 1 1 auto !important; /* Allow flexible growth and shrinking */
+    overflow: visible !important; /* Ensure shadows aren't clipped */
 }
 
 /* Calendar Container - responsive positioning */

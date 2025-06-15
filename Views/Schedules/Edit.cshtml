@@ -12,46 +12,86 @@
     <div class="col-md-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Schedule_Id" />
+            <input type="hidden" asp-for="ScheduleId" />
             <div class="form-group">
-                <label asp-for="Nr_Days" class="control-label"></label>
-                <input asp-for="Nr_Days" class="form-control" />
-                <span asp-validation-for="Nr_Days" class="text-danger"></span>
+                <label asp-for="ScheduleName" class="control-label"></label>
+                <input asp-for="ScheduleName" class="form-control" />
+                <span asp-validation-for="ScheduleName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Start_Day" class="control-label"></label>
-                <input asp-for="Start_Day" class="form-control" />
-                <span asp-validation-for="Start_Day" class="text-danger"></span>
+                <label asp-for="NrDays" class="control-label"></label>
+                <input asp-for="NrDays" class="form-control" />
+                <span asp-validation-for="NrDays" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="End_Day" class="control-label"></label>
-                <input asp-for="End_Day" class="form-control" />
-                <span asp-validation-for="End_Day" class="text-danger"></span>
+                <label asp-for="StartDay" class="control-label"></label>
+                <input asp-for="StartDay" class="form-control" />
+                <span asp-validation-for="StartDay" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Start_Month" class="control-label"></label>
-                <input asp-for="Start_Month" class="form-control" />
-                <span asp-validation-for="Start_Month" class="text-danger"></span>
+                <label asp-for="EndDay" class="control-label"></label>
+                <input asp-for="EndDay" class="form-control" />
+                <span asp-validation-for="EndDay" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="End_Month" class="control-label"></label>
-                <input asp-for="End_Month" class="form-control" />
-                <span asp-validation-for="End_Month" class="text-danger"></span>
+                <label asp-for="StartMonth" class="control-label"></label>
+                <input asp-for="StartMonth" class="form-control" />
+                <span asp-validation-for="StartMonth" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Start_Date" class="control-label"></label>
-                <input asp-for="Start_Date" class="form-control" />
-                <span asp-validation-for="Start_Date" class="text-danger"></span>
+                <label asp-for="EndMonth" class="control-label"></label>
+                <input asp-for="EndMonth" class="form-control" />
+                <span asp-validation-for="EndMonth" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="End_Date" class="control-label"></label>
-                <input asp-for="End_Date" class="form-control" />
-                <span asp-validation-for="End_Date" class="text-danger"></span>
+                <label asp-for="StartDate" class="control-label"></label>
+                <input asp-for="StartDate" class="form-control" />
+                <span asp-validation-for="StartDate" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="User_Id" class="control-label"></label>
-                <select asp-for="User_Id" class="form-control" asp-items="ViewBag.User_Id"></select>
-                <span asp-validation-for="User_Id" class="text-danger"></span>
+                <label asp-for="EndDate" class="control-label"></label>
+                <input asp-for="EndDate" class="form-control" />
+                <span asp-validation-for="EndDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserId" class="control-label"></label>
+                <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+                <span asp-validation-for="UserId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CityName" class="control-label"></label>
+                <input asp-for="CityName" class="form-control" />
+                <span asp-validation-for="CityName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PlaceId" class="control-label"></label>
+                <input asp-for="PlaceId" class="form-control" />
+                <span asp-validation-for="PlaceId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="HotelName" class="control-label"></label>
+                <input asp-for="HotelName" class="form-control" />
+                <span asp-validation-for="HotelName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="HotelId" class="control-label"></label>
+                <input asp-for="HotelId" class="form-control" />
+                <span asp-validation-for="HotelId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ResidenceLat" class="control-label"></label>
+                <input asp-for="ResidenceLat" class="form-control" />
+                <span asp-validation-for="ResidenceLat" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ResidenceLng" class="control-label"></label>
+                <input asp-for="ResidenceLng" class="form-control" />
+                <span asp-validation-for="ResidenceLng" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ResidenceAddress" class="control-label"></label>
+                <input asp-for="ResidenceAddress" class="form-control" />
+                <span asp-validation-for="ResidenceAddress" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
@@ -64,6 +104,3 @@
     <a asp-action="Index">Back to List</a>
 </div>
 
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}

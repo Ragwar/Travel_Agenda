@@ -1,9 +1,9 @@
 ﻿@{
     ViewData["Title"] = "Select Residence";
     var apiKey = ViewData["GoogleApiKey"];
-    var scheduleId = ViewBag.Schedule.Schedule_Id;
-    var cityPlaceId = ViewBag.Schedule.Place_Id;
-    var cityName = ViewBag.Schedule.City_Name;
+    var scheduleId = ViewBag.Schedule.ScheduleId;
+    var cityPlaceId = ViewBag.Schedule.PlaceId;
+    var cityName = ViewBag.Schedule.CityName;
 }
 
 <link rel="stylesheet" href="~/css/Residence.css" />
@@ -496,7 +496,7 @@
         fetch('/Home/SaveResidence', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ schedule_Id: scheduleId, hotel_Id: selectedHotel.place_id, hotel_Name: selectedHotel.name })
+            body: JSON.stringify({ scheduleId: scheduleId, hotelId: selectedHotel.placeid, hotelName: selectedHotel.name })
         }).then(r => r.ok
             ? window.location.href = `/Home/LocationsAndActivities?scheduleId=${scheduleId}`
             : alert('Save failed')
@@ -544,7 +544,7 @@
         fetch('/Home/SaveResidence', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ schedule_Id: scheduleId, hotel_Id: pid, hotel_Name: fn })
+            body: JSON.stringify({ scheduleId: scheduleId, hotelId: pid, hotelName: fn })
         }).then(r => r.ok
             ? window.location.href = `/Home/LocationsAndActivities?scheduleId=${scheduleId}`
             : showAddressError('Save failed.')

@@ -1,8 +1,8 @@
 ﻿@{
     ViewData["Title"] = "View Day";
     var schedule = ViewBag.Schedule as TravelAgenda.Models.Schedule;
-    var dayActivities = (ViewBag.DayActivities as IEnumerable<TravelAgenda.Models.Schedule_Activity>)?.ToList()
-                       ?? new List<TravelAgenda.Models.Schedule_Activity>();
+    var dayActivities = (ViewBag.DayActivities as IEnumerable<TravelAgenda.Models.ScheduleActivity>)?.ToList()
+                       ?? new List<TravelAgenda.Models.ScheduleActivity>();
     var selectedDate = ViewBag.SelectedDate as DateTime?;
     var apiKey = ViewData["GoogleApiKey"];
 }
@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="~/css/ViewDay.css" />
 
 <h1>
-    @schedule.City_Name - @selectedDate?.ToString("dddd, MMMM dd, yyyy")
+    @schedule.CityName - @selectedDate?.ToString("dddd, MMMM dd, yyyy")
 </h1>
 
 <!-- Main container: Left for activities, right for calendar -->
@@ -28,7 +28,7 @@
                     <a class="btn btn-primary"
                        asp-controller="Home"
                        asp-action="LocationsAndActivities"
-                       asp-route-scheduleId="@schedule.Schedule_Id">
+                       asp-route-scheduleId="@schedule.ScheduleId">
                         Add Activities
                     </a>
                 </div>
@@ -45,7 +45,7 @@
                             <div class="activity-info">
                                 <strong>@activity.Name</strong>
                                 <div class="activity-time">
-                                    ⏰ @activity.Start_Hour:@((activity.Start_Minute ?? 0).ToString("00")) - @activity.End_Hour:@((activity.End_Minute ?? 0).ToString("00"))
+                                    ⏰ @activity.StartHour:@((activity.StartMinute ?? 0).ToString("00")) - @activity.EndHour:@((activity.EndMinute ?? 0).ToString("00"))
                                 </div>
                                 <div class="activity-type">
                                     @if (!string.IsNullOrEmpty(activity.Type))
@@ -107,8 +107,8 @@
                     @* render this day's events *@
                     @foreach (var activity in dayActivities)
                     {
-                        var startTime = activity.Start_Hour + ((activity.Start_Minute ?? 0) / 60.0);
-                        var endTime = activity.End_Hour + ((activity.End_Minute ?? 0) / 60.0);
+                        var startTime = activity.StartHour + ((activity.StartMinute ?? 0) / 60.0);
+                        var endTime = activity.EndHour + ((activity.EndMinute ?? 0) / 60.0);
                         var top = startTime * 60;
                         var height = (endTime - startTime) * 60 - 2;
 
@@ -125,7 +125,7 @@
             <!-- Top row: Google Maps and Edit Activities side by side -->
             <div class="action-buttons-row">
                 @{
-                    var hotelName = schedule.Hotel_Name ?? string.Empty;
+                    var hotelName = schedule.HotelName ?? string.Empty;
                     var encodedHotel = Uri.EscapeDataString(hotelName);
                     var stops = dayActivities
                     .Where(a => a.Name != hotelName)
@@ -145,7 +145,7 @@
                 <a class="edit-activities-btn"
                    asp-controller="Home"
                    asp-action="LocationsAndActivities"
-                   asp-route-scheduleId="@schedule.Schedule_Id">
+                   asp-route-scheduleId="@schedule.ScheduleId">
                     Edit Activities
                 </a>
             </div>
@@ -154,7 +154,7 @@
             <a class="back-to-schedule-btn"
                asp-controller="Home"
                asp-action="ViewSchedule"
-               asp-route-id="@schedule.Schedule_Id">
+               asp-route-id="@schedule.ScheduleId">
                 Back to Full Schedule
             </a>
         </div>
@@ -514,24 +514,24 @@
         // Add place IDs to activity headers from the server data and preload details
         @foreach (var activity in dayActivities)
         {
-                if (!string.IsNullOrEmpty(activity.Place_Id))
+                if (!string.IsNullOrEmpty(activity.PlaceId))
                 {
                         <text>
                         // Use the activity index to get the correct activity item
-                        const activityItem@(activity.Schedule_Activity_Id) = activityItems[activityIndex];
-                        if (activityItem@(activity.Schedule_Activity_Id)) {
-                            const header@(activity.Schedule_Activity_Id) = activityItem@(activity.Schedule_Activity_Id).querySelector('.activity-header');
-                            const details@(activity.Schedule_Activity_Id) = activityItem@(activity.Schedule_Activity_Id).querySelector('.activity-details');
+                        const activityItem@(activity.ScheduleActivityId) = activityItems[activityIndex];
+                        if (activityItem@(activity.ScheduleActivityId)) {
+                            const header@(activity.ScheduleActivityId) = activityItem@(activity.ScheduleActivityId).querySelector('.activity-header');
+                            const details@(activity.ScheduleActivityId) = activityItem@(activity.ScheduleActivityId).querySelector('.activity-details');
 
-                            if (header@(activity.Schedule_Activity_Id)) {
-                                header@(activity.Schedule_Activity_Id).dataset.placeId = '@activity.Place_Id';
-                                header@(activity.Schedule_Activity_Id).dataset.activityId = '@activity.Schedule_Activity_Id';
+                            if (header@(activity.ScheduleActivityId)) {
+                                header@(activity.ScheduleActivityId).dataset.placeId = '@activity.PlaceId';
+                                header@(activity.ScheduleActivityId).dataset.activityId = '@activity.ScheduleActivityId';
 
-                                if (details@(activity.Schedule_Activity_Id)) {
+                                if (details@(activity.ScheduleActivityId)) {
                                     // Hide the details initially but start loading
-                                    details@(activity.Schedule_Activity_Id).style.display = 'none';
+                                    details@(activity.ScheduleActivityId).style.display = 'none';
                                     setTimeout(() => {
-                                        loadActivityDetails('@Html.Raw(Html.Encode(activity.Name))', '@activity.Place_Id', details@(activity.Schedule_Activity_Id), header@(activity.Schedule_Activity_Id));
+                                        loadActivityDetails('@Html.Raw(Html.Encode(activity.Name))', '@activity.PlaceId', details@(activity.ScheduleActivityId), header@(activity.ScheduleActivityId));
                                     }, activityIndex * 500); // Stagger the API calls based on position
                                 }
                             }
@@ -543,18 +543,18 @@
                 {
                         <text>
                         // Handle activities without place_id
-                        const activityItem@(activity.Schedule_Activity_Id) = activityItems[activityIndex];
-                        if (activityItem@(activity.Schedule_Activity_Id)) {
-                            const header@(activity.Schedule_Activity_Id) = activityItem@(activity.Schedule_Activity_Id).querySelector('.activity-header');
-                            const details@(activity.Schedule_Activity_Id) = activityItem@(activity.Schedule_Activity_Id).querySelector('.activity-details');
+                        const activityItem@(activity.ScheduleActivityId) = activityItems[activityIndex];
+                        if (activityItem@(activity.ScheduleActivityId)) {
+                            const header@(activity.ScheduleActivityId) = activityItem@(activity.ScheduleActivityId).querySelector('.activity-header');
+                            const details@(activity.ScheduleActivityId) = activityItem@(activity.ScheduleActivityId).querySelector('.activity-details');
 
-                            if (header@(activity.Schedule_Activity_Id)) {
-                                header@(activity.Schedule_Activity_Id).dataset.activityId = '@activity.Schedule_Activity_Id';
+                            if (header@(activity.ScheduleActivityId)) {
+                                header@(activity.ScheduleActivityId).dataset.activityId = '@activity.ScheduleActivityId';
                             }
 
-                            if (details@(activity.Schedule_Activity_Id)) {
-                                details@(activity.Schedule_Activity_Id).style.display = 'none';
-                                details@(activity.Schedule_Activity_Id).innerHTML = `
+                            if (details@(activity.ScheduleActivityId)) {
+                                details@(activity.ScheduleActivityId).style.display = 'none';
+                                details@(activity.ScheduleActivityId).innerHTML = `
                                     <div style="text-align: center; color: #999; padding: 20px;">
                                         <div style="font-size: 20px; margin-bottom: 10px;">ℹ️</div>
                                         <p><em>No additional details available for this activity.</em></p>

@@ -12,46 +12,94 @@
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nr_Days)
+            @Html.DisplayNameFor(model => model.ScheduleName)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nr_Days)
+            @Html.DisplayFor(model => model.ScheduleName)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Start_Day)
+            @Html.DisplayNameFor(model => model.NrDays)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Start_Day)
+            @Html.DisplayFor(model => model.NrDays)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.End_Day)
+            @Html.DisplayNameFor(model => model.StartDay)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.End_Day)
+            @Html.DisplayFor(model => model.StartDay)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Start_Month)
+            @Html.DisplayNameFor(model => model.EndDay)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Start_Month)
+            @Html.DisplayFor(model => model.EndDay)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.End_Month)
+            @Html.DisplayNameFor(model => model.StartMonth)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.End_Month)
+            @Html.DisplayFor(model => model.StartMonth)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Start_Date)
+            @Html.DisplayNameFor(model => model.EndMonth)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Start_Date)
+            @Html.DisplayFor(model => model.EndMonth)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.End_Date)
+            @Html.DisplayNameFor(model => model.StartDate)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.End_Date)
+            @Html.DisplayFor(model => model.StartDate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.EndDate)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.EndDate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CityName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CityName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PlaceId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PlaceId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.HotelName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.HotelName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.HotelId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.HotelId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.ResidenceLat)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.ResidenceLat)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.ResidenceLng)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.ResidenceLng)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.ResidenceAddress)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.ResidenceAddress)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.User)
@@ -62,7 +110,7 @@
     </dl>
     
     <form asp-action="Delete">
-        <input type="hidden" asp-for="Schedule_Id" />
+        <input type="hidden" asp-for="ScheduleId" />
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>
     </form>

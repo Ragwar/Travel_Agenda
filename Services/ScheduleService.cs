@@ -33,12 +33,12 @@ namespace TravelAgenda.Services
 
         public Schedule GetScheduleById(int id)
         {
-            return _repositoryWrapper.ScheduleRepository.FindByCondition(c => c.Schedule_Id == id).FirstOrDefault()!;
+            return _repositoryWrapper.ScheduleRepository.FindByCondition(c => c.ScheduleId == id).FirstOrDefault()!;
         }
 
         public List<Schedule> GetSchedulesByUserId(string id)
         {
-            return _repositoryWrapper.ScheduleRepository.FindByCondition(c => c.User_Id == id).ToList();
+            return _repositoryWrapper.ScheduleRepository.FindByCondition(c => c.UserId == id).ToList();
         }
 
         public List<Schedule> GetScheduleByName(string Name)

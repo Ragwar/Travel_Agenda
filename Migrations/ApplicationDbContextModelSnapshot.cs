@@ -226,111 +226,114 @@ namespace TravelAgenda.Migrations
 
             modelBuilder.Entity("TravelAgenda.Models.Schedule", b =>
                 {
-                    b.Property<int>("Schedule_Id")
+                    b.Property<int>("ScheduleId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Schedule_Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ScheduleId"));
 
-                    b.Property<string>("City_Name")
+                    b.Property<string>("CityName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("End_Date")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("End_Day")
+                    b.Property<int?>("EndDay")
                         .HasColumnType("int");
 
-                    b.Property<int?>("End_Month")
+                    b.Property<int?>("EndMonth")
                         .HasColumnType("int");
 
-                    b.Property<string>("Hotel_Id")
+                    b.Property<string>("HotelId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Hotel_Name")
+                    b.Property<string>("HotelName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("Nr_Days")
+                    b.Property<int?>("NrDays")
                         .HasColumnType("int");
 
-                    b.Property<string>("Place_Id")
+                    b.Property<string>("PlaceId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Residence_Address")
+                    b.Property<string>("ResidenceAddress")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("Residence_Lat")
+                    b.Property<double?>("ResidenceLat")
                         .HasColumnType("float");
 
-                    b.Property<double?>("Residence_Lng")
+                    b.Property<double?>("ResidenceLng")
                         .HasColumnType("float");
 
-                    b.Property<DateTime?>("Start_Date")
+                    b.Property<string>("ScheduleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("Start_Day")
+                    b.Property<int?>("StartDay")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Start_Month")
+                    b.Property<int?>("StartMonth")
                         .HasColumnType("int");
 
-                    b.Property<string>("User_Id")
+                    b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("Schedule_Id");
+                    b.HasKey("ScheduleId");
 
-                    b.HasIndex("User_Id");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Schedules");
                 });
 
-            modelBuilder.Entity("TravelAgenda.Models.Schedule_Activity", b =>
+            modelBuilder.Entity("TravelAgenda.Models.ScheduleActivity", b =>
                 {
-                    b.Property<int>("Schedule_Activity_Id")
+                    b.Property<int>("ScheduleActivityId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Schedule_Activity_Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ScheduleActivityId"));
 
-                    b.Property<string>("Add_Info")
+                    b.Property<string>("AddInfo")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("Available")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("End_Date")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("End_Hour")
+                    b.Property<int?>("EndHour")
                         .HasColumnType("int");
 
-                    b.Property<int?>("End_Minute")
+                    b.Property<int?>("EndMinute")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Place_Id")
+                    b.Property<string>("PlaceId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Schedule_Id")
+                    b.Property<int>("ScheduleId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("Start_Date")
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("Start_Hour")
+                    b.Property<int?>("StartHour")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Start_Minute")
+                    b.Property<int?>("StartMinute")
                         .HasColumnType("int");
 
                     b.Property<string>("Type")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Schedule_Activity_Id");
+                    b.HasKey("ScheduleActivityId");
 
-                    b.HasIndex("Schedule_Id");
+                    b.HasIndex("ScheduleId");
 
                     b.ToTable("Day_Activities");
                 });
@@ -371,21 +374,21 @@ namespace TravelAgenda.Migrations
 
             modelBuilder.Entity("TravelAgenda.Models.UserInfo", b =>
                 {
-                    b.Property<int>("UserInfo_Id")
+                    b.Property<int>("UserInfoId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserInfo_Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserInfoId"));
 
-                    b.Property<string>("User_Id")
+                    b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Username")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("UserInfo_Id");
+                    b.HasKey("UserInfoId");
 
-                    b.HasIndex("User_Id");
+                    b.HasIndex("UserId");
 
                     b.ToTable("UserInfo");
                 });
@@ -445,16 +448,16 @@ namespace TravelAgenda.Migrations
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("User_Id");
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TravelAgenda.Models.Schedule_Activity", b =>
+            modelBuilder.Entity("TravelAgenda.Models.ScheduleActivity", b =>
                 {
                     b.HasOne("TravelAgenda.Models.Schedule", "Schedule")
                         .WithMany()
-                        .HasForeignKey("Schedule_Id")
+                        .HasForeignKey("ScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -465,7 +468,7 @@ namespace TravelAgenda.Migrations
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("User_Id");
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });

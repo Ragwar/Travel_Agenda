@@ -1,12 +1,12 @@
 ﻿@{
     ViewData["Title"] = "View Schedule";
     var schedule = ViewBag.Schedule as TravelAgenda.Models.Schedule;
-    var activities = (ViewBag.Activities as IEnumerable<TravelAgenda.Models.Schedule_Activity>)?.ToList()
-                               ?? new List<TravelAgenda.Models.Schedule_Activity>();
+    var activities = (ViewBag.Activities as IEnumerable<TravelAgenda.Models.ScheduleActivity>)?.ToList()
+                               ?? new List<TravelAgenda.Models.ScheduleActivity>();
 
     // build date list
-    var startDate = schedule.Start_Date.Value.Date;
-    var daysCount = schedule.Nr_Days ?? 0;
+    var startDate = schedule.StartDate.Value.Date;
+    var daysCount = schedule.NrDays ?? 0;
     var dates = Enumerable.Range(0, daysCount)
                               .Select(i => startDate.AddDays(i))
                               .ToList();
@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="~/css/ViewSchedule.css" />
 <div class="header-section">
     <h1>
-        Your Trip: @schedule.City_Name - @startDate.ToString("MMMM dd, yyyy")
+        Your Trip: @schedule.CityName - @startDate.ToString("MMMM dd, yyyy")
         &ndash;
         @dates.Last().ToString("MMMM dd, yyyy")
     </h1>
@@ -22,11 +22,11 @@
         <a class="edit-schedule-btn"
            asp-controller="Home"
            asp-action="LocationsAndActivities"
-           asp-route-scheduleId="@schedule.Schedule_Id">
+           asp-route-scheduleId="@schedule.ScheduleId">
             Edit Schedule
         </a>
         <form asp-action="ExportToGoogleCalendar" asp-controller="Home" method="post" style="display: inline;">
-            <input type="hidden" name="scheduleId" value="@schedule.Schedule_Id" />
+            <input type="hidden" name="scheduleId" value="@schedule.ScheduleId" />
             <button type="submit" class="export-calendar-btn">
                 Export to Google Calendar
             </button>
@@ -55,13 +55,13 @@
     {
         // filter to just this date's activities
         var dayActs = activities
-        .Where(a => a.Start_Date.HasValue && a.Start_Date.Value.Date == date)
+        .Where(a => a.StartDate.HasValue && a.StartDate.Value.Date == date)
         .Select(a => new
         {
             a.Name,
-            Start = a.Start_Hour + ((a.Start_Minute ?? 0) / 60.0),
-            Duration = (a.End_Hour + ((a.End_Minute ?? 0) / 60.0))
-        - (a.Start_Hour + ((a.Start_Minute ?? 0) / 60.0))
+            Start = a.StartHour + ((a.StartMinute ?? 0) / 60.0),
+            Duration = (a.EndHour + ((a.EndMinute ?? 0) / 60.0))
+        - (a.StartHour + ((a.StartMinute ?? 0) / 60.0))
         })
         .OrderBy(e => e.Start)
         .ToList();
@@ -103,7 +103,7 @@
             @* Show buttons for this day *@
             <div class="day-buttons">
                 @{
-                    var hotelName = schedule.Hotel_Name ?? string.Empty;
+                    var hotelName = schedule.HotelName ?? string.Empty;
                     var encodedHotel = Uri.EscapeDataString(hotelName);
                     var stops = dayActs
                     .Where(e => e.Name != hotelName)
@@ -119,7 +119,7 @@
                 <a class="view-day-btn"
                    asp-controller="Home"
                    asp-action="ViewDay"
-                   asp-route-scheduleId="@schedule.Schedule_Id"
+                   asp-route-scheduleId="@schedule.ScheduleId"
                    asp-route-date="@date.ToString("yyyy-MM-dd")">
                     View Day Details
                 </a>

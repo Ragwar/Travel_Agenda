@@ -16,7 +16,7 @@ namespace TravelAgenda.Services
 {
 	public interface IGoogleCalendarService
 	{
-		Task<bool> CreateScheduleEvents(string userId, Schedule schedule, List<Schedule_Activity> activities);
+		Task<bool> CreateScheduleEvents(string userId, Schedule schedule, List<ScheduleActivity> activities);
 		Task<bool> HasValidGoogleTokenAsync(string userId);
 	}
 
@@ -48,7 +48,7 @@ namespace TravelAgenda.Services
 			return !string.IsNullOrEmpty(token);
 		}
 
-		public async Task<bool> CreateScheduleEvents(string userId, Schedule schedule, List<Schedule_Activity> activities)
+		public async Task<bool> CreateScheduleEvents(string userId, Schedule schedule, List<ScheduleActivity> activities)
 		{
 			try
 			{
@@ -96,8 +96,8 @@ namespace TravelAgenda.Services
 
 				// Group activities by date
 				var activitiesByDate = activities
-					.Where(a => a.Start_Date.HasValue)
-					.GroupBy(a => a.Start_Date.Value.Date)
+					.Where(a => a.StartDate.HasValue)
+					.GroupBy(a => a.StartDate.Value.Date)
 					.OrderBy(g => g.Key);
 
 				int successCount = 0;
@@ -106,7 +106,7 @@ namespace TravelAgenda.Services
 				// Create events for each activity
 				foreach (var dayActivities in activitiesByDate)
 				{
-					foreach (var activity in dayActivities.OrderBy(a => a.Start_Hour))
+					foreach (var activity in dayActivities.OrderBy(a => a.StartHour))
 					{
 						totalCount++;
 						var calendarEvent = CreateCalendarEvent(activity, schedule);
@@ -139,19 +139,19 @@ namespace TravelAgenda.Services
 			}
 		}
 
-		private Event CreateCalendarEvent(Schedule_Activity activity, Schedule schedule)
+		private Event CreateCalendarEvent(ScheduleActivity activity, Schedule schedule)
 		{
-			if (!activity.Start_Date.HasValue)
+			if (!activity.StartDate.HasValue)
 				return null;
 
 			try
 			{
 				// Create start and end DateTime objects
-				var startDate = activity.Start_Date.Value.Date;
-				var startDateTime = startDate.AddHours(activity.Start_Hour ?? 0).AddMinutes(activity.Start_Minute ?? 0);
+				var startDate = activity.StartDate.Value.Date;
+				var startDateTime = startDate.AddHours(activity.StartHour ?? 0).AddMinutes(activity.StartMinute ?? 0);
 
-				var endDateTime = startDate.AddHours(activity.End_Hour ?? activity.Start_Hour ?? 0)
-										  .AddMinutes(activity.End_Minute ?? activity.Start_Minute ?? 0);
+				var endDateTime = startDate.AddHours(activity.EndHour ?? activity.StartHour ?? 0)
+										  .AddMinutes(activity.EndMinute ?? activity.StartMinute ?? 0);
 
 				// If end time is before start time, assume it's the next day
 				if (endDateTime <= startDateTime)
@@ -163,8 +163,8 @@ namespace TravelAgenda.Services
 				{
 					Summary = activity.Name,
 					Description = $"Activity Type: {activity.Type}\n" +
-								  $"Trip: {schedule.City_Name}\n" +
-								  $"{(!string.IsNullOrEmpty(activity.Add_Info) ? $"Additional Info: {activity.Add_Info}" : "")}",
+								  $"Trip: {schedule.CityName}\n" +
+								  $"{(!string.IsNullOrEmpty(activity.AddInfo) ? $"Additional Info: {activity.AddInfo}" : "")}",
 					Start = new EventDateTime
 					{
 						DateTime = startDateTime,
@@ -178,13 +178,13 @@ namespace TravelAgenda.Services
 				};
 
 				// Add location if we have a Google Places ID
-				if (!string.IsNullOrEmpty(activity.Place_Id))
+				if (!string.IsNullOrEmpty(activity.PlaceId))
 				{
 					// The location will be the activity name which should include the address
 					calendarEvent.Location = activity.Name;
 
 					// Add a link to Google Maps in the description
-					calendarEvent.Description += $"\n\nView on Google Maps: https://www.google.com/maps/place/?q=place_id:{activity.Place_Id}";
+					calendarEvent.Description += $"\n\nView on Google Maps: https://www.google.com/maps/place/?q=place_id:{activity.PlaceId}";
 				}
 
 				// Set reminders (optional - 30 minutes before)

@@ -10,23 +10,23 @@ using TravelAgenda.Models;
 
 namespace TravelAgenda.Controllers
 {
-    public class Schedule_ActivityController : Controller
+    public class ScheduleActivityController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public Schedule_ActivityController(ApplicationDbContext context)
+        public ScheduleActivityController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // GET: Schedule_Activity
+        // GET: ScheduleActivity
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Day_Activities.Include(s => s.Schedule);
             return View(await applicationDbContext.ToListAsync());
         }
 
-        // GET: Schedule_Activity/Details/5
+        // GET: ScheduleActivity/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -34,42 +34,42 @@ namespace TravelAgenda.Controllers
                 return NotFound();
             }
 
-            var schedule_Activity = await _context.Day_Activities
+            var ScheduleActivity = await _context.Day_Activities
                 .Include(s => s.Schedule)
-                .FirstOrDefaultAsync(m => m.Schedule_Activity_Id == id);
-            if (schedule_Activity == null)
+                .FirstOrDefaultAsync(m => m.ScheduleActivityId == id);
+            if (ScheduleActivity == null)
             {
                 return NotFound();
             }
 
-            return View(schedule_Activity);
+            return View(ScheduleActivity);
         }
 
-        // GET: Schedule_Activity/Create
+        // GET: ScheduleActivity/Create
         public IActionResult Create()
         {
-            ViewData["Schedule_Id"] = new SelectList(_context.Schedules, "Schedule_Id", "Schedule_Id");
+            ViewData["ScheduleId"] = new SelectList(_context.Schedules, "ScheduleId", "ScheduleId");
             return View();
         }
 
-        // POST: Schedule_Activity/Create
+        // POST: ScheduleActivity/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Schedule_Activity_Id,Start_Hour,End_Hour,Start_Minute,End_Minute,Start_Date,End_Date,Add_Info,Name,Place_Id,Type,Available,Schedule_Id,Activity_Id")] Schedule_Activity schedule_Activity)
+        public async Task<IActionResult> Create([Bind("ScheduleActivityId,StartHour,EndHour,StartMinute,EndMinute,StartDate,EndDate,AddInfo,Name,PlaceId,Type,Available,ScheduleId")] ScheduleActivity ScheduleActivity)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(schedule_Activity);
+                _context.Add(ScheduleActivity);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Schedule_Id"] = new SelectList(_context.Schedules, "Schedule_Id", "Schedule_Id", schedule_Activity.Schedule_Id);
-            return View(schedule_Activity);
+            ViewData["ScheduleId"] = new SelectList(_context.Schedules, "ScheduleId", "ScheduleId", ScheduleActivity.ScheduleId);
+            return View(ScheduleActivity);
         }
 
-        // GET: Schedule_Activity/Edit/5
+        // GET: ScheduleActivity/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -77,24 +77,23 @@ namespace TravelAgenda.Controllers
                 return NotFound();
             }
 
-            var schedule_Activity = await _context.Day_Activities.FindAsync(id);
-            if (schedule_Activity == null)
+            var ScheduleActivity = await _context.Day_Activities.FindAsync(id);
+            if (ScheduleActivity == null)
             {
                 return NotFound();
             }
-
-            ViewData["Schedule_Id"] = new SelectList(_context.Schedules, "Schedule_Id", "Schedule_Id", schedule_Activity.Schedule_Id);
-            return View(schedule_Activity);
+            ViewData["ScheduleId"] = new SelectList(_context.Schedules, "ScheduleId", "ScheduleId", ScheduleActivity.ScheduleId);
+            return View(ScheduleActivity);
         }
 
-        // POST: Schedule_Activity/Edit/5
+        // POST: ScheduleActivity/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Schedule_Activity_Id,Start_Hour,End_Hour,Start_Minute,End_Minute,Start_Date,End_Date,Add_Info,Name,Place_Id,Type,Available,Schedule_Id,Activity_Id")] Schedule_Activity schedule_Activity)
+        public async Task<IActionResult> Edit(int id, [Bind("ScheduleActivityId,StartHour,EndHour,StartMinute,EndMinute,StartDate,EndDate,AddInfo,Name,PlaceId,Type,Available,ScheduleId")] ScheduleActivity ScheduleActivity)
         {
-            if (id != schedule_Activity.Schedule_Activity_Id)
+            if (id != ScheduleActivity.ScheduleActivityId)
             {
                 return NotFound();
             }
@@ -103,12 +102,12 @@ namespace TravelAgenda.Controllers
             {
                 try
                 {
-                    _context.Update(schedule_Activity);
+                    _context.Update(ScheduleActivity);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!Schedule_ActivityExists(schedule_Activity.Schedule_Activity_Id))
+                    if (!ScheduleActivityExists(ScheduleActivity.ScheduleActivityId))
                     {
                         return NotFound();
                     }
@@ -119,11 +118,11 @@ namespace TravelAgenda.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Schedule_Id"] = new SelectList(_context.Schedules, "Schedule_Id", "Schedule_Id", schedule_Activity.Schedule_Id);
-            return View(schedule_Activity);
+            ViewData["ScheduleId"] = new SelectList(_context.Schedules, "ScheduleId", "ScheduleId", ScheduleActivity.ScheduleId);
+            return View(ScheduleActivity);
         }
 
-        // GET: Schedule_Activity/Delete/5
+        // GET: ScheduleActivity/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -131,35 +130,35 @@ namespace TravelAgenda.Controllers
                 return NotFound();
             }
 
-            var schedule_Activity = await _context.Day_Activities
+            var ScheduleActivity = await _context.Day_Activities
                 .Include(s => s.Schedule)
-                .FirstOrDefaultAsync(m => m.Schedule_Activity_Id == id);
-            if (schedule_Activity == null)
+                .FirstOrDefaultAsync(m => m.ScheduleActivityId == id);
+            if (ScheduleActivity == null)
             {
                 return NotFound();
             }
 
-            return View(schedule_Activity);
+            return View(ScheduleActivity);
         }
 
-        // POST: Schedule_Activity/Delete/5
+        // POST: ScheduleActivity/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var schedule_Activity = await _context.Day_Activities.FindAsync(id);
-            if (schedule_Activity != null)
+            var ScheduleActivity = await _context.Day_Activities.FindAsync(id);
+            if (ScheduleActivity != null)
             {
-                _context.Day_Activities.Remove(schedule_Activity);
+                _context.Day_Activities.Remove(ScheduleActivity);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool Schedule_ActivityExists(int id)
+        private bool ScheduleActivityExists(int id)
         {
-            return _context.Day_Activities.Any(e => e.Schedule_Activity_Id == id);
+            return _context.Day_Activities.Any(e => e.ScheduleActivityId == id);
         }
     }
 }

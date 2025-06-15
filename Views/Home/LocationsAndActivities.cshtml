@@ -6,7 +6,7 @@
 @{
     // Razor Variables
     ViewData["Title"] = "Activities & Locations";
-    var schedule = ViewBag.Schedule; // Contains Start_Date and End_Date
+    var schedule = ViewBag.Schedule; // Contains StartDate and EndDate
     var cityName = ViewBag.CityName;
     var placeId = ViewBag.PlaceId;
     var apiKey = ViewBag.GoogleApiKey;
@@ -52,7 +52,7 @@
 
     // Serialize saved activities from the ViewBag.
     // Note: property names here should match your model: Start_Date, Start_Hour, Start_Minute, End_Hour, End_Minute, Name, Place_Id, Type, etc.
-    const schedule_Id = @ViewBag.Schedule.Schedule_Id;
+    const scheduleId = @ViewBag.Schedule.ScheduleId;
     savedActivities = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Locations ?? new List<object>()));
 
     // ======================================================
@@ -65,7 +65,7 @@
     const defaultScrollStart = 8; // 8AM is default top visible hour
     let contentLoadedFlags = {};
     const calendarHeaderEl = document.getElementById("calendarHeader");
-    const scheduleDate = "@(ViewBag.Schedule?.Start_Date?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))";
+    const scheduleDate = "@(ViewBag.Schedule?.StartDate?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))";
     calendarHeaderEl.textContent = "Schedule for " + scheduleDate;
     const calendarEl = document.getElementById("hourSlotsContainer");
     const hourSlotsContainer = document.getElementById("hourSlotsContainer");
@@ -78,11 +78,11 @@
     // Set current date from the schedule start date.
     let currentDate = new Date(scheduleDate);
     // End date from your schedule (should be set in ViewBag.Schedule)
-    const scheduleEndDate = new Date("@(ViewBag.Schedule?.End_Date?.ToString("yyyy-MM-dd"))");
+    const scheduleEndDate = new Date("@(ViewBag.Schedule?.EndDate?.ToString("yyyy-MM-dd"))");
 
     // Add this right after defining the schedule dates
     const isDefaultDate = scheduleDate.includes("0001-01-01") || 
-                         "@(ViewBag.Schedule?.End_Date?.ToString("yyyy-MM-dd"))".includes("0001-01-01");
+                         "@(ViewBag.Schedule?.EndDate?.ToString("yyyy-MM-dd"))".includes("0001-01-01");
 
     // Add near the top of the script where other global variables are defined
     let hasValidScheduleDates = false;
@@ -123,7 +123,7 @@
                 <div class="calendar-overlay-message">
                     <div class="overlay-icon">⏱️</div>
                     <p>Please select city break period to have access to the agenda</p>
-                    <a href="/Home/TimePeriod?scheduleId=${schedule_Id}" class="btn btn-primary">Select Period</a>
+                    <a href="/Home/TimePeriod?scheduleId=${scheduleId}" class="btn btn-primary">Select Period</a>
                 </div>
             `;
 
@@ -262,7 +262,7 @@
             removeBtn.addEventListener("click", function (e) {
                 e.stopPropagation();
 
-                const activityId = calendarEvent.schedule_Activity_Id;
+                const activityId = calendarEvent.scheduleActivityId;
                 if (!activityId) {
                     console.warn("Cannot delete an unsaved event.");
                     return;
@@ -387,7 +387,7 @@
             start: targetHour,
             duration: duration,
             placeId: locationId,
-            schedule_Activity_Id: 0
+            scheduleActivityId: 0
         };
         //events.push(calendarEvent);
         //renderEvents();
@@ -401,7 +401,7 @@
         // Use local date string for schedule. (Assumes currentDate holds the view date.)
         let scheduleDateIso = getLocalDateStr(currentDate);
         // Get schedule ID from Razor.
-        let scheduleId = @ViewBag.Schedule.Schedule_Id;
+        let scheduleId = @ViewBag.Schedule.ScheduleId;
 
         // Prepare the data using the event’s current properties.
         let startHourInt = Math.floor(calendarEvent.start);
@@ -411,17 +411,17 @@
         let endMinute = Math.round((end - endHourInt) * 60);
 
         const activityData = {
-            Schedule_Id: scheduleId,
+            ScheduleId: scheduleId,
             Name: calendarEvent.name,
-            Place_Id: calendarEvent.placeId,
+            PlaceId: calendarEvent.placeId,
             Type: calendarEvent.type,
-            Start_Hour: startHourInt,
-            End_Hour: endHourInt,
-            Start_Minute: startMinute,
-            End_Minute: endMinute,
-            Start_Date: scheduleDateIso,
-            End_Date: scheduleDateIso,
-            Add_Info: ""
+            StartHour: startHourInt,
+            EndHour: endHourInt,
+            StartMinute: startMinute,
+            EndMinute: endMinute,
+            StartDate: scheduleDateIso,
+            EndDate: scheduleDateIso,
+            AddInfo: ""
         };
 
         fetch('/Home/CreateScheduleActivity', {
@@ -431,9 +431,9 @@
         })
             .then(response => response.json())
             .then(data => {
-                // Assume the response contains the created activity record, including its Schedule_Activity_Id.
-                if (data && data.scheduleActivity && data.scheduleActivity.schedule_Activity_Id) {
-                    calendarEvent.schedule_Activity_Id = data.scheduleActivity.schedule_Activity_Id;
+                // Assume the response contains the created activity record, including its ScheduleActivity_Id.
+                if (data && data.scheduleActivity && data.scheduleActivity.scheduleActivityId) {
+                    calendarEvent.scheduleActivityId = data.scheduleActivity.scheduleActivityId;
                 }
 
                 console.log("Created schedule activity:", data);
@@ -448,12 +448,12 @@
 
     // Helper: Update an existing schedule activity in the database.
     function updateScheduleActivity(calendarEvent) {
-        if (!calendarEvent.schedule_Activity_Id) {
-            console.warn("No Schedule_Activity_Id defined for event, cannot update.");
+        if (!calendarEvent.scheduleActivityId) {
+            console.warn("No ScheduleActivityId defined for event, cannot update.");
             return;
         }
         let scheduleDateIso = getLocalDateStr(currentDate);
-        let scheduleId = @ViewBag.Schedule.Schedule_Id;
+        let scheduleId = @ViewBag.Schedule.ScheduleId;
 
         let startHourInt = Math.floor(calendarEvent.start);
         let startMinute = Math.round((calendarEvent.start - startHourInt) * 60);
@@ -462,18 +462,18 @@
         let endMinute = Math.round((end - endHourInt) * 60);
 
         const activityData = {
-            Schedule_Activity_Id: calendarEvent.schedule_Activity_Id,
-            Schedule_Id: scheduleId,
+            ScheduleActivityId: calendarEvent.scheduleActivityId,
+            ScheduleId: scheduleId,
             Name: calendarEvent.name,
-            Place_Id: calendarEvent.placeId,
+            PlaceId: calendarEvent.placeId,
             Type: calendarEvent.type,
-            Start_Hour: startHourInt,
-            End_Hour: endHourInt,
-            Start_Minute: startMinute,
-            End_Minute: endMinute,
-            Start_Date: scheduleDateIso,
-            End_Date: scheduleDateIso,
-            Add_Info: ""
+            StartHour: startHourInt,
+            EndHour: endHourInt,
+            StartMinute: startMinute,
+            EndMinute: endMinute,
+            StartDate: scheduleDateIso,
+            EndDate: scheduleDateIso,
+            AddInfo: ""
         };
 
         fetch('/Home/UpdateScheduleActivity', {
@@ -598,7 +598,7 @@
         // Get the current date as a local date string.
         const currentDateStr = getLocalDateStr(currentDate);
         console.log("Current date for rendering:", currentDateStr);
-        fetch(`/Home/GetScheduleActivities?id=${schedule_Id}`, {
+        fetch(`/Home/GetScheduleActivities?id=${scheduleId}`, {
             method: 'GET'
         })
             .then(response => {
@@ -608,18 +608,18 @@
                 return response.json();           // ← parse JSON
             })
             .then(data => {
-                // ‘data’ is now the array of Schedule_Activity from your controller
+                // ‘data’ is now the array of ScheduleActivity from your controller
                 savedActivities = data;
                 console.log("Loaded activities:", savedActivities);
                 // Loop through each saved activity.
                 savedActivities.forEach(activity => {
                     // Parse the activity's Start_Date as a local date and format it.
-                    let activityDateStr = getLocalDateStr(parseDateAsLocal(activity.start_Date));
+                    let activityDateStr = getLocalDateStr(parseDateAsLocal(activity.startDate));
                     console.log("Checking activity:", activity.name, "with date", activityDateStr);
 
                     if (activityDateStr === currentDateStr) {
-                        const startHour = activity.start_Hour + ((activity.start_Minute || 0) / 60);
-                        const endHour = activity.end_Hour + ((activity.end_Minute || 0) / 60);
+                        const startHour = activity.startHour + ((activity.startMinute || 0) / 60);
+                        const endHour = activity.endHour + ((activity.endMinute || 0) / 60);
                         const duration = endHour - startHour;
                         events.push({
                             name: activity.name,
@@ -627,7 +627,7 @@
                             start: startHour,
                             duration: duration,
                             placeId: activity.place_Id,
-                            schedule_Activity_Id: activity.schedule_Activity_Id
+                            scheduleActivityId: activity.scheduleActivityId
                         });
                     }
                 });
@@ -1054,7 +1054,6 @@
             pane.id = type;
             pane.style.cssText = `
                 min-height: 400px;
-                background: #f8f9fa;
                 border-radius: 8px;
             `;
 
@@ -2395,7 +2394,7 @@
 
 
         // Your hotel name from the Razor model
-        const hotelName = "@ViewBag.Schedule.Hotel_Name";
+        const hotelName = "@ViewBag.Schedule.HotelName";
         const encodedHotel = encodeURIComponent(hotelName);
 
         const waypoints = names

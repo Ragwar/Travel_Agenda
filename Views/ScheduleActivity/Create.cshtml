@@ -1,0 +1,84 @@
+﻿@model TravelAgenda.Models.ScheduleActivity
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>ScheduleActivity</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="StartHour" class="control-label"></label>
+                <input asp-for="StartHour" class="form-control" />
+                <span asp-validation-for="StartHour" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="EndHour" class="control-label"></label>
+                <input asp-for="EndHour" class="form-control" />
+                <span asp-validation-for="EndHour" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="StartMinute" class="control-label"></label>
+                <input asp-for="StartMinute" class="form-control" />
+                <span asp-validation-for="StartMinute" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="EndMinute" class="control-label"></label>
+                <input asp-for="EndMinute" class="form-control" />
+                <span asp-validation-for="EndMinute" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="StartDate" class="control-label"></label>
+                <input asp-for="StartDate" class="form-control" />
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="EndDate" class="control-label"></label>
+                <input asp-for="EndDate" class="form-control" />
+                <span asp-validation-for="EndDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AddInfo" class="control-label"></label>
+                <input asp-for="AddInfo" class="form-control" />
+                <span asp-validation-for="AddInfo" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PlaceId" class="control-label"></label>
+                <input asp-for="PlaceId" class="form-control" />
+                <span asp-validation-for="PlaceId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Type" class="control-label"></label>
+                <input asp-for="Type" class="form-control" />
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Available" class="control-label"></label>
+                <input asp-for="Available" class="form-control" />
+                <span asp-validation-for="Available" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ScheduleId" class="control-label"></label>
+                <select asp-for="ScheduleId" class ="form-control" asp-items="ViewBag.ScheduleId"></select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+

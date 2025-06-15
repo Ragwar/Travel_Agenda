@@ -1,4 +1,4 @@
-﻿@model IEnumerable<TravelAgenda.Models.Schedule_Activity>
+﻿@model IEnumerable<TravelAgenda.Models.ScheduleActivity>
 
 @{
     ViewData["Title"] = "Index";
@@ -13,31 +13,31 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Start_Hour)
+                @Html.DisplayNameFor(model => model.StartHour)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.End_Hour)
+                @Html.DisplayNameFor(model => model.EndHour)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Start_Minute)
+                @Html.DisplayNameFor(model => model.StartMinute)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.End_Minute)
+                @Html.DisplayNameFor(model => model.EndMinute)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Start_Date)
+                @Html.DisplayNameFor(model => model.StartDate)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.End_Date)
+                @Html.DisplayNameFor(model => model.EndDate)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Add_Info)
+                @Html.DisplayNameFor(model => model.AddInfo)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Name)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Place_Id)
+                @Html.DisplayNameFor(model => model.PlaceId)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Type)
@@ -48,7 +48,6 @@
             <th>
                 @Html.DisplayNameFor(model => model.Schedule)
             </th>
-
             <th></th>
         </tr>
     </thead>
@@ -56,31 +55,31 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Start_Hour)
+                @Html.DisplayFor(modelItem => item.StartHour)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.End_Hour)
+                @Html.DisplayFor(modelItem => item.EndHour)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Start_Minute)
+                @Html.DisplayFor(modelItem => item.StartMinute)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.End_Minute)
+                @Html.DisplayFor(modelItem => item.EndMinute)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Start_Date)
+                @Html.DisplayFor(modelItem => item.StartDate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.End_Date)
+                @Html.DisplayFor(modelItem => item.EndDate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Add_Info)
+                @Html.DisplayFor(modelItem => item.AddInfo)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Place_Id)
+                @Html.DisplayFor(modelItem => item.PlaceId)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Type)
@@ -89,12 +88,12 @@
                 @Html.DisplayFor(modelItem => item.Available)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Schedule.Schedule_Id)
+                @Html.DisplayFor(modelItem => item.Schedule.ScheduleId)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Schedule_Activity_Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Schedule_Activity_Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Schedule_Activity_Id">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.ScheduleActivityId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.ScheduleActivityId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.ScheduleActivityId">Delete</a>
             </td>
         </tr>
 }

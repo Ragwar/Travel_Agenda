@@ -10,23 +10,23 @@ using TravelAgenda.Models;
 
 namespace TravelAgenda.Controllers
 {
-    public class UserInfoController : Controller
+    public class SchedulesController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public UserInfoController(ApplicationDbContext context)
+        public SchedulesController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // GET: UserInfo
+        // GET: Schedules
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.UserInfo.Include(u => u.User);
+            var applicationDbContext = _context.Schedules.Include(s => s.User);
             return View(await applicationDbContext.ToListAsync());
         }
 
-        // GET: UserInfo/Details/5
+        // GET: Schedules/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -34,42 +34,42 @@ namespace TravelAgenda.Controllers
                 return NotFound();
             }
 
-            var userInfo = await _context.UserInfo
-                .Include(u => u.User)
-                .FirstOrDefaultAsync(m => m.UserInfo_Id == id);
-            if (userInfo == null)
+            var schedule = await _context.Schedules
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(m => m.ScheduleId == id);
+            if (schedule == null)
             {
                 return NotFound();
             }
 
-            return View(userInfo);
+            return View(schedule);
         }
 
-        // GET: UserInfo/Create
+        // GET: Schedules/Create
         public IActionResult Create()
         {
-            ViewData["User_Id"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
             return View();
         }
 
-        // POST: UserInfo/Create
+        // POST: Schedules/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("UserInfo_Id,Username,User_Id")] UserInfo userInfo)
+        public async Task<IActionResult> Create([Bind("ScheduleId,ScheduleName,NrDays,StartDay,EndDay,StartMonth,EndMonth,StartDate,EndDate,UserId,CityName,PlaceId,HotelName,HotelId,ResidenceLat,ResidenceLng,ResidenceAddress")] Schedule schedule)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(userInfo);
+                _context.Add(schedule);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["User_Id"] = new SelectList(_context.Users, "Id", "Id", userInfo.User_Id);
-            return View(userInfo);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", schedule.UserId);
+            return View(schedule);
         }
 
-        // GET: UserInfo/Edit/5
+        // GET: Schedules/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -77,23 +77,23 @@ namespace TravelAgenda.Controllers
                 return NotFound();
             }
 
-            var userInfo = await _context.UserInfo.FindAsync(id);
-            if (userInfo == null)
+            var schedule = await _context.Schedules.FindAsync(id);
+            if (schedule == null)
             {
                 return NotFound();
             }
-            ViewData["User_Id"] = new SelectList(_context.Users, "Id", "Id", userInfo.User_Id);
-            return View(userInfo);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", schedule.UserId);
+            return View(schedule);
         }
 
-        // POST: UserInfo/Edit/5
+        // POST: Schedules/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("UserInfo_Id,Username,User_Id")] UserInfo userInfo)
+        public async Task<IActionResult> Edit(int id, [Bind("ScheduleId,ScheduleName,NrDays,StartDay,EndDay,StartMonth,EndMonth,StartDate,EndDate,UserId,CityName,PlaceId,HotelName,HotelId,ResidenceLat,ResidenceLng,ResidenceAddress")] Schedule schedule)
         {
-            if (id != userInfo.UserInfo_Id)
+            if (id != schedule.ScheduleId)
             {
                 return NotFound();
             }
@@ -102,12 +102,12 @@ namespace TravelAgenda.Controllers
             {
                 try
                 {
-                    _context.Update(userInfo);
+                    _context.Update(schedule);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserInfoExists(userInfo.UserInfo_Id))
+                    if (!ScheduleExists(schedule.ScheduleId))
                     {
                         return NotFound();
                     }
@@ -118,11 +118,11 @@ namespace TravelAgenda.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["User_Id"] = new SelectList(_context.Users, "Id", "Id", userInfo.User_Id);
-            return View(userInfo);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", schedule.UserId);
+            return View(schedule);
         }
 
-        // GET: UserInfo/Delete/5
+        // GET: Schedules/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -130,35 +130,35 @@ namespace TravelAgenda.Controllers
                 return NotFound();
             }
 
-            var userInfo = await _context.UserInfo
-                .Include(u => u.User)
-                .FirstOrDefaultAsync(m => m.UserInfo_Id == id);
-            if (userInfo == null)
+            var schedule = await _context.Schedules
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(m => m.ScheduleId == id);
+            if (schedule == null)
             {
                 return NotFound();
             }
 
-            return View(userInfo);
+            return View(schedule);
         }
 
-        // POST: UserInfo/Delete/5
+        // POST: Schedules/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var userInfo = await _context.UserInfo.FindAsync(id);
-            if (userInfo != null)
+            var schedule = await _context.Schedules.FindAsync(id);
+            if (schedule != null)
             {
-                _context.UserInfo.Remove(userInfo);
+                _context.Schedules.Remove(schedule);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool UserInfoExists(int id)
+        private bool ScheduleExists(int id)
         {
-            return _context.UserInfo.Any(e => e.UserInfo_Id == id);
+            return _context.Schedules.Any(e => e.ScheduleId == id);
         }
     }
 }

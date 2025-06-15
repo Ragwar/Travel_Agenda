@@ -28,10 +28,10 @@
                     try 
                     {
                         // Handle both nullable DateTime? and DateTime scenarios
-                        if (Schedule?.Start_Date != null && Schedule?.End_Date != null)
+                        if (Schedule?.StartDate != null && Schedule?.EndDate != null)
                         {
-                            var startDate = Schedule.Start_Date;
-                            var endDate = Schedule.End_Date;
+                            var startDate = Schedule.StartDate;
+                            var endDate = Schedule.EndDate;
                             
                             // Check if it's a nullable DateTime with HasValue property
                             if (startDate.GetType() == typeof(DateTime?))
@@ -54,8 +54,8 @@
                 @if (hasValidDates)
                 {
 
-                        var startDate = Schedule.Start_Date;
-                        var endDate = Schedule.End_Date;
+                        var startDate = Schedule.StartDate;
+                        var endDate = Schedule.EndDate;
                         
                         // Handle both nullable and non-nullable DateTime
                         DateTime displayStartDate, displayEndDate;
@@ -233,10 +233,10 @@ else
 
                 try
                 {
-                        if (isExistingSchedule && Schedule?.Start_Date != null && Schedule?.End_Date != null)
+                        if (isExistingSchedule && Schedule?.StartDate != null && Schedule?.EndDate != null)
                         {
-                                var startDate = Schedule.Start_Date;
-                                var endDate = Schedule.End_Date;
+                                var startDate = Schedule.StartDate;
+                                var endDate = Schedule.EndDate;
 
                                 // Handle both nullable DateTime? and DateTime scenarios
                                 if (startDate.GetType() == typeof(DateTime?))

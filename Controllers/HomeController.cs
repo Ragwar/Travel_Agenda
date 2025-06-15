@@ -16,7 +16,7 @@ namespace TravelAgenda.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IScheduleService _scheduleService;
-        private readonly ISchedule_ActivityService _schedule_activityProductService;
+        private readonly IScheduleActivityService _ScheduleActivityProductService;
         private readonly IUserInfoService _userInfoService;
         private readonly IUserService _userService;
         private readonly string _googleApiKey;
@@ -26,7 +26,7 @@ namespace TravelAgenda.Controllers
 
 		public HomeController(ApplicationDbContext context, 
             IScheduleService scheduleService, 
-            ISchedule_ActivityService schedule_activityProductService, 
+            IScheduleActivityService ScheduleActivityProductService, 
             IUserInfoService userInfoService, 
             IUserService userService, 
             IConfiguration configuration, 
@@ -35,7 +35,7 @@ namespace TravelAgenda.Controllers
 
         {
             _scheduleService = scheduleService;
-            _schedule_activityProductService = schedule_activityProductService;
+            _ScheduleActivityProductService = ScheduleActivityProductService;
             _userInfoService = userInfoService;
             _userService = userService;
             _googleApiKey = configuration["GoogleAPI:ApiKey"];
@@ -104,12 +104,12 @@ namespace TravelAgenda.Controllers
             if (schedule == null) return NotFound();
 
             ViewBag.Schedule = schedule;
-            ViewData["CityName"] = schedule.City_Name;
-            ViewData["PlaceId"] = schedule.Place_Id;
+            ViewData["CityName"] = schedule.CityName;
+            ViewData["PlaceId"] = schedule.PlaceId;
             ViewData["GoogleApiKey"] = _googleApiKey;
 
-            var activities = _schedule_activityProductService
-                                 .GetSchedule_ActivityByScheduleId(scheduleId);
+            var activities = _ScheduleActivityProductService
+                                 .GetScheduleActivityByScheduleId(scheduleId);
             return View(activities);
         }
 
@@ -119,8 +119,8 @@ namespace TravelAgenda.Controllers
             if (schedule == null) return NotFound();
 
             ViewBag.Schedule = schedule;
-            ViewData["CityName"] = schedule.City_Name;
-            ViewData["PlaceId"] = schedule.Place_Id;
+            ViewData["CityName"] = schedule.CityName;
+            ViewData["PlaceId"] = schedule.PlaceId;
             ViewData["GoogleApiKey"] = _googleApiKey;
 
             return View();
@@ -129,7 +129,7 @@ namespace TravelAgenda.Controllers
 		public IActionResult ViewSchedule(int id)
 		{
 			var schedule = _scheduleService.GetScheduleById(id);
-			var activities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(schedule.Schedule_Id);
+			var activities = _ScheduleActivityProductService.GetScheduleActivityByScheduleId(schedule.ScheduleId);
 			ViewBag.Schedule = schedule;
 			ViewBag.Activities = activities;
 
@@ -149,12 +149,12 @@ namespace TravelAgenda.Controllers
 			}
 
 			// Get all activities for this schedule
-			var allActivities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(scheduleId);
+			var allActivities = _ScheduleActivityProductService.GetScheduleActivityByScheduleId(scheduleId);
 
 			// Filter activities for the selected date
 			var dayActivities = allActivities
-				.Where(a => a.Start_Date.HasValue && a.Start_Date.Value.Date == selectedDate.Date)
-				.OrderBy(a => a.Start_Hour + ((a.Start_Minute ?? 0) / 60.0))
+				.Where(a => a.StartDate.HasValue && a.StartDate.Value.Date == selectedDate.Date)
+				.OrderBy(a => a.StartHour + ((a.StartMinute ?? 0) / 60.0))
 				.ToList();
 
 			ViewBag.Schedule = schedule;
@@ -183,21 +183,21 @@ namespace TravelAgenda.Controllers
 			// Create a new empty Schedule entry
 			var schedule = new Schedule
 			{
-				User_Id = userId,
+				UserId = userId,
 				// Leave dates as null/default for now - they'll be updated later
-				Start_Date = default(DateTime),
-				End_Date = default(DateTime),
-				Nr_Days = 0,
-				Start_Day = 0,
-				End_Day = 0,
-				Start_Month = 0,
-				End_Month = 0
+				StartDate = default(DateTime),
+				EndDate = default(DateTime),
+				NrDays = 0,
+				StartDay = 0,
+				EndDay = 0,
+				StartMonth = 0,
+				EndMonth = 0
 			};
 
 			// Save to database via the ScheduleService
 			_scheduleService.CreateSchedule(schedule);
 
-			return Ok(new { scheduleId = schedule.Schedule_Id });
+			return Ok(new { scheduleId = schedule.ScheduleId });
 		}
 		public class UpdateDateRangeViewModel
 		{
@@ -240,7 +240,7 @@ namespace TravelAgenda.Controllers
 				}
 
 				// Verify the schedule belongs to the current user
-				if (schedule.User_Id != user.Id)
+				if (schedule.UserId != user.Id)
 				{
 					return Unauthorized("You don't have permission to modify this schedule.");
 				}
@@ -250,14 +250,14 @@ namespace TravelAgenda.Controllers
 				// Create new schedule with NULL dates initially
 				schedule = new Schedule
 				{
-					User_Id = user.Id,
-					Start_Date = null,    // Changed: Set to null instead of default(DateTime)
-					End_Date = null,      // Changed: Set to null instead of default(DateTime)
-					Nr_Days = null,       // Changed: Set to null instead of 0
-					Start_Day = null,     // Changed: Set to null instead of 0
-					End_Day = null,       // Changed: Set to null instead of 0
-					Start_Month = null,   // Changed: Set to null instead of 0
-					End_Month = null      // Changed: Set to null instead of 0
+					UserId = user.Id,
+					StartDate = null,    // Changed: Set to null instead of default(DateTime)
+					EndDate = null,      // Changed: Set to null instead of default(DateTime)
+					NrDays = null,       // Changed: Set to null instead of 0
+					StartDay = null,     // Changed: Set to null instead of 0
+					EndDay = null,       // Changed: Set to null instead of 0
+					StartMonth = null,   // Changed: Set to null instead of 0
+					EndMonth = null      // Changed: Set to null instead of 0
 				};
 
 				_scheduleService.CreateSchedule(schedule);
@@ -267,18 +267,18 @@ namespace TravelAgenda.Controllers
 			var nrDays = (endDate - startDate).Days + 1;
 
 			// Update the schedule with dates
-			schedule.Start_Date = startDate;
-			schedule.End_Date = endDate;
-			schedule.Nr_Days = nrDays;
-			schedule.Start_Day = startDate.Day;
-			schedule.End_Day = endDate.Day;
-			schedule.Start_Month = startDate.Month;
-			schedule.End_Month = endDate.Month;
+			schedule.StartDate = startDate;
+			schedule.EndDate = endDate;
+			schedule.NrDays = nrDays;
+			schedule.StartDay = startDate.Day;
+			schedule.EndDay = endDate.Day;
+			schedule.StartMonth = startDate.Month;
+			schedule.EndMonth = endDate.Month;
 
 			// Update the schedule in database
 			_scheduleService.UpdateSchedule(schedule);
 
-			return Ok(new { scheduleId = schedule.Schedule_Id });
+			return Ok(new { scheduleId = schedule.ScheduleId });
 		}
 
 		[HttpPost]
@@ -311,8 +311,8 @@ namespace TravelAgenda.Controllers
                 }
 
                 // Update the schedule with city data
-                schedule.City_Name = city.Name;
-                schedule.Place_Id = city.PlaceId;
+                schedule.CityName = city.Name;
+                schedule.	PlaceId = city.PlaceId;
 
                 _scheduleService.UpdateSchedule(schedule);
 
@@ -326,24 +326,23 @@ namespace TravelAgenda.Controllers
 
         public class ResidenceViewModel
         {
-            public int Schedule_Id { get; set; }
-            public string? Hotel_Id { get; set; }
-            public string? Hotel_Name { get; set; }
+            public int ScheduleId { get; set; }
+            public string? HotelId { get; set; }
+            public string? HotelName { get; set; }
         }
 
         [HttpPost]
         public IActionResult SaveResidence([FromBody] ResidenceViewModel vm)
         {
-            if (vm == null || vm.Schedule_Id <= 0)
+            if (vm == null || vm.ScheduleId <= 0)
                 return BadRequest("Invalid payload.");
 
-            var schedule = _scheduleService.GetScheduleById(vm.Schedule_Id);
+            var schedule = _scheduleService.GetScheduleById(vm.ScheduleId);
             if (schedule == null)
                 return NotFound("Schedule not found.");
 
-            // always write vm.Hotel_Id / vm.Hotel_Name
-            schedule.Hotel_Id = vm.Hotel_Id;
-            schedule.Hotel_Name = vm.Hotel_Name;
+            schedule.HotelId = vm.HotelId;
+            schedule.HotelName = vm.HotelName;
 
             _scheduleService.UpdateSchedule(schedule);
             return Ok();
@@ -365,12 +364,12 @@ namespace TravelAgenda.Controllers
         [HttpGet]
         public async Task<IActionResult> GetScheduleActivities(int id)
         {
-            List<Schedule_Activity> Emi = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(id);
+            List<ScheduleActivity> Emi = _ScheduleActivityProductService.GetScheduleActivityByScheduleId(id);
             return Ok(Emi);
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveScheduleActivities([FromBody] List<Schedule_Activity> activities)
+        public async Task<IActionResult> SaveScheduleActivities([FromBody] List<ScheduleActivity> activities)
         {
             if (activities == null || activities.Count == 0)
             {
@@ -379,46 +378,46 @@ namespace TravelAgenda.Controllers
 
             foreach (var activity in activities)
             {
-                var scheduleActivity = new Schedule_Activity
+                var scheduleActivity = new ScheduleActivity
                 {
-                    Schedule_Id = activity.Schedule_Id,
+                    ScheduleId = activity.ScheduleId,
                     Name = activity.Name,
-                    Place_Id = activity.Place_Id,
+                    PlaceId = activity.PlaceId,
                     Type = activity.Type,
-                    Start_Hour = activity.Start_Hour,
-                    End_Hour = activity.End_Hour,
-                    Start_Minute = activity.Start_Minute,
-                    End_Minute = activity.End_Minute,
-                    Start_Date = activity.Start_Date,
-                    End_Date = activity.End_Date,
-                    Add_Info = activity.Add_Info,
+                    StartHour = activity.StartHour,
+                    EndHour = activity.EndHour,
+                    StartMinute = activity.StartMinute,
+                    EndMinute = activity.EndMinute,
+                    StartDate = activity.StartDate,
+                    EndDate = activity.EndDate,
+                    AddInfo = activity.AddInfo,
                     Available = true
                 };
 
                 // Save using your schedule activity service
-                _schedule_activityProductService.CreateSchedule_Activity(scheduleActivity);
+                _ScheduleActivityProductService.CreateScheduleActivity(scheduleActivity);
             }
             return Ok(new { message = "Activities saved successfully." });
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateScheduleActivity([FromBody] Schedule_Activity activity)
+        public async Task<IActionResult> CreateScheduleActivity([FromBody] ScheduleActivity activity)
         {
             if (activity == null)
                 return BadRequest("Invalid activity.");
 
             // Save the new activity.
-            _schedule_activityProductService.CreateSchedule_Activity(activity);
+            _ScheduleActivityProductService.CreateScheduleActivity(activity);
             return Ok(new { scheduleActivity = activity });
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateScheduleActivity([FromBody] Schedule_Activity activity)
+        public async Task<IActionResult> UpdateScheduleActivity([FromBody] ScheduleActivity activity)
         {
-            if (activity == null || activity.Schedule_Activity_Id <= 0)
+            if (activity == null || activity.ScheduleActivityId <= 0)
                 return BadRequest("Invalid activity.");
 
-            _schedule_activityProductService.UpdateSchedule_Activity(activity);
+            _ScheduleActivityProductService.UpdateScheduleActivity(activity);
             return Ok(new { scheduleActivity = activity });
         }
 
@@ -427,9 +426,9 @@ namespace TravelAgenda.Controllers
         {
             if (id <= 0)
                 return BadRequest("Invalid activity ID.");
-            Schedule_Activity activity = _schedule_activityProductService.GetSchedule_ActivityById(id);
-            // Assuming your service has a DeleteSchedule_Activity(int id) method:
-            _schedule_activityProductService.DeleteSchedule_Activity(activity);
+            ScheduleActivity activity = _ScheduleActivityProductService.GetScheduleActivityById(id);
+            // Assuming your service has a DeleteScheduleActivity(int id) method:
+            _ScheduleActivityProductService.DeleteScheduleActivity(activity);
 
             return Ok(new { success = true });
         }
@@ -463,7 +462,7 @@ namespace TravelAgenda.Controllers
 				}
 
 				// Verify the schedule belongs to the current user
-				if (schedule.User_Id != user.Id)
+				if (schedule.UserId != user.Id)
 				{
 					return Unauthorized("You don't have permission to export this schedule.");
 				}
@@ -487,7 +486,7 @@ namespace TravelAgenda.Controllers
 				}
 
 				// Get all activities for this schedule
-				var activities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(scheduleId);
+				var activities = _ScheduleActivityProductService.GetScheduleActivityByScheduleId(scheduleId);
 
 				if (activities == null || activities.Count == 0)
 				{
@@ -546,7 +545,7 @@ namespace TravelAgenda.Controllers
 					return NotFound("Schedule not found.");
 				}
 
-				var activities = _schedule_activityProductService.GetSchedule_ActivityByScheduleId(scheduleId.Value);
+				var activities = _ScheduleActivityProductService.GetScheduleActivityByScheduleId(scheduleId.Value);
 
 				// Small delay to ensure tokens are properly saved
 				await Task.Delay(1000);

@@ -33,7 +33,7 @@ namespace TravelAgenda.Services
 
         public UserInfo GetUserInfoById(int id)
         {
-            return _repositoryWrapper.UserInfoRepository.FindByCondition(c => c.UserInfo_Id == id).FirstOrDefault()!;
+            return _repositoryWrapper.UserInfoRepository.FindByCondition(c => c.UserInfoId == id).FirstOrDefault()!;
         }
 
         public List<UserInfo> GetUserInfoByName(string Name)

@@ -15,15 +15,15 @@
         <div class="schedule-container">
             @foreach (Schedule schedule in ViewBag.Schedules)
             {
-                <div class="schedule-item" data-id="@schedule.Schedule_Id">
+                <div class="schedule-item" data-id="@schedule.ScheduleId">
                     <button class="delete-schedule-btn" title="Delete schedule">✕</button>
                     <div class="schedule-image">
                         @{
                             string mapUrl;
-                            if (!string.IsNullOrWhiteSpace(schedule.Hotel_Id) && !string.IsNullOrWhiteSpace(schedule.Hotel_Name))
+                            if (!string.IsNullOrWhiteSpace(schedule.HotelId) && !string.IsNullOrWhiteSpace(schedule.HotelName))
                             {
                                 // Center on the hotel name and drop a marker there
-                                var encodedName = Uri.EscapeDataString(schedule.Hotel_Name);
+                                var encodedName = Uri.EscapeDataString(schedule.HotelName);
                                 mapUrl =
                                 $"https://maps.googleapis.com/maps/api/staticmap?" +
                                 $"center={encodedName}" +
@@ -36,9 +36,9 @@
                             else
                             {
                                 // Fallback to city‐center
-                                var center = string.IsNullOrWhiteSpace(schedule.City_Name)
+                                var center = string.IsNullOrWhiteSpace(schedule.CityName)
                                 ? "0,0"
-                                : Uri.EscapeDataString(schedule.City_Name);
+                                : Uri.EscapeDataString(schedule.CityName);
                                 mapUrl =
                                 $"https://maps.googleapis.com/maps/api/staticmap?" +
                                 $"center={center}" +
@@ -49,24 +49,24 @@
                             }
                         }
                         <img src="@mapUrl"
-                             alt="@(string.IsNullOrWhiteSpace(schedule.Hotel_Name ?? schedule.City_Name)
+                             alt="@(string.IsNullOrWhiteSpace(schedule.HotelName ?? schedule.CityName)
                                                                                               ? "No location selected"
-                                                                                              : schedule.Hotel_Name ?? schedule.City_Name)" />
+                                                                                              : schedule.HotelName ?? schedule.CityName)" />
                                                                                                                                  </div>
                                                                                                                                  <div class="schedule-details">
                                                                                                                                      <h3>
-                            @(string.IsNullOrWhiteSpace(schedule.City_Name)
+                            @(string.IsNullOrWhiteSpace(schedule.CityName)
                                             ? ""
-                                            : schedule.City_Name)
+                                            : schedule.CityName)
             </h3>
 
                         @* Check if dates are missing or default *@
-            @if (schedule.Start_Date == default(DateTime) || schedule.End_Date == default(DateTime) || schedule.Nr_Days <= 0)
+            @if (schedule.StartDate == default(DateTime) || schedule.EndDate == default(DateTime) || schedule.NrDays <= 0)
                         {
                             <a class="btn btn-warning"
                                asp-controller="Home"
                                asp-action="TimePeriod"
-                               asp-route-scheduleId="@schedule.Schedule_Id">
+                               asp-route-scheduleId="@schedule.ScheduleId">
                                 Select Period
                             </a>
                         }
@@ -74,37 +74,37 @@
                         {
                             <p>
                                 <strong>Dates:</strong>
-                                @schedule.Start_Date?.ToString(dateFormat)
+                                @schedule.StartDate?.ToString(dateFormat)
                                 <span> to </span>
-                                @schedule.End_Date?.ToString(dateFormat)
+                                @schedule.EndDate?.ToString(dateFormat)
                             </p>
-                            <p><strong>Number of days:</strong> @schedule.Nr_Days</p>
+                            <p><strong>Number of days:</strong> @schedule.NrDays</p>
 
-                            @if (!string.IsNullOrWhiteSpace(schedule.Hotel_Name))
+                            @if (!string.IsNullOrWhiteSpace(schedule.HotelName))
                             {
-                                <p><strong>Residence:</strong> @schedule.Hotel_Name</p>
+                                <p><strong>Residence:</strong> @schedule.HotelName</p>
                             }
                         }
 
                         @* Check if city is missing *@
-                        @if (string.IsNullOrWhiteSpace(schedule.City_Name))
+                        @if (string.IsNullOrWhiteSpace(schedule.CityName))
                         {
                             <a class="btn btn-warning"
                                asp-controller="Home"
                                asp-action="City"
-                               asp-route-scheduleId="@schedule.Schedule_Id">
+                               asp-route-scheduleId="@schedule.ScheduleId">
                                 Select City
                             </a>
                         }
 
                         @* Only show View Schedule if city is present *@
-                        @if (!string.IsNullOrWhiteSpace(schedule.City_Name))
+                        @if (!string.IsNullOrWhiteSpace(schedule.CityName))
                         {
                             <a class="btn btn-primary"
                                asp-area=""
                                asp-controller="Home"
                                asp-action="ViewSchedule"
-                               asp-route-id="@schedule.Schedule_Id">
+                               asp-route-id="@schedule.ScheduleId">
                                 View Schedule
                             </a>
                         }

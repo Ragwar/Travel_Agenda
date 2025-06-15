@@ -2,17 +2,17 @@
 
 namespace TravelAgenda.Services.Interfaces
 {
-    public interface ISchedule_ActivityService
+    public interface IScheduleActivityService
     {
-        void CreateSchedule_Activity(Schedule_Activity Schedule_Activity);
+        void CreateScheduleActivity(ScheduleActivity ScheduleActivity);
 
-        void DeleteSchedule_Activity(Schedule_Activity Schedule_Activity);
+        void DeleteScheduleActivity(ScheduleActivity ScheduleActivity);
 
-        void UpdateSchedule_Activity(Schedule_Activity Schedule_Activity);
+        void UpdateScheduleActivity(ScheduleActivity ScheduleActivity);
 
-        Schedule_Activity GetSchedule_ActivityById(int id);
+        ScheduleActivity GetScheduleActivityById(int id);
 
-        List<Schedule_Activity> GetSchedule_Activities();
-        List<Schedule_Activity> GetSchedule_ActivityByScheduleId(int id);
+        List<ScheduleActivity> GetSchedule_Activities();
+        List<ScheduleActivity> GetScheduleActivityByScheduleId(int id);
     }
 }

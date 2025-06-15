@@ -13,25 +13,49 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Nr_Days)
+                @Html.DisplayNameFor(model => model.ScheduleName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Start_Day)
+                @Html.DisplayNameFor(model => model.NrDays)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.End_Day)
+                @Html.DisplayNameFor(model => model.StartDay)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Start_Month)
+                @Html.DisplayNameFor(model => model.EndDay)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.End_Month)
+                @Html.DisplayNameFor(model => model.StartMonth)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Start_Date)
+                @Html.DisplayNameFor(model => model.EndMonth)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.End_Date)
+                @Html.DisplayNameFor(model => model.StartDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EndDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CityName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PlaceId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.HotelName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.HotelId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ResidenceLat)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ResidenceLng)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ResidenceAddress)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.User)
@@ -43,33 +67,57 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Nr_Days)
+                @Html.DisplayFor(modelItem => item.ScheduleName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Start_Day)
+                @Html.DisplayFor(modelItem => item.NrDays)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.End_Day)
+                @Html.DisplayFor(modelItem => item.StartDay)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Start_Month)
+                @Html.DisplayFor(modelItem => item.EndDay)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.End_Month)
+                @Html.DisplayFor(modelItem => item.StartMonth)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Start_Date)
+                @Html.DisplayFor(modelItem => item.EndMonth)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.End_Date)
+                @Html.DisplayFor(modelItem => item.StartDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EndDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CityName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PlaceId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.HotelName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.HotelId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ResidenceLat)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ResidenceLng)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ResidenceAddress)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.User.Id)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Schedule_Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Schedule_Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Schedule_Id">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.ScheduleId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.ScheduleId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.ScheduleId">Delete</a>
             </td>
         </tr>
 }

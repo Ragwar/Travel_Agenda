@@ -11,7 +11,7 @@ namespace TravelAgenda.Data
         {
 
         }
-        public DbSet<Schedule_Activity>? Day_Activities { get; set; }
+        public DbSet<ScheduleActivity>? Day_Activities { get; set; }
         public DbSet<Schedule>? Schedules { get; set; }
 
         public DbSet<UserInfo>? UserInfo { get; set; }

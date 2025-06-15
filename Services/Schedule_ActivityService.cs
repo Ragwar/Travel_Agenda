@@ -4,51 +4,51 @@ using TravelAgenda.Services.Interfaces;
 
 namespace TravelAgenda.Services
 {
-    public class Schedule_ActivityService : ISchedule_ActivityService
+    public class ScheduleActivityService : IScheduleActivityService
     {
         private readonly IRepositoryWrapper _repositoryWrapper;
 
-        public Schedule_ActivityService(IRepositoryWrapper repositoryWrapper)
+        public ScheduleActivityService(IRepositoryWrapper repositoryWrapper)
         {
             _repositoryWrapper = repositoryWrapper;
         }
 
-        public void CreateSchedule_Activity(Schedule_Activity Schedule_Activity)
+        public void CreateScheduleActivity(ScheduleActivity ScheduleActivity)
         {
-            _repositoryWrapper.Schedule_ActivityRepository.Create(Schedule_Activity);
+            _repositoryWrapper.ScheduleActivityRepository.Create(ScheduleActivity);
             _repositoryWrapper.Save();
         }
 
-        public void DeleteSchedule_Activity(Schedule_Activity Schedule_Activity)
+        public void DeleteScheduleActivity(ScheduleActivity ScheduleActivity)
         {
-            _repositoryWrapper.Schedule_ActivityRepository.Delete(Schedule_Activity);
+            _repositoryWrapper.ScheduleActivityRepository.Delete(ScheduleActivity);
             _repositoryWrapper.Save();
         }
 
-        public void UpdateSchedule_Activity(Schedule_Activity Schedule_Activity)
+        public void UpdateScheduleActivity(ScheduleActivity ScheduleActivity)
         {
-            _repositoryWrapper.Schedule_ActivityRepository.Update(Schedule_Activity);
+            _repositoryWrapper.ScheduleActivityRepository.Update(ScheduleActivity);
             _repositoryWrapper.Save();
         }
 
-        public Schedule_Activity GetSchedule_ActivityById(int id)
+        public ScheduleActivity GetScheduleActivityById(int id)
         {
-            return _repositoryWrapper.Schedule_ActivityRepository.FindByCondition(c => c.Schedule_Activity_Id == id).FirstOrDefault()!;
+            return _repositoryWrapper.ScheduleActivityRepository.FindByCondition(c => c.ScheduleActivityId == id).FirstOrDefault()!;
         }
 
-        public List<Schedule_Activity> GetSchedule_ActivityByName(string Name)
+        public List<ScheduleActivity> GetScheduleActivityByName(string Name)
         {
-            return _repositoryWrapper.Schedule_ActivityRepository.FindAll().ToList();//nu e functia buna, trebuie facuta
+            return _repositoryWrapper.ScheduleActivityRepository.FindAll().ToList();//nu e functia buna, trebuie facuta
         }
 
-        public List<Schedule_Activity> GetSchedule_Activities()
+        public List<ScheduleActivity> GetSchedule_Activities()
         {
-            return _repositoryWrapper.Schedule_ActivityRepository.FindAll().ToList();
+            return _repositoryWrapper.ScheduleActivityRepository.FindAll().ToList();
         }
         
-        public List<Schedule_Activity> GetSchedule_ActivityByScheduleId(int id)
+        public List<ScheduleActivity> GetScheduleActivityByScheduleId(int id)
         {
-            return _repositoryWrapper.Schedule_ActivityRepository.FindByCondition(c => c.Schedule_Id == id).ToList();
+            return _repositoryWrapper.ScheduleActivityRepository.FindByCondition(c => c.ScheduleId == id).ToList();
         }
 
     }

@@ -102,8 +102,8 @@ builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IUserInfoService, UserInfoService>();
 builder.Services.AddScoped<IUserInfoRepository, UserInfoRepository>();
 
-builder.Services.AddScoped<ISchedule_ActivityService, Schedule_ActivityService>();
-builder.Services.AddScoped<ISchedule_ActivityRepository, Schedule_ActivityRepository>();
+builder.Services.AddScoped<IScheduleActivityService, ScheduleActivityService>();
+builder.Services.AddScoped<IScheduleActivityRepository, ScheduleActivityRepository>();
 builder.Services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
 
 

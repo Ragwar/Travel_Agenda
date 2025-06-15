@@ -7,11 +7,11 @@ namespace TravelAgenda.Models
     public class UserInfo
     {
         [Key]
-        public int UserInfo_Id { get; set; }
+        public int UserInfoId { get; set; }
         public string? Username { get; set; }
-        public string? User_Id { get; set; }
+        public string? UserId { get; set; }
 
-        [ForeignKey("User_Id")]
+        [ForeignKey("UserId")]
         public IdentityUser? User { get; set; }
 
     }

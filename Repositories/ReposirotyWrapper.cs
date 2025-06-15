@@ -44,17 +44,17 @@ namespace TravelAgenda.Repositories
             }
         }
 
-        //Schedule_Activity
-        private ISchedule_ActivityRepository _Schedule_ActivityRepository;
-        public ISchedule_ActivityRepository Schedule_ActivityRepository
+        //ScheduleActivity
+        private IScheduleActivityRepository _ScheduleActivityRepository;
+        public IScheduleActivityRepository ScheduleActivityRepository
         {
             get
             {
-                if (_Schedule_ActivityRepository == null)
+                if (_ScheduleActivityRepository == null)
                 {
-                    _Schedule_ActivityRepository = new Schedule_ActivityRepository(_applicationDbContext);
+                    _ScheduleActivityRepository = new ScheduleActivityRepository(_applicationDbContext);
                 }
-                return _Schedule_ActivityRepository;
+                return _ScheduleActivityRepository;
             }
         }
 
