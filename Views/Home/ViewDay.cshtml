@@ -109,7 +109,8 @@
                     {
                         var startTime = activity.StartHour + ((activity.StartMinute ?? 0) / 60.0);
                         var endTime = activity.EndHour + ((activity.EndMinute ?? 0) / 60.0);
-                        var top = startTime * 60;
+
+                        var top = (startTime - 1) * 60;
                         var height = (endTime - startTime) * 60 - 2;
 
                         <div class="event" style="top: @(top)px; height: @(height)px;">

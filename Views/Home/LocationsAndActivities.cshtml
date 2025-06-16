@@ -2012,7 +2012,7 @@
     // ===================================================
     // CREATE ENHANCED SEARCH RESULT ITEM
     // ===================================================
-    function createSearchResultItem(place, index, targetPane, svc) {
+        function createSearchResultItem(place, index, targetPane, svc) {
         const item = document.createElement("div");
         item.className = "search-result-item";
         item.style.cssText = `
@@ -2051,7 +2051,7 @@
             e.dataTransfer.effectAllowed = "copy";
             e.dataTransfer.setData("text/plain", "");
             e.dataTransfer.setData("application/json",
-                JSON.stringify({ name: place.name, placeId: place.place_id }));
+                JSON.stringify({ name: place.name, placeId: place.placeId })); // Fixed: use placeId not place_id
 
             // Determine type based on place types for drag behavior
             const placeTypes = place.types || [];
@@ -2077,9 +2077,14 @@
         const infoDiv = document.createElement("div");
         infoDiv.style.cssText = "flex: 1; min-width: 0;";
 
-        const priceSymbols = place.price_level && place.price_level > 0
-            ? "$".repeat(place.price_level)
-            : (place.price_level === 0 ? "Free" : "");
+        // Fixed: Use camelCase property names to match the controller response
+        const rating = place.rating || 0;
+        const userRatingsTotal = place.userRatingsTotal || 0; // Fixed: camelCase
+        const priceLevel = place.priceLevel; // Fixed: camelCase
+
+        const priceSymbols = priceLevel && priceLevel > 0
+            ? "$".repeat(priceLevel)
+            : (priceLevel === 0 ? "Free" : "");
 
         const priceDisplay = priceSymbols ? `
             <div style="display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;">
@@ -2087,18 +2092,17 @@
             </div>
         ` : '';
 
-
         infoDiv.innerHTML = `
             <div style="margin-bottom: 8px;">
                 <strong style="font-size: 18px; color: #333; display: block; margin-bottom: 4px;">${place.name}</strong>
                 <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                    <span style="color: #ffc107; font-weight: 500;">⭐ ${place.rating.toFixed(1)}</span>
-                    <span style="color: #666; font-size: 14px;">(${place.user_ratings_total.toLocaleString()} reviews)</span>
+                    <span style="color: #ffc107; font-weight: 500;">⭐ ${rating.toFixed(1)}</span>
+                    <span style="color: #666; font-size: 14px;">(${userRatingsTotal.toLocaleString()} reviews)</span>
                     ${priceDisplay}
                 </div>
             </div>
             <div style="color: #999; font-size: 14px;">
-                📍 ${place.vicinity || place.formatted_address || 'Location available'}
+                📍 ${place.vicinity || place.formattedAddress || 'Location available'}
             </div>
         `;
 
@@ -2176,7 +2180,8 @@
                 scheduleType = "shopping_mall";
             }
 
-            addEvent(place.name, scheduleType, targetHour, place.place_id);
+            // Fixed: Use camelCase placeId to match controller response
+            addEvent(place.name, scheduleType, targetHour, place.placeId);
 
             // Visual feedback
             addBtn.innerHTML = "✓";
@@ -2192,13 +2197,13 @@
 
         // Load image using the fast image loader
         const photoUrl = place.photos && place.photos.length > 0
-            ? getOptimizedPhotoUrl(place.photos[0], 100)
+            ? place.photos[0].photoUrl // Fixed: use camelCase photoUrl
             : null;
 
         imageLoader.addToQueue(
             photoUrl,
             place.name,
-            place.geometry.location,
+            place.location, // Fixed: use camelCase location
             imageContainer,
             100
         );
@@ -2210,10 +2215,28 @@
             }
         }, 3000);
 
-        // Fetch full details (reuse the same function)
-        loadPlaceDetails(place, details, svc);
+        // For search results, we need to create a mock place object for loadPlaceDetails
+        // since it expects the old format
+        const mockPlace = {
+            place_id: place.placeId,
+            name: place.name,
+            rating: place.rating,
+            user_ratings_total: place.userRatingsTotal,
+            price_level: place.priceLevel,
+            types: place.types,
+            vicinity: place.vicinity,
+            formatted_address: place.formattedAddress
+        };
+
+        // Fetch full details using the mock object
+        if (svc) {
+            loadPlaceDetails(mockPlace, details, svc);
+        } else {
+            // If no service provided, use the service endpoint
+            loadPlaceDetailsViaService(place, details);
+        }
     }
-        // toggle details helper
+    // toggle details helper
     window.toggleDetails = function (header) {
         document.querySelectorAll(".activity-details").forEach(d => { if (d !== header.nextSibling) d.style.display = "none"; });
         const det = header.nextSibling;
