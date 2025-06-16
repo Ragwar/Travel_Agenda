@@ -13,11 +13,11 @@
 }
 <link rel="stylesheet" href="~/css/ViewSchedule.css" />
 <div class="header-section">
-    <h1>
+    <h3 style="color:#007bff">
         Your Trip: @schedule.CityName - @startDate.ToString("MMMM dd, yyyy")
         &ndash;
         @dates.Last().ToString("MMMM dd, yyyy")
-    </h1>
+    </h3>
     <div class="header-buttons">
         <a class="edit-schedule-btn"
            asp-controller="Home"
@@ -60,8 +60,7 @@
         {
             a.Name,
             Start = a.StartHour + ((a.StartMinute ?? 0) / 60.0),
-            Duration = (a.EndHour + ((a.EndMinute ?? 0) / 60.0))
-        - (a.StartHour + ((a.StartMinute ?? 0) / 60.0))
+            Duration = (a.EndHour + ((a.EndMinute ?? 0) / 60.0)) - (a.StartHour + ((a.StartMinute ?? 0) / 60.0))
         })
         .OrderBy(e => e.Start)
         .ToList();
@@ -89,8 +88,8 @@
                         @* render only this day's events *@
                         @foreach (var ev in dayActs)
                         {
-                            var top = ev.Start * 60;
-                            var height = ev.Duration * 60 - 2;  // subtract 2px for borders
+                            var top = (ev.Start - 1) * 60;
+                            var height = ev.Duration * 60 - 2;
 
                             <div class="event" style="top: @(top)px; height: @(height)px;">
                                 <div class="content">@ev.Name</div>

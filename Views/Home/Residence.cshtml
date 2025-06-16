@@ -10,7 +10,6 @@
 @await Html.PartialAsync("_ProgressFlowChart")
 <div class="container mt-4">
 
-    
     <input type="hidden" id="scheduleId" value="@scheduleId" />
 
     <ul class="nav nav-tabs">
@@ -34,7 +33,6 @@
                 <div class="hotel-map-panel">
                     <button id="selectHotelBtn" class="btn btn-primary" disabled>Select Hotel</button>
                     <div id="map"></div>
-
                 </div>
             </div>
         </div>
@@ -58,21 +56,19 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=@apiKey&libraries=places"></script>
 <script>
     window.currentProgressStep = 'residence';
-        const existingHotelName = '@Html.Raw(ViewBag.Schedule?.HotelName ?? "")';
+    const existingHotelName = '@Html.Raw(ViewBag.Schedule?.HotelName ?? "")';
     const existingHotelId = '@Html.Raw(ViewBag.Schedule?.HotelId ?? "")';
-    let map, service, addrMap, geocoder, addressMarker, geocodedResult;
+    let map, placesService, addrMap, geocoder, addressMarker, geocodedResult;
     let selectedHotel = null;
     const scheduleId = document.getElementById('scheduleId').value;
     const CITY_PLACE_ID = "@cityPlaceId";
     const CITY_NAME = "@cityName";
     const googleApiKey = "@apiKey";
 
-    // infinite scroll state
-    let nextPageToken = null;
-    let loading = false;
+    // Hotel data storage
     let allHotels = [];
-    let isInitialLoad = true;
-    let renderedHotelIds = new Set(); // Track which hotels have been rendered
+    let renderedHotelIds = new Set();
+    let loading = false;
 
     // Fast image loader with Google Maps Static API fallback (same as city view)
     class FastImageLoader {
@@ -154,8 +150,22 @@
                 return;
             }
 
-            const lat = placeLocation.lat();
-            const lng = placeLocation.lng();
+            // Handle both Google Maps LatLng objects and plain objects
+            let lat, lng;
+
+            if (typeof placeLocation.lat === 'function') {
+                // Google Maps LatLng object
+                lat = placeLocation.lat();
+                lng = placeLocation.lng();
+            } else if (placeLocation.lat !== undefined && placeLocation.lng !== undefined) {
+                // Plain object with lat/lng properties
+                lat = placeLocation.lat;
+                lng = placeLocation.lng;
+            } else {
+                // Invalid location object
+                this.createFallbackImage(placeName, container);
+                return;
+            }
 
             const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
                 `center=${lat},${lng}&` +
@@ -188,21 +198,21 @@
 
         createFallbackImage(placeName, container) {
             container.innerHTML = `
-                                <div style="
-                                    width: 80px;
-                                    height: 80px;
-                                    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-                                    border-radius: 8px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    color: white;
-                                    font-size: 20px;
-                                    border: 2px solid #0056b3;
-                                ">
-                                    🏨
-                                </div>
-                            `;
+                <div style="
+                    width: 80px;
+                    height: 80px;
+                    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 20px;
+                    border: 2px solid #0056b3;
+                ">
+                    🏨
+                </div>
+            `;
         }
 
         delay(ms) {
@@ -215,216 +225,113 @@
     function createImageContainer(placeName) {
         const container = document.createElement("div");
         container.className = "hotel-image-container";
-
-        container.innerHTML = `
-                            <div class="loading-placeholder">
-                                ⏳
-                            </div>
-                        `;
-
+        container.innerHTML = `<div class="loading-placeholder">⏳</div>`;
         return container;
     }
 
-    function getOptimizedPhotoUrl(photo) {
-        if (!photo) return null;
-
-        try {
-            return photo.getUrl({
-                maxWidth: 80,
-                maxHeight: 80
-            });
-        } catch (error) {
-            console.error('Error getting photo URL:', error);
-            return null;
-        }
-    }
-
     function initMap() {
-    geocoder = new google.maps.Geocoder();
-    service = new google.maps.places.PlacesService(document.createElement('div'));
+        geocoder = new google.maps.Geocoder();
 
-    service.getDetails({ placeId: CITY_PLACE_ID, fields: ['geometry'] }, (city, st) => {
-        if (st !== google.maps.places.PlacesServiceStatus.OK) return;
-        cityViewport = city.geometry.viewport;  // save viewport
-        const center = city.geometry.location;
+        // Get city details to initialize maps
+        const tempService = new google.maps.places.PlacesService(document.createElement('div'));
+        tempService.getDetails({ placeId: CITY_PLACE_ID, fields: ['geometry'] }, (city, status) => {
+            if (status !== google.maps.places.PlacesServiceStatus.OK) return;
 
-        map = new google.maps.Map(document.getElementById('map'), { center, zoom: 13 });
-        service = new google.maps.places.PlacesService(map);
+            const center = city.geometry.location;
 
-        addrMap = new google.maps.Map(document.getElementById('mapAddress'), { center, zoom: 13 });
-        enableMapClickForAddress();
+            // Initialize main map
+            map = new google.maps.Map(document.getElementById('map'), { center, zoom: 13 });
+            placesService = new google.maps.places.PlacesService(map);
 
-        // Load existing residence if available
-        if (existingHotelName && existingHotelId) {
-            loadExistingResidence();
-        } else {
-            // Load initial batch of hotels only if no existing residence
-            loadInitialHotels();
-        }
-    });
+            // Initialize address map
+            addrMap = new google.maps.Map(document.getElementById('mapAddress'), { center, zoom: 13 });
+            enableMapClickForAddress();
 
+            // Load existing residence if available
+            if (existingHotelName && existingHotelId) {
+                loadExistingResidence();
+            } else {
+                // Load initial batch of hotels only if no existing residence
+                loadHotelsFromServer();
+            }
+        });
+
+        // Set up infinite scroll
         document.getElementById('hotelListPanel').addEventListener('scroll', () => {
             const panel = document.getElementById('hotelListPanel');
             if (!loading && panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 50) {
-                if (nextPageToken) loadHotelsPage(nextPageToken);
+                loadMoreHotels();
             }
         });
     }
-    function loadInitialHotels() {
-        const panel = document.getElementById('hotelListPanel');
-        panel.innerHTML = '<div class="loading-indicator">Loading top-rated hotels...</div>';
 
-        allHotels = [];
-        renderedHotelIds.clear();
-        nextPageToken = null;
-        loading = false;
+    function loadHotelsFromServer() {
+        console.log(`Loading hotels for ${CITY_NAME}`);
 
-        // Use the exact same pattern as city view
-        fetchTopHotels();
-    }
+        // Use the server-side service to get hotel data (same as city view pattern)
+        fetch(`/Home/GetHotelsInCity?cityPlaceId=${encodeURIComponent(CITY_PLACE_ID)}&cityName=${encodeURIComponent(CITY_NAME)}&maxResults=20`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(hotels => {
+                // Clear loading indicator
+                const panel = document.getElementById('hotelListPanel');
+                panel.innerHTML = '';
 
-    async function fetchTopHotels() {
-        console.log('Searching for top hotels in the city');
+                if (hotels.length === 0) {
+                    panel.innerHTML = '<div class="no-results">No hotels found in this city.</div>';
+                    return;
+                }
 
-        const service = new google.maps.places.PlacesService(document.createElement('div'));
-        let allResults = [];
+                // Sort by rating and reviews (same as before)
+                hotels.sort((a, b) => (b.userRatingsTotal || 0) - (a.userRatingsTotal || 0));
 
-        try {
-            // Method 1: Nearby search for lodging (primary method)
-            const nearbyResults = await new Promise((resolve) => {
-                service.nearbySearch({
-                    bounds: cityViewport,
-                    type: 'lodging',
-                    strictBounds: true
-                }, (results, status) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK) {
-                        resolve(results || []);
-                    } else {
-                        console.log('Nearby search failed:', status);
-                        resolve([]);
-                    }
-                });
-            });
+                // Store all hotels
+                allHotels = hotels;
 
-            allResults.push(...nearbyResults);
-
-            // Small delay between requests
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Method 2: Text search for hotels (to catch any missed ones)
-            const textResults = await new Promise((resolve) => {
-                service.textSearch({
-                    query: `hotels in ${CITY_NAME}`,
-                    bounds: cityViewport
-                }, (results, status) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK) {
-                        resolve(results || []);
-                    } else {
-                        resolve([]);
-                    }
-                });
-            });
-
-            allResults.push(...textResults);
-
-            // Remove duplicates (same as city view)
-            const uniqueResults = allResults.filter((place, index, self) =>
-                index === self.findIndex(p => p.place_id === place.place_id)
-            );
-
-            // Filter and sort (exactly like city view)
-            let filteredResults = uniqueResults
-                .filter(result => {
-                    // Must have rating and reasonable review count
-                    if (!result.rating || !result.user_ratings_total || result.user_ratings_total < 5) {
-                        return false;
-                    }
-                    return true;
-                })
-                .sort((a, b) => {
-                    // Prioritize places with more reviews, then by rating (same as city view)
-                    const reviewDiff = b.user_ratings_total - a.user_ratings_total;
-                    if (Math.abs(reviewDiff) > 100) return reviewDiff;
-                    return b.rating - a.rating;
-                });
-
-            console.log(`Found ${filteredResults.length} hotels, displaying top results`);
-
-            // Store results
-            allHotels = filteredResults;
-
-            // Clear loading message and render results
-            const panel = document.getElementById('hotelListPanel');
-            panel.innerHTML = '';
-
-            if (filteredResults.length === 0) {
-                panel.innerHTML = '<p class="no-results-message">No hotels found in this city.</p>';
-                return;
-            }
-
-            // Render hotels (take top 20 initially, same pattern as city view)
-            const topResults = filteredResults.slice(0, 20);
-
-            topResults.forEach((hotel, index) => {
-                const item = createHotelItem(hotel);
-                panel.appendChild(item);
-                renderedHotelIds.add(hotel.place_id);
-            });
-
-            // Set up simple infinite scroll for remaining hotels if there are more
-            if (filteredResults.length > 20) {
-                setupSimpleInfiniteScroll();
-            }
-
-        } catch (error) {
-            console.error('Error fetching hotels:', error);
-            const panel = document.getElementById('hotelListPanel');
-            panel.innerHTML = '<p class="error-message">Error loading hotels. Please try again.</p>';
-        }
-    }
-
-    function setupSimpleInfiniteScroll() {
-        let currentIndex = 20; // We've already shown first 20
-
-        const handleScroll = () => {
-            if (loading) return;
-
-            const panel = document.getElementById('hotelListPanel');
-            if (panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 100) {
-                loadMoreHotelsSimple();
-            }
-        };
-
-        const loadMoreHotelsSimple = () => {
-            if (loading || currentIndex >= allHotels.length) return;
-
-            loading = true;
-
-            // Load next batch (10 at a time)
-            const nextBatch = allHotels.slice(currentIndex, currentIndex + 10);
-            const panel = document.getElementById('hotelListPanel');
-
-            nextBatch.forEach(hotel => {
-                if (!renderedHotelIds.has(hotel.place_id)) {
+                // Render initial batch
+                const initialBatch = hotels.slice(0, 10);
+                initialBatch.forEach(hotel => {
                     const item = createHotelItem(hotel);
                     panel.appendChild(item);
-                    renderedHotelIds.add(hotel.place_id);
-                }
+                    renderedHotelIds.add(hotel.placeId);
+                });
+
+                console.log(`Loaded ${hotels.length} hotels from server, displaying first ${initialBatch.length}`);
+            })
+            .catch(error => {
+                console.error('Error loading hotels:', error);
+                const panel = document.getElementById('hotelListPanel');
+                panel.innerHTML = '<div class="error-message">Error loading hotels. Please try again.</div>';
             });
+    }
 
-            currentIndex += 10;
-            loading = false;
+    function loadMoreHotels() {
+        if (loading || renderedHotelIds.size >= allHotels.length) return;
 
-            console.log(`Loaded ${nextBatch.length} more hotels`);
-        };
+        loading = true;
+        const panel = document.getElementById('hotelListPanel');
 
-        document.getElementById('hotelListPanel').addEventListener('scroll', handleScroll);
+        // Get next batch of hotels
+        const nextBatch = allHotels.filter(hotel => !renderedHotelIds.has(hotel.placeId)).slice(0, 10);
+
+        nextBatch.forEach(hotel => {
+            const item = createHotelItem(hotel);
+            panel.appendChild(item);
+            renderedHotelIds.add(hotel.placeId);
+        });
+
+        loading = false;
+        console.log(`Loaded ${nextBatch.length} more hotels`);
     }
 
     function loadExistingResidence() {
         console.log(`Loading existing residence: ${existingHotelName} with ID: ${existingHotelId}`);
 
-        service.getDetails({
+        placesService.getDetails({
             placeId: existingHotelId,
             fields: ['name', 'place_id', 'geometry', 'formatted_address', 'rating', 'user_ratings_total', 'photos', 'price_level']
         }, (place, status) => {
@@ -434,7 +341,7 @@
                 // Set the selected hotel
                 selectedHotel = place;
 
-                // Center map on the existing residence - ONLY ZOOM, NO LIST ADDITION
+                // Center map on the existing residence
                 map.setCenter(place.geometry.location);
                 map.setZoom(16);
 
@@ -446,64 +353,71 @@
                 const panel = document.getElementById('hotelListPanel');
                 panel.innerHTML = '';
 
-                // Load hotels normally (without adding the existing one to the list)
-                loadInitialHotels();
+                // Load hotels normally
+                loadHotelsFromServer();
 
                 console.log(`Existing residence ${place.name} loaded successfully - map centered only`);
             } else {
                 console.error('Failed to load existing residence details:', status);
                 // Fallback: load hotels normally
-                loadInitialHotels();
+                loadHotelsFromServer();
             }
         });
     }
 
-       function renderAllHotels() {
-        const panel = document.getElementById('hotelListPanel');
-        panel.innerHTML = '';
-        renderedHotelIds.clear();
-
-        allHotels.forEach(place => {
-            const item = createHotelItem(place);
-            panel.appendChild(item);
-            renderedHotelIds.add(place.place_id);
-        });
-    }
-
-    function createHotelItem(place) {
+    function createHotelItem(hotel) {
         const item = document.createElement('div');
         item.className = 'hotel-item';
 
-        const rating = place.rating || 0;
-        const reviews = place.user_ratings_total || 0;
-        const price = place.price_level || 0;
+        const rating = hotel.rating || 0;
+        const reviews = hotel.userRatingsTotal || 0;
 
         const header = document.createElement('div');
         header.className = 'hotel-header';
 
         // Create image container
-        const imageContainer = createImageContainer(place.name);
+        const imageContainer = createImageContainer(hotel.name);
 
         // Create info div
         const infoDiv = document.createElement('div');
         infoDiv.className = 'info';
 
-
         infoDiv.innerHTML = `
-                            <strong>${place.name}</strong>
-                            <div class="hotel-rating">⭐ ${rating.toFixed(1)} (${reviews.toLocaleString()} reviews)</div>
-                        `;
+            <strong>${hotel.name}</strong>
+            <div class="hotel-rating">⭐ ${rating.toFixed(1)} (${reviews.toLocaleString()} reviews)</div>
+        `;
 
         header.appendChild(imageContainer);
         header.appendChild(infoDiv);
 
         header.addEventListener('click', () => {
-            map.panTo(place.geometry.location);
-            map.setZoom(16);
+            // Handle location object properly
+            const location = hotel.location;
+            if (location) {
+                let lat, lng;
+
+                if (typeof location.lat === 'function') {
+                    // Google Maps LatLng object
+                    lat = location.lat();
+                    lng = location.lng();
+                } else if (location.lat !== undefined && location.lng !== undefined) {
+                    // Plain object with lat/lng properties
+                    lat = location.lat;
+                    lng = location.lng;
+                } else {
+                    console.error('Invalid location object:', location);
+                    return;
+                }
+
+                map.panTo(new google.maps.LatLng(lat, lng));
+                map.setZoom(16);
+            }
+
             toggleHotelDetails(header.nextSibling);
-            selectedHotel = place;
+            selectedHotel = hotel;
             document.getElementById('selectHotelBtn').disabled = false;
         });
+
         item.appendChild(header);
 
         const details = document.createElement('div');
@@ -511,46 +425,65 @@
         details.innerHTML = '<em>Loading details…</em>';
         item.appendChild(details);
 
-        // Load image using the fast image loader
-        const photoUrl = place.photos && place.photos.length > 0
-            ? getOptimizedPhotoUrl(place.photos[0])
-            : null;
+        // Load image using Places API (same pattern as city view)
+        if (hotel.placeId) {
+            placesService.getDetails({
+                placeId: hotel.placeId,
+                fields: ['photos']
+            }, (place, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK && place && place.photos && place.photos.length > 0) {
+                    // Get optimized photo URL
+                    const photoUrl = place.photos[0].getUrl({
+                        maxWidth: 80,
+                        maxHeight: 80
+                    });
+                    imageLoader.addToQueue(
+                        photoUrl,
+                        hotel.name,
+                        hotel.location,
+                        imageContainer
+                    );
+                } else {
+                    // No photos available, use map view
+                    imageLoader.createMapView(hotel.name, hotel.location, imageContainer);
+                }
+            });
+        } else {
+            imageLoader.createFallbackImage(hotel.name, imageContainer);
+        }
 
-        imageLoader.addToQueue(
-            photoUrl,
-            place.name,
-            place.geometry.location,
-            imageContainer
-        );
+        // Load detailed information using server endpoint
+        if (hotel.placeId) {
+            fetch(`/Home/GetPlaceDetails?placeId=${encodeURIComponent(hotel.placeId)}`)
+                .then(response => response.json())
+                .then(full => {
+                    if (!full) {
+                        details.innerHTML = '<p><em>Details unavailable.</em></p>';
+                        return;
+                    }
 
-        service.getDetails({
-            placeId: place.place_id,
-            fields: ['formatted_address', 'formatted_phone_number', 'website', 'opening_hours', 'reviews', 'editorial_summary', 'types']
-        }, (full, st2) => {
-            if (st2 !== google.maps.places.PlacesServiceStatus.OK) {
-                details.innerHTML = '<p><em>Details unavailable.</em></p>';
-                return;
-            }
-            const tags = (full.types || [])
-                .filter(t => ['no_smoking', 'free_wifi', 'parking', 'wheelchair_accessible'].includes(t))
-                .map(t => `<span class="tag">${t.replace(/_/g, ' ')}</span>`).join(' ') || '<span class="tag">No special amenities listed</span>';
+                    const hours = full.openingHours?.weekdayText
+                        ? `<h5>Hours</h5><ul>${full.openingHours.weekdayText.map(d => `<li>${d}</li>`).join('')}</ul>` : '';
 
-            const hours = full.opening_hours?.weekday_text
-                ? `<h5>Hours</h5><ul>${full.opening_hours.weekday_text.map(d => `<li>${d}</li>`).join('')}</ul>` : '';
+                    const revs = (full.reviews || []).slice(0, 2)
+                        .map(r => `<div class="review-item"><strong>${r.authorName}</strong> <span style="color: #ffc107;">⭐ ${r.rating}</span><p style="margin: 4px 0 0 0;">${r.text}</p></div>`).join('') || '<em>No reviews available.</em>';
 
-            const revs = (full.reviews || []).slice(0, 2)
-                .map(r => `<div class="review-item"><strong>${r.author_name}</strong> <span style="color: #ffc107;">⭐ ${r.rating}</span><p style="margin: 4px 0 0 0;">${r.text}</p></div>`).join('') || '<em>No reviews available.</em>';
-
-            details.innerHTML = `
-                                <p><strong>📍 Address:</strong> ${full.formatted_address}</p>
-                                <p><strong>📞 Phone:</strong> ${full.formatted_phone_number || 'N/A'}</p>
-                                <p><strong>🌐 Website:</strong> ${full.website ? `<a href="${full.website}" target="_blank" rel="noopener">${full.website}</a>` : 'N/A'}</p>
-                                ${hours}
-                                <h5>Amenities</h5><div>${tags}</div>
-                                <h5>Recent Reviews</h5><div>${revs}</div>
-                                <h5>About</h5><p>${full.editorial_summary?.overview || 'No description available.'}</p>
-                            `;
-        });
+                    details.innerHTML = `
+                        <p><strong>📍 Address:</strong> ${full.formattedAddress}</p>
+                        <p><strong>📞 Phone:</strong> ${full.formattedPhoneNumber || 'N/A'}</p>
+                        <p><strong>🌐 Website:</strong> ${full.website ? `<a href="${full.website}" target="_blank" rel="noopener">${full.website}</a>` : 'N/A'}</p>
+                        ${hours}
+                        <h5>Recent Reviews</h5><div>${revs}</div>
+                        <h5>About</h5><p>${full.editorialSummary || 'No description available.'}</p>
+                    `;
+                })
+                .catch(err => {
+                    console.error('Error loading hotel details:', err);
+                    details.innerHTML = '<p><em>Details unavailable.</em></p>';
+                });
+        } else {
+            details.innerHTML = '<p><em>Details unavailable.</em></p>';
+        }
 
         return item;
     }
@@ -565,7 +498,7 @@
         fetch('/Home/SaveResidence', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scheduleId: scheduleId, hotelId: selectedHotel.place_id, hotelName: selectedHotel.name })
+            body: JSON.stringify({ scheduleId: scheduleId, hotelId: selectedHotel.place_id || selectedHotel.placeId, hotelName: selectedHotel.name })
         }).then(r => r.ok
             ? window.location.href = `/Home/LocationsAndActivities?scheduleId=${scheduleId}`
             : alert('Save failed')
@@ -580,6 +513,7 @@
             });
         });
     }
+
     function applyAddressFromClick(result, loc) {
         geocodedResult = result;
         if (addressMarker) addressMarker.setMap(null);
@@ -589,6 +523,7 @@
         document.getElementById('addressInfo').classList.remove('d-none');
         document.getElementById('saveAddressBtn').disabled = false;
     }
+
     document.getElementById('geocodeBtn').addEventListener('click', () => {
         clearAddressError();
         let a = document.getElementById('addressInput').value.trim();
@@ -608,6 +543,7 @@
             document.getElementById('saveAddressBtn').disabled = false;
         });
     });
+
     document.getElementById('saveAddressBtn').addEventListener('click', () => {
         const pid = geocodedResult.place_id, fn = geocodedResult.formatted_address;
         fetch('/Home/SaveResidence', {
@@ -619,6 +555,7 @@
             : showAddressError('Save failed.')
         );
     });
+
     function showAddressError(m) { const el = document.getElementById('addressError'); el.textContent = m; el.style.display = 'block'; }
     function clearAddressError() { document.getElementById('addressError').style.display = 'none'; }
 

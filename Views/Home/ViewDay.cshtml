@@ -109,7 +109,8 @@
                     {
                         var startTime = activity.StartHour + ((activity.StartMinute ?? 0) / 60.0);
                         var endTime = activity.EndHour + ((activity.EndMinute ?? 0) / 60.0);
-                        var top = startTime * 60;
+
+                        var top = (startTime - 1) * 60;
                         var height = (endTime - startTime) * 60 - 2;
 
                         <div class="event" style="top: @(top)px; height: @(height)px;">
@@ -165,8 +166,10 @@
 <script>
     const googleApiKey = "@apiKey";
     const loadedActivities = new Set();
+    let placesService;
+    let map; // Add map reference
 
-    // Fast image loader (same as other views)
+    // Fast image loader (enhanced with better error handling)
     class FastImageLoader {
         constructor() {
             this.queue = [];
@@ -224,16 +227,18 @@
 
                 const onError = () => {
                     clearTimeout(timeoutId);
+                    console.log(`Photo failed for ${placeName}, trying map view`);
                     this.createMapView(placeName, placeLocation, container);
                     cleanup();
                 };
 
-                timeoutId = setTimeout(onError, 2000);
+                timeoutId = setTimeout(onError, 3000); // Increased timeout
 
                 img.onload = onSuccess;
                 img.onerror = onError;
                 img.src = photoUrl;
             } else {
+                console.log(`No photo URL for ${placeName}, using map view`);
                 this.createMapView(placeName, placeLocation, container);
                 cleanup();
             }
@@ -241,12 +246,20 @@
 
         createMapView(placeName, placeLocation, container) {
             if (!placeLocation) {
+                console.log(`No location for ${placeName}, using fallback`);
                 this.createFallbackImage(placeName, container);
                 return;
             }
 
-            const lat = placeLocation.lat();
-            const lng = placeLocation.lng();
+            // Handle both Google Maps objects and plain objects from service
+            const lat = typeof placeLocation.lat === 'function' ? placeLocation.lat() : placeLocation.lat;
+            const lng = typeof placeLocation.lng === 'function' ? placeLocation.lng() : placeLocation.lng;
+
+            if (!lat || !lng) {
+                console.log(`Invalid coordinates for ${placeName}, using fallback`);
+                this.createFallbackImage(placeName, container);
+                return;
+            }
 
             const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
                 `center=${lat},${lng}&` +
@@ -272,6 +285,7 @@
             };
 
             img.onerror = () => {
+                console.log(`Map view failed for ${placeName}, using fallback`);
                 this.createFallbackImage(placeName, container);
             };
         }
@@ -312,9 +326,42 @@
 
     const imageLoader = new FastImageLoader();
 
+    // Helper function to get optimized photo URL
+    function getOptimizedPhotoUrl(photo) {
+        if (!photo) return null;
+
+        try {
+            return photo.getUrl({
+                maxWidth: 80,
+                maxHeight: 80
+            });
+        } catch (error) {
+            console.error('Error getting photo URL:', error);
+            return null;
+        }
+    }
+
+    // Initialize Places Service with proper map
+    function initPlacesService() {
+        console.log('Initializing Places Service...');
+
+        // Create a hidden map just for the Places Service
+        const hiddenMapDiv = document.createElement('div');
+        hiddenMapDiv.style.display = 'none';
+        hiddenMapDiv.id = 'hidden-map';
+        document.body.appendChild(hiddenMapDiv);
+
+        map = new google.maps.Map(hiddenMapDiv, {
+            zoom: 10,
+            center: { lat: 44.3192, lng: 23.7949 } // Craiova coordinates
+        });
+
+        placesService = new google.maps.places.PlacesService(map);
+        console.log('Places Service initialized');
+    }
+
     // Toggle activity details
     function toggleActivityDetails(header) {
-        // Find the details element - it should be the next element sibling, not just nextSibling
         const details = header.nextElementSibling;
 
         if (!details || !details.classList.contains('activity-details')) {
@@ -336,11 +383,12 @@
         }
     }
 
-    // Load activity details using Google Places API
+    // Enhanced load activity details function
     function loadActivityDetails(activityName, placeId, detailsContainer, headerElement) {
         console.log(`Loading details for: ${activityName}, placeId: ${placeId}`);
 
-        if (!placeId) {
+        if (!placeId || placeId.trim() === '') {
+            console.log(`No placeId for ${activityName}, showing no details message`);
             detailsContainer.innerHTML = `
                 <div style="text-align: center; color: #999; padding: 20px;">
                     <div style="font-size: 20px; margin-bottom: 10px;">ℹ️</div>
@@ -350,113 +398,189 @@
             return;
         }
 
-        const service = new google.maps.places.PlacesService(document.createElement("div"));
+        // Show loading state
+        detailsContainer.innerHTML = `
+            <div style="text-align: center; color: #666; padding: 20px;">
+                <div style="font-size: 20px; margin-bottom: 10px;">⏳</div>
+                <p><em>Loading detailed information...</em></p>
+            </div>
+        `;
 
-        service.getDetails({
-            placeId: placeId,
-            fields: [
-                "formatted_address",
-                "formatted_phone_number",
-                "website",
-                "opening_hours",
-                "reviews",
-                "editorial_summary",
-                "types",
-                "photos",
-                "geometry",
-                "name",
-                "rating",
-                "user_ratings_total"
-            ]
-        }, (place, status) => {
-            console.log(`Places API response for ${activityName}:`, status, place);
-
-            if (status !== google.maps.places.PlacesServiceStatus.OK) {
-                console.error(`Places API failed for ${activityName}:`, status);
-
-                // Try alternative approach - search by name if place_id fails
-                service.textSearch({
-                    query: activityName,
-                    fields: [
-                        "formatted_address",
-                        "formatted_phone_number",
-                        "website",
-                        "opening_hours",
-                        "reviews",
-                        "editorial_summary",
-                        "types",
-                        "photos",
-                        "geometry",
-                        "name",
-                        "rating",
-                        "user_ratings_total"
-                    ]
-                }, (searchResults, searchStatus) => {
-                    console.log(`Text search response for ${activityName}:`, searchStatus, searchResults);
-
-                    if (searchStatus === google.maps.places.PlacesServiceStatus.OK && searchResults && searchResults.length > 0) {
-                        // Use the first result
-                        const foundPlace = searchResults[0];
-                        console.log(`Found place via text search:`, foundPlace);
-                        renderPlaceDetails(foundPlace, detailsContainer, headerElement, activityName);
-                    } else {
-                        detailsContainer.innerHTML = `
-                            <div style="text-align: center; color: #999; padding: 20px;">
-                                <div style="font-size: 20px; margin-bottom: 10px;">❌</div>
-                                <p><em>Unable to load detailed information for this location.</em></p>
-                                <p style="font-size: 0.8em; color: #666;">API Status: ${status}</p>
-                            </div>
-                        `;
-                    }
-                });
-                return;
-            }
-
-            renderPlaceDetails(place, detailsContainer, headerElement, activityName);
-        });
+        // Use the service endpoint with better error handling
+        fetch(`/Home/GetPlaceDetails?placeId=${encodeURIComponent(placeId)}`)
+            .then(response => {
+                console.log(`Response status for ${activityName}: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(place => {
+                console.log(`Places API response for ${activityName}:`, place);
+                if (place && place.name) {
+                    renderPlaceDetails(place, detailsContainer, headerElement, activityName);
+                } else {
+                    console.log(`No valid place data returned for ${activityName}`);
+                    fallbackToSearch(activityName, detailsContainer);
+                }
+            })
+            .catch(error => {
+                console.error(`Failed to load details for ${activityName}:`, error);
+                fallbackToSearch(activityName, detailsContainer);
+            });
     }
 
-    // Separate function to render place details
+    // Fallback search function
+    function fallbackToSearch(activityName, detailsContainer) {
+        console.log(`Attempting fallback search for: ${activityName}`);
+
+        const searchEndpoint = `/Home/SearchPlaces?query=${encodeURIComponent(activityName)}`;
+
+        fetch(searchEndpoint)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Search failed with status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(searchResults => {
+                console.log(`Search results for ${activityName}:`, searchResults);
+
+                if (searchResults && searchResults.length > 0) {
+                    const foundPlace = searchResults[0];
+                    console.log(`Found place via search:`, foundPlace);
+
+                    // Convert PlaceResult to PlaceDetailsResult format
+                    const placeDetails = {
+                        placeId: foundPlace.placeId,
+                        name: foundPlace.name,
+                        formattedAddress: foundPlace.formattedAddress,
+                        rating: foundPlace.rating,
+                        userRatingsTotal: foundPlace.userRatingsTotal,
+                        priceLevel: foundPlace.priceLevel,
+                        types: foundPlace.types,
+                        photos: foundPlace.photos,
+                        location: foundPlace.location,
+                        // Add empty defaults for missing fields
+                        formattedPhoneNumber: null,
+                        website: null,
+                        openingHours: null,
+                        reviews: []
+                    };
+
+                    renderPlaceDetails(placeDetails, detailsContainer, null, activityName);
+                } else {
+                    console.log(`No search results found for ${activityName}`);
+                    showNoDetailsMessage(detailsContainer);
+                }
+            })
+            .catch(searchError => {
+                console.error('Search fallback also failed:', searchError);
+                showNoDetailsMessage(detailsContainer);
+            });
+    }
+
+    // Show no details message
+    function showNoDetailsMessage(detailsContainer) {
+        detailsContainer.innerHTML = `
+            <div style="text-align: center; color: #999; padding: 20px;">
+                <div style="font-size: 20px; margin-bottom: 10px;">❌</div>
+                <p><em>Unable to load detailed information for this location.</em></p>
+            </div>
+        `;
+    }
+
+    // Enhanced function to load both images and details
+    function loadActivityImagesAndDetails(activityName, placeId, detailsContainer, headerElement) {
+        console.log(`Loading images and details for: ${activityName}, placeId: ${placeId}`);
+
+        const imageContainer = headerElement.querySelector('.activity-image-container');
+
+        // Handle image loading
+        if (imageContainer) {
+            if (!placeId || placeId.trim() === '') {
+                console.log(`No placeId for ${activityName}, using fallback image`);
+                imageLoader.createFallbackImage(activityName, imageContainer);
+            } else if (placesService) {
+                // Try to get photos using Places Service
+                placesService.getDetails({
+                    placeId: placeId,
+                    fields: ['photos', 'geometry', 'name']
+                }, (place, status) => {
+                    console.log(`Places Service response for ${activityName}:`, status, place);
+
+                    if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+                        if (place.photos && place.photos.length > 0) {
+                            const photoUrl = getOptimizedPhotoUrl(place.photos[0]);
+                            const location = place.geometry ? place.geometry.location : null;
+                            imageLoader.addToQueue(
+                                photoUrl,
+                                activityName,
+                                location,
+                                imageContainer
+                            );
+                        } else {
+                            // No photos available, use map view
+                            const location = place.geometry ? place.geometry.location : null;
+                            imageLoader.createMapView(activityName, location, imageContainer);
+                        }
+                    } else {
+                        console.error(`Failed to get place details for images (${activityName}):`, status);
+                        imageLoader.createFallbackImage(activityName, imageContainer);
+                    }
+                });
+            } else {
+                console.log(`Places service not ready for ${activityName}, using fallback`);
+                imageLoader.createFallbackImage(activityName, imageContainer);
+            }
+        }
+
+        // Load detailed information
+        loadActivityDetails(activityName, placeId, detailsContainer, headerElement);
+    }
+
+    // Enhanced function to render place details
     function renderPlaceDetails(place, detailsContainer, headerElement, activityName) {
         console.log(`Rendering details for:`, place);
 
-        // Load image for the header
-        const imageContainer = headerElement.querySelector('.activity-image-container');
-        if (place.photos && place.photos.length > 0) {
-            const photoUrl = place.photos[0].getUrl({ maxWidth: 80, maxHeight: 80 });
-            imageLoader.addToQueue(photoUrl, activityName, place.geometry?.location, imageContainer);
-        } else {
-            imageLoader.createFallbackImage(activityName, imageContainer);
+        if (!place || !place.name) {
+            showNoDetailsMessage(detailsContainer);
+            return;
         }
 
-        // Generate detailed content
-        const amenityTypes = ["no_smoking", "free_wifi", "parking", "wheelchair_accessible", "air_conditioning", "pet_friendly"];
-        const tags = (place.types || [])
-            .filter(t => amenityTypes.includes(t))
-            .map(t => `
-                <span class="amenity-tag">${t.replace(/_/g, " ")}</span>
-            `).join(" ") || `<span class="no-amenities">No special amenities listed</span>`;
+        // Generate detailed content with null checks
+        const rating = place.rating ? `⭐ ${place.rating} (${place.userRatingsTotal || 0} reviews)` : 'No rating available';
 
-        const hours = place.opening_hours?.weekday_text
+        // Enhanced opening hours with better formatting
+        const hours = place.openingHours?.weekdayText && place.openingHours.weekdayText.length > 0
             ? `
                 <div class="info-section">
                     <h5>🕒 Opening Hours</h5>
                     <div class="hours-list">
-                        ${place.opening_hours.weekday_text.map(d => `<div class="hour-item">${d}</div>`).join("")}
+                        ${place.openingHours.weekdayText.map(d => `<div class="hour-item">${d}</div>`).join("")}
                     </div>
                 </div>
-            ` : "";
+            ` : `
+                <div class="info-section">
+                    <h5>🕒 Opening Hours</h5>
+                    <div class="hours-list">
+                        <div class="hour-item" style="color: #666; font-style: italic;">Opening hours not available</div>
+                    </div>
+                </div>
+            `;
 
-        const reviews = (place.reviews || []).slice(0, 2)
-            .map(r => `
+        // Enhanced reviews section
+        const reviews = (place.reviews && place.reviews.length > 0)
+            ? place.reviews.slice(0, 2).map(r => `
                 <div class="review-item">
                     <div class="review-header">
-                        <strong>${r.author_name}</strong>
-                        <span class="review-rating">⭐ ${r.rating}</span>
+                        <strong>${r.authorName || 'Anonymous'}</strong>
+                        <span class="review-rating">⭐ ${r.rating || 'N/A'}</span>
                     </div>
-                    <p class="review-text">${r.text}</p>
+                    <p class="review-text">${(r.text || '').substring(0, 150)}${r.text && r.text.length > 150 ? '...' : ''}</p>
                 </div>
-            `).join("") || `<div class="no-reviews">No reviews available</div>`;
+            `).join("")
+            : `<div class="no-reviews">No reviews available</div>`;
 
         detailsContainer.innerHTML = `
             <div class="details-content">
@@ -465,15 +589,15 @@
                         <div class="info-section">
                             <h5>📍 Contact Information</h5>
                             <div class="contact-info">
-                                <p><strong>Address:</strong><br><span class="address">${place.formatted_address || 'Address not available'}</span></p>
-                                <p><strong>Phone:</strong><br><span class="phone">${place.formatted_phone_number || 'N/A'}</span></p>
+                                <p><strong>Address:</strong><br><span class="address">${place.formattedAddress || 'Address not available'}</span></p>
+                                <p><strong>Phone:</strong><br><span class="phone">${place.formattedPhoneNumber || 'N/A'}</span></p>
                                 <p><strong>Website:</strong><br>
                                     ${place.website
                                         ? `<a href="${place.website}" target="_blank" class="website-link">${place.website}</a>`
                                         : '<span class="na">N/A</span>'
                                     }
                                 </p>
-                                ${place.rating ? `<p><strong>Rating:</strong><br><span class="rating">⭐ ${place.rating} (${place.user_ratings_total || 0} reviews)</span></p>` : ''}
+                                <p><strong>Rating:</strong><br><span class="rating">${rating}</span></p>
                             </div>
                         </div>
                         ${hours}
@@ -489,7 +613,7 @@
                     </div>
                 </div>
                 <div class="external-link">
-                    <a href="https://www.google.com/maps/place/?q=place_id:${place.place_id || ''}"
+                    <a href="https://www.google.com/maps/place/?q=place_id:${place.placeId || ''}"
                        target="_blank"
                        class="maps-link">
                         🗺️ View on Google Maps
@@ -499,72 +623,91 @@
         `;
     }
 
-    // Initialize - scroll calendar to 8 AM and preload all activity details
-      window.addEventListener('load', function () {
+    // Initialize everything when page loads
+    window.addEventListener('load', function () {
+        console.log('Page loaded, initializing...');
+
+        // Scroll calendar to 8 AM
         const scrollTo = (8 - 1) * 60; // 7 hours × 60px
         const calendarScroll = document.querySelector('.hourSlotsScroll');
         if (calendarScroll) {
             calendarScroll.scrollTop = scrollTo;
         }
 
-        // Get all activity items in order
-        const activityItems = document.querySelectorAll('.activity-item');
-        let activityIndex = 0;
+        // Initialize Places Service first
+        initPlacesService();
 
-        // Add place IDs to activity headers from the server data and preload details
-        @foreach (var activity in dayActivities)
-        {
-                if (!string.IsNullOrEmpty(activity.PlaceId))
+        // Wait for Google Maps to be ready, then start loading activities
+        const waitForGoogleMaps = setInterval(() => {
+            if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+                clearInterval(waitForGoogleMaps);
+                console.log('Google Maps API ready, starting activity loading...');
+
+                // Get all activity items in order
+                const activityItems = document.querySelectorAll('.activity-item');
+                let activityIndex = 0;
+
+                console.log(`Found ${activityItems.length} activity items`);
+
+                // Process activities from server data
+                @foreach (var activity in dayActivities)
                 {
                         <text>
-                        // Use the activity index to get the correct activity item
+                        console.log(`Processing activity: @Html.Raw(Html.Encode(activity.Name))`);
+
                         const activityItem@(activity.ScheduleActivityId) = activityItems[activityIndex];
                         if (activityItem@(activity.ScheduleActivityId)) {
                             const header@(activity.ScheduleActivityId) = activityItem@(activity.ScheduleActivityId).querySelector('.activity-header');
                             const details@(activity.ScheduleActivityId) = activityItem@(activity.ScheduleActivityId).querySelector('.activity-details');
 
                             if (header@(activity.ScheduleActivityId)) {
-                                header@(activity.ScheduleActivityId).dataset.placeId = '@activity.PlaceId';
-                                header@(activity.ScheduleActivityId).dataset.activityId = '@activity.ScheduleActivityId';
+                                @if (!string.IsNullOrEmpty(activity.PlaceId))
+                                {
+                                        <text>
+                                        header@(activity.ScheduleActivityId).dataset.placeId = '@activity.PlaceId';
+                                        header@(activity.ScheduleActivityId).dataset.activityId = '@activity.ScheduleActivityId';
 
-                                if (details@(activity.ScheduleActivityId)) {
-                                    // Hide the details initially but start loading
-                                    details@(activity.ScheduleActivityId).style.display = 'none';
-                                    setTimeout(() => {
-                                        loadActivityDetails('@Html.Raw(Html.Encode(activity.Name))', '@activity.PlaceId', details@(activity.ScheduleActivityId), header@(activity.ScheduleActivityId));
-                                    }, activityIndex * 500); // Stagger the API calls based on position
+                                        if (details@(activity.ScheduleActivityId)) {
+                                            details@(activity.ScheduleActivityId).style.display = 'none';
+
+                                            // Stagger the API calls to avoid rate limiting
+                                            setTimeout(() => {
+                                                console.log(`Loading details for activity @(activity.ScheduleActivityId): @Html.Raw(Html.Encode(activity.Name))`);
+                                                loadActivityImagesAndDetails('@Html.Raw(Html.Encode(activity.Name))', '@activity.PlaceId', details@(activity.ScheduleActivityId), header@(activity.ScheduleActivityId));
+                                            }, activityIndex * 1000); // Increased delay to 1 second
+                                        }
+                                        </text>
+                                }
+                                else
+                                {
+                                        <text>
+                                        header@(activity.ScheduleActivityId).dataset.activityId = '@activity.ScheduleActivityId';
+
+                                        const imageContainer@(activity.ScheduleActivityId) = activityItem@(activity.ScheduleActivityId).querySelector('.activity-image-container');
+
+                                        // Load fallback image for activities without place_id
+                                        if (imageContainer@(activity.ScheduleActivityId)) {
+                                            console.log(`No placeId for @Html.Raw(Html.Encode(activity.Name)), using fallback image`);
+                                            imageLoader.createFallbackImage('@Html.Raw(Html.Encode(activity.Name))', imageContainer@(activity.ScheduleActivityId));
+                                        }
+
+                                        if (details@(activity.ScheduleActivityId)) {
+                                            details@(activity.ScheduleActivityId).style.display = 'none';
+                                            details@(activity.ScheduleActivityId).innerHTML = `
+                                                <div style="text-align: center; color: #999; padding: 20px;">
+                                                    <div style="font-size: 20px; margin-bottom: 10px;">ℹ️</div>
+                                                    <p><em>No additional details available for this activity.</em></p>
+                                                </div>
+                                            `;
+                                        }
+                                        </text>
                                 }
                             }
                         }
                         activityIndex++;
                         </text>
                 }
-                else
-                {
-                        <text>
-                        // Handle activities without place_id
-                        const activityItem@(activity.ScheduleActivityId) = activityItems[activityIndex];
-                        if (activityItem@(activity.ScheduleActivityId)) {
-                            const header@(activity.ScheduleActivityId) = activityItem@(activity.ScheduleActivityId).querySelector('.activity-header');
-                            const details@(activity.ScheduleActivityId) = activityItem@(activity.ScheduleActivityId).querySelector('.activity-details');
-
-                            if (header@(activity.ScheduleActivityId)) {
-                                header@(activity.ScheduleActivityId).dataset.activityId = '@activity.ScheduleActivityId';
-                            }
-
-                            if (details@(activity.ScheduleActivityId)) {
-                                details@(activity.ScheduleActivityId).style.display = 'none';
-                                details@(activity.ScheduleActivityId).innerHTML = `
-                                    <div style="text-align: center; color: #999; padding: 20px;">
-                                        <div style="font-size: 20px; margin-bottom: 10px;">ℹ️</div>
-                                        <p><em>No additional details available for this activity.</em></p>
-                                    </div>
-                                `;
-                            }
-                        }
-                        activityIndex++;
-                        </text>
-                }
-        }
+            }
+        }, 100); // Check every 100ms until Google Maps is ready
     });
 </script>
