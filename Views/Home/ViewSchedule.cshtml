@@ -13,11 +13,11 @@
 }
 <link rel="stylesheet" href="~/css/ViewSchedule.css" />
 <div class="header-section">
-    <h1>
+    <h3 style="color:#007bff">
         Your Trip: @schedule.CityName - @startDate.ToString("MMMM dd, yyyy")
         &ndash;
         @dates.Last().ToString("MMMM dd, yyyy")
-    </h1>
+    </h3>
     <div class="header-buttons">
         <a class="edit-schedule-btn"
            asp-controller="Home"
