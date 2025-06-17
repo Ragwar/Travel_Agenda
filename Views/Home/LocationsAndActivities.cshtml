@@ -58,7 +58,7 @@
     // ======================================================
     const slotHeight = 60; // each hour slot is 60px tall
     const fullStartHour = 1;
-    const fullEndHour = 25; // hours 1 to 24 (endHour is non-inclusive)
+    const fullEndHour = 24; // hours 1 to 24 (endHour is non-inclusive)
     const visibleSlots = 8;
     const defaultScrollStart = 8; // 8AM is default top visible hour
     let contentLoadedFlags = {};
@@ -224,8 +224,9 @@
         restaurant: 2,
         hotel: 1,
         park: 2,
-        shopping_mall: 2,
-        museum: 2
+        shops: 2,
+        museum: 2,
+        attractions: 3
     };
 
     // Utility: Check if a time range is free (no overlapping event)
@@ -756,8 +757,9 @@
                 hotel: '🏨',
                 park: '🌳',
                 museum: '🏛️',
-                shopping_mall: '🛍️',
+                shops: '🛍️',
                 search: '📍',
+                attractions: '🎡',
                 default: '📍'
             };
 
@@ -766,8 +768,9 @@
                 hotel: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
                 park: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
                 museum: 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)',
-                shopping_mall: 'linear-gradient(135deg, #fd79a8 0%, #e84393 100%)',
+                shops: 'linear-gradient(135deg, #fd79a8 0%, #e84393 100%)',
                 search: 'linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)',
+                attractions: 'linear-gradient(135deg, #ff7675 0%, #d63031 100%)',  
                 default: 'linear-gradient(135deg, #636e72 0%, #2d3436 100%)'
             };
 
@@ -843,14 +846,15 @@
         );
     }
         // Enhanced location types with icons
-    const locationsTypes = ["search", "restaurant", "hotel", "park", "museum", "shopping_mall"];
-    const locationsTypeNames = {
+    const locationsTypes = ["search", "restaurant", "hotel", "park", "museum", "shops", "attractions"];    const locationsTypeNames = {
             search: "🔍 Search",
             restaurant: "🍽️ Restaurants",
             hotel: "🏨 Hotels",
             park: "🌳 Parks",
             museum: "🏛️ Museums",
-            shopping_mall: "🛍️ Shopping"
+            shops: "🛍️ Shops",
+            attractions: "🎡 Attractions"
+
         };
 
     const typeIcons = {
@@ -858,8 +862,9 @@
             hotel: '🏨',
             park: '🌳',
             museum: '🏛️',
-            shopping_mall: '🛍️',
-            search: '🔍'
+            shops: '🛍️',
+            search: '🔍',
+            attractions: '🎡'
         };
 
 
@@ -1105,9 +1110,13 @@
                 required: ['museum', 'art_gallery', 'library', 'cultural_center'],
                 forbidden: ['restaurant', 'lodging', 'hotel', 'park', 'shopping_mall', 'store']
             },
-            shopping_mall: {
+            shops: {
                 required: ['shopping_mall', 'department_store', 'store', 'clothing_store', 'shoe_store', 'electronics_store', 'furniture_store', 'home_goods_store'],
                 forbidden: ['restaurant', 'lodging', 'hotel', 'park', 'museum']
+            },
+            attractions: {
+                required: ['tourist_attraction', 'amusement_park', 'aquarium', 'zoo', 'landmark', 'stadium', 'casino', 'place_of_worship'],
+                forbidden: ['restaurant', 'lodging', 'hotel', 'resort', 'shopping_mall', 'store', 'meal_takeaway', 'food', 'park', 'museum', 'art_gallery', 'library']
             }
         };
 
@@ -1150,10 +1159,10 @@
                 forbidden: ['park', 'hotel', 'restaurant', 'mall', 'shopping'],
                 required: ['museum', 'gallery', 'cultural', 'history', 'art']
             },
-            shopping_mall: {
+            shops: {
                 forbidden: ['park', 'hotel', 'restaurant', 'museum'],
                 required: ['mall', 'shopping', 'center', 'store', 'market']
-            }
+    }
         };
 
         const filter = nameFilters[targetType];
@@ -1302,7 +1311,8 @@
             hotel: ['lodging', 'hotel', 'resort', 'hostel', 'motel', 'bed_and_breakfast', 'guest_house'],
             park: ['park', 'natural_feature', 'campground', 'rv_park', 'zoo'],
             museum: ['museum', 'art_gallery', 'library', 'cultural_center', 'gallery'],
-            shopping_mall: ['shopping_mall', 'department_store', 'store', 'clothing_store', 'electronics_store']
+            shops: ['shopping_mall', 'department_store', 'store', 'clothing_store', 'electronics_store'],
+    attractions:['tourist_attraction', 'amusement_park', 'aquarium', 'landmark', 'point_of_interest', 'place_of_worship', 'stadium', 'casino']
         };
 
         const related = relatedTypes[targetType] || [];
@@ -2064,7 +2074,9 @@
             } else if (placeTypes.includes('museum')) {
                 window.draggedType = "museum";
             } else if (placeTypes.includes('shopping_mall') || placeTypes.includes('store')) {
-                window.draggedType = "shopping_mall";
+                window.draggedType = "shops";
+            }else if (placeTypes.includes('tourist_attraction') || placeTypes.includes('amusement_park')) {
+                window.draggedType = "attractions";
             } else {
                 window.draggedType = "search"; // default for search results
             }
@@ -2177,7 +2189,9 @@
             } else if (placeTypes.includes('museum')) {
                 scheduleType = "museum";
             } else if (placeTypes.includes('shopping_mall') || placeTypes.includes('store')) {
-                scheduleType = "shopping_mall";
+                scheduleType = "shops";
+            } else if (placeTypes.includes('tourist_attraction') || placeTypes.includes('amusement_park')) { 
+                scheduleType = "attractions";
             }
 
             // Fixed: Use camelCase placeId to match controller response

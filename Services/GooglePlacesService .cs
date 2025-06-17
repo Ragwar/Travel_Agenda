@@ -333,6 +333,14 @@ namespace TravelAgenda.Services
 					$"shopping in {cityName}",
 					$"malls {cityName}",
 					$"stores {cityName}"
+				},
+				["attractions"] = new List<string>
+				{
+					$"tourist attractions {cityName}",
+					$"landmarks {cityName}",
+					$"sightseeing {cityName}",
+					$"amusement parks {cityName}",
+					$"things to do {cityName}"
 				}
 			};
 
@@ -348,15 +356,62 @@ namespace TravelAgenda.Services
 			{
 				["restaurant"] = new List<string> { "restaurant", "meal_takeaway", "meal_delivery", "food", "cafe", "bar" },
 				["lodging"] = new List<string> { "lodging", "hotel", "resort", "hostel", "motel", "bed_and_breakfast", "guest_house" },
-				["park"] = new List<string> { "park", "natural_feature", "campground", "rv_park" },
+				["park"] = new List<string> { "park", "natural_feature", "campground", "rv_park", "zoo" },
 				["museum"] = new List<string> { "museum", "art_gallery", "library", "cultural_center" },
-				["shopping_mall"] = new List<string> { "shopping_mall", "department_store", "store", "clothing_store", "electronics_store" }
+				["shopping_mall"] = new List<string> { "shopping_mall", "department_store", "store", "clothing_store", "electronics_store" },
+				["attractions"] = new List<string> { "tourist_attraction", "amusement_park", "aquarium", "landmark", "place_of_worship", "stadium", "casino", "art_gallery", "cultural_center" }
 			};
 
 			if (!typeMapping.ContainsKey(targetType))
 				return true;
 
 			return place.Types.Any(t => typeMapping[targetType].Contains(t));
+		}
+
+		private bool IsStrictlyCorrectType(PlaceResult place, string targetType)
+		{
+			if (place.Types == null || !place.Types.Any())
+				return false;
+
+			var strictTypeMapping = new Dictionary<string, (List<string> Required, List<string> Forbidden)>
+			{
+				["restaurant"] = (
+					new List<string> { "restaurant", "meal_takeaway", "meal_delivery", "food", "cafe", "bar", "bakery" },
+					new List<string> { "lodging", "hotel", "resort", "park", "museum", "shopping_mall", "store", "tourist_attraction" }
+				),
+				["lodging"] = (
+					new List<string> { "lodging", "hotel", "resort", "hostel", "motel", "bed_and_breakfast", "guest_house" },
+					new List<string> { "restaurant", "park", "museum", "shopping_mall", "tourist_attraction", "food" }
+				),
+				["park"] = (
+					new List<string> { "park", "natural_feature", "campground", "rv_park" },
+					new List<string> { "restaurant", "lodging", "hotel", "museum", "shopping_mall", "store", "tourist_attraction" }
+				),
+				["museum"] = (
+					new List<string> { "museum", "art_gallery", "library", "cultural_center" },
+					new List<string> { "restaurant", "lodging", "hotel", "park", "shopping_mall", "store", "tourist_attraction" }
+				),
+				["shopping_mall"] = (
+					new List<string> { "shopping_mall", "department_store", "store", "clothing_store", "electronics_store" },
+					new List<string> { "restaurant", "lodging", "hotel", "park", "museum", "tourist_attraction" }
+				),
+				["attractions"] = (
+					new List<string> { "tourist_attraction", "amusement_park", "aquarium", "landmark", "zoo", "stadium", "casino", "place_of_worship" },
+					new List<string> { "restaurant", "lodging", "hotel", "resort", "shopping_mall", "store", "meal_takeaway", "food", "park", "museum", "art_gallery", "library" }
+				)
+			};
+
+			if (!strictTypeMapping.ContainsKey(targetType))
+				return true;
+
+			var (required, forbidden) = strictTypeMapping[targetType];
+
+			// Check if place has any forbidden types
+			if (place.Types.Any(t => forbidden.Contains(t)))
+				return false;
+
+			// Check if place has any required types
+			return place.Types.Any(t => required.Contains(t));
 		}
 
 		private PlaceResult ConvertToPlaceResult(GooglePlaceSearchResult googleResult, string locationType)

@@ -12,3 +12,23 @@
 	margin: 0 auto;
 	padding: 2rem;
 }
+
+/* Center content vertically and horizontally */
+.text-center {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	min-height: 80vh; /* Use most of the viewport height */
+	text-align: center;
+}
+
+	/* Optional: Add some spacing between elements */
+	.text-center h1 {
+		margin-bottom: 1.5rem;
+	}
+
+	.text-center p {
+		margin-bottom: 2rem;
+		max-width: 600px; /* Limit paragraph width for better readability */
+	}
